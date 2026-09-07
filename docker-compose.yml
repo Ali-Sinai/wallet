@@ -1,0 +1,21 @@
+services:
+  wallet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      WALLET_SESSION_SECRET: ${WALLET_SESSION_SECRET:?set a long random string}
+      WALLET_ADMIN_USERNAME: ${WALLET_ADMIN_USERNAME:-admin}
+      WALLET_ADMIN_PASSWORD: ${WALLET_ADMIN_PASSWORD:?set an admin password}
+      # Uncomment both lines below once you have a Firebase service-account
+      # JSON (see README "Push notifications") — push stays disabled without it.
+      # WALLET_FIREBASE_SERVICE_ACCOUNT_PATH: /firebase-service-account.json
+    volumes:
+      - wallet-data:/data
+      # - ./firebase-service-account.json:/firebase-service-account.json:ro
+    restart: unless-stopped
+
+volumes:
+  wallet-data:

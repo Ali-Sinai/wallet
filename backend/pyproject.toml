@@ -1,0 +1,52 @@
+[project]
+name = "wallet"
+version = "0.1.0"
+description = "Self-hosted personal finance tracker (Iranian context)"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "sqlmodel>=0.0.22",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "alembic>=1.14",
+    "jdatetime>=5.0",
+    "bcrypt>=4.2",
+    "itsdangerous>=2.2",
+    "firebase-admin>=6.5",
+    "python-multipart>=0.0.17",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.27",
+    "ruff>=0.7",
+    "mypy>=1.13",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008"]  # FastAPI's Depends(...) in argument defaults is the standard idiom
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+disallow_untyped_defs = false
+# Note: SQLModel's Pydantic-style field annotations don't give the classic
+# SQLAlchemy mypy plugin a declarative mapping to hook into, so it adds
+# nothing here and is intentionally left out. Column-expression call sites
+# (`.desc()`, `.in_()`, `.join()`) are typed as plain Python attributes by
+# mypy and need a local `# type: ignore` — a known SQLModel/mypy limitation,
+# not a real type error (verified by tests and by running the app).
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
