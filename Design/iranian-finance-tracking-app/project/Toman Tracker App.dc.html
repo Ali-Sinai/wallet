@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics=""><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&amp;display=swap" rel="stylesheet"><style>@font-face{font-family:Rooyin;src:url("uploads/RooyinFree-Regular.ttf") format("truetype");font-weight:400;font-display:swap}@font-face{font-family:Rooyin;src:url("uploads/RooyinFree-Bold.ttf") format("truetype");font-weight:700;font-display:swap}html,body{margin:0;height:100%;background:#0a0c0b;font-family:Rooyin,Vazirmatn,system-ui,sans-serif}a{color:#0f9b6e;text-decoration:none}a:hover{color:#12b17e}*{box-sizing:border-box}::-webkit-scrollbar{width:0;height:0}@keyframes sheetUp{from{transform:translateY(18px);opacity:.4}to{transform:translateY(0);opacity:1}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}</style></helmet>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 12px;background:radial-gradient(90% 60% at 50% 0%,#12241d 0%,#08090a 60%)">
+<div dir="{{ dir }}" style="position:relative;width:390px;height:844px;flex:none;border-radius:34px;overflow:hidden;background:#08090a;color:#e8eaec;font-family:Rooyin,Vazirmatn,sans-serif;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07);display:flex;flex-direction:column">
+
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px 2px;font-size:12px;color:rgba(232,234,236,.45);flex:none">
+<span>{{ t.clock }}</span>
+<div style="display:flex;gap:6px;align-items:center">
+<span>{{ t.currency }}</span>
+<div style="display:flex;gap:2px;padding:2px;border-radius:99px;background:rgba(255,255,255,.07)">
+<div style="padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:700;cursor:pointer;background:{{ enChipBg }};color:{{ enChipFg }}" onClick="{{ setEn }}">EN</div>
+<div style="padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:700;cursor:pointer;background:{{ faChipBg }};color:{{ faChipFg }}" onClick="{{ setFa }}">فا</div>
+</div>
+</div>
+</div>
+
+<div style="flex:1;min-height:0;overflow-y:auto;padding-bottom:8px">
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="animation:fadeIn .18s ease">
+<div style="padding:8px 22px 0;display:flex;justify-content:space-between;align-items:flex-start">
+<div>
+<div style="display:flex;align-items:flex-end;gap:3px"><div style="font-size:22px;font-weight:700;letter-spacing:-.9px;line-height:1">{{ appName }}</div><div style="width:6px;height:6px;border-radius:2px;background:#0f9b6e;margin-bottom:3px;flex:none"></div></div>
+<div style="font-size:11px;color:rgba(232,234,236,.45);margin-top:3px">{{ t.monthLabel }}</div>
+</div>
+
+</div>
+
+<div style="margin:14px 22px 0;padding:18px;border-radius:22px;background:linear-gradient(155deg,#12241d 0%,#0b120f 70%);border:1px solid rgba(15,155,110,.28)">
+<div style="font-size:11.5px;color:rgba(232,234,236,.45)">{{ t.balance }}</div>
+<div style="display:flex;align-items:baseline;gap:7px;margin-top:6px"><span style="font-size:36px;font-weight:700;letter-spacing:-.5px;line-height:1.05">{{ balanceText }}</span><span style="font-size:14px;color:rgba(232,234,236,.45)">{{ t.tomanShort }}</span></div>
+<div style="display:flex;gap:10px;margin-top:14px">
+<div style="flex:1;background:rgba(255,255,255,.04);border-radius:13px;padding:10px 12px"><div style="font-size:11.5px;color:rgba(232,234,236,.5)">{{ t.in }}</div><div style="font-size:15.5px;font-weight:700;color:#3fd39a;margin-top:2px">{{ inText }}</div></div>
+<div style="flex:1;background:rgba(255,255,255,.04);border-radius:13px;padding:10px 12px"><div style="font-size:11.5px;color:rgba(232,234,236,.5)">{{ t.out }}</div><div style="font-size:15.5px;font-weight:700;color:#ff7a6b;margin-top:2px">{{ outText }}</div></div>
+</div>
+</div>
+
+<sc-if value="{{ hasSms }}" hint-placeholder-val="{{ true }}">
+<div style="margin:14px 22px 0;padding:16px;border-radius:20px;background:#101a16;border:1px solid rgba(15,155,110,.35);animation:sheetUp .22s ease" onClick="{{ stop }}">
+<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:11.5px;color:#3fd39a;font-weight:700">{{ t.detected }}</div><div style="font-size:11px;color:rgba(232,234,236,.4)">{{ smsCounter }}</div></div>
+<div style="margin-top:8px;font-size:12px;color:rgba(232,234,236,.55);line-height:1.5;border-inline-start:2px solid rgba(63,211,154,.4);padding-inline-start:10px">{{ topSms.raw }}</div>
+<div style="display:flex;align-items:baseline;gap:6px;margin-top:11px"><span style="font-size:24px;font-weight:700;color:{{ topSms.color }}">{{ topSms.amountText }}</span><span style="font-size:12px;color:rgba(232,234,236,.45)">{{ topSms.meta }}</span></div>
+<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px">
+<sc-for list="{{ topSmsCats }}" as="c" hint-placeholder-count="3">
+<div style="padding:7px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.border }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px;margin-top:14px">
+<div style="flex:1;text-align:center;padding:11px 0;border-radius:13px;background:#0f9b6e;color:#04120c;font-size:13px;font-weight:700;cursor:pointer" onClick="{{ confirmSms }}">{{ t.confirm }}</div>
+<div style="flex:none;padding:11px 14px;border-radius:13px;border:1px solid rgba(255,255,255,.14);font-size:13px;color:rgba(232,234,236,.8);cursor:pointer" onClick="{{ splitSms }}">{{ t.split }}</div>
+<div style="flex:none;padding:11px 14px;border-radius:13px;border:1px solid rgba(255,255,255,.14);font-size:13px;color:rgba(232,234,236,.5);cursor:pointer" onClick="{{ ignoreSms }}">{{ t.ignore }}</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ noSms }}" hint-placeholder-val="{{ false }}">
+<div>
+<div style="margin:16px 22px 0;padding-top:13px;border-top:1px solid rgba(255,255,255,.08)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ t.dailySpend }}</div><div style="font-size:11.5px;color:rgba(232,234,236,.55)">{{ avgText }}</div></div>
+<div style="display:flex;align-items:flex-end;gap:5px;height:62px;margin-top:11px">
+<sc-for list="{{ bars }}" as="b" hint-placeholder-count="14">
+<div style="flex:1;border-radius:3px 3px 0 0;height:{{ b.h }};background:{{ b.bg }}"></div>
+</sc-for>
+</div>
+</div>
+<div style="margin:14px 22px 0;padding-top:13px;border-top:1px solid rgba(255,255,255,.08)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ t.categories }}</div><div style="font-size:11.5px;color:#0f9b6e;cursor:pointer" onClick="{{ goReports }}">{{ t.reportsLink }}</div></div>
+<div style="display:flex;height:9px;border-radius:3px;overflow:hidden;margin-top:10px">
+<sc-for list="{{ catShares }}" as="c" hint-placeholder-count="5">
+<div style="width:{{ c.w }};background:{{ c.color }}"></div>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:9px;font-size:11.5px;color:rgba(232,234,236,.65)">
+<sc-for list="{{ catShares }}" as="c" hint-placeholder-count="5"><span>{{ c.label }}</span></sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="margin:14px 22px 0;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ t.recent }}</div><div style="font-size:11.5px;color:#0f9b6e;cursor:pointer" onClick="{{ goActivity }}">{{ t.all }}</div></div>
+<div style="display:flex;flex-direction:column;margin-top:4px">
+<sc-for list="{{ recent }}" as="r" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer" onClick="{{ r.onTap }}">
+<div style="width:3px;height:26px;border-radius:2px;flex:none;background:{{ r.color }}"></div>
+<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">{{ r.title }}</div><div style="font-size:11px;color:rgba(232,234,236,.42);margin-top:2px">{{ r.meta }}</div></div>
+<div style="text-align:end;flex:none"><div style="font-size:14px;font-weight:700;color:{{ r.color }}">{{ r.amountText }}</div><div style="font-size:10.5px;color:rgba(232,234,236,.35)">{{ r.dateText }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isActivity }}" hint-placeholder-val="{{ false }}">
+<div style="animation:fadeIn .18s ease">
+<div style="padding:10px 22px 0;display:flex;justify-content:space-between;align-items:center">
+<div style="font-size:19px;font-weight:700">{{ L.activity }}</div>
+<div style="display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:99px;background:#101a16;border:1px solid rgba(15,155,110,.35);cursor:pointer" onClick="{{ goInbox }}"><span style="width:6px;height:6px;border-radius:99px;background:#0f9b6e"></span><span style="font-size:11.5px;color:#3fd39a;font-weight:700">{{ L.inbox }} {{ inboxBadge }}</span></div>
+</div>
+<div style="display:flex;gap:6px;padding:12px 22px 0">
+<sc-for list="{{ typeChips }}" as="c" hint-placeholder-count="3">
+<div style="flex:1;text-align:center;padding:8px 0;border-radius:11px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:6px;padding:10px 22px 0;overflow-x:auto">
+<sc-for list="{{ catChips }}" as="c" hint-placeholder-count="6">
+<div style="flex:none;padding:7px 12px;border-radius:99px;font-size:11.5px;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="padding:14px 22px 0">
+<div style="font-size:11px;color:rgba(232,234,236,.35)">{{ rowsCount }} {{ L.of }} {{ L.activity }}</div>
+<sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
+<div style="padding:40px 0;text-align:center;font-size:13px;color:rgba(232,234,236,.35)">{{ L.empty }}</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;margin-top:4px">
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer" onClick="{{ r.onTap }}">
+<div style="width:3px;height:26px;border-radius:2px;flex:none;background:{{ r.color }}"></div>
+<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">{{ r.title }}</div><div style="font-size:11px;color:rgba(232,234,236,.42);margin-top:2px">{{ r.meta }}</div></div>
+<div style="text-align:end;flex:none"><div style="font-size:14px;font-weight:700;color:{{ r.color }}">{{ r.amountText }}</div><div style="font-size:10.5px;color:rgba(232,234,236,.35)">{{ r.dateText }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isInbox }}" hint-placeholder-val="{{ false }}">
+<div style="animation:fadeIn .18s ease;padding:10px 22px 0">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div style="font-size:19px;font-weight:700">{{ L.inbox }}</div>
+<div style="font-size:11.5px;color:#0f9b6e;cursor:pointer" onClick="{{ goActivity }}">{{ L.activity }}</div>
+</div>
+<sc-if value="{{ inboxEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="padding:44px 0;text-align:center;font-size:13px;color:rgba(232,234,236,.35)">{{ L.inboxEmpty }}</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+<sc-for list="{{ smsRows }}" as="m" hint-placeholder-count="3">
+<div style="padding:15px;border-radius:18px;background:#101a16;border:1px solid rgba(15,155,110,.28)">
+<div style="font-size:12px;color:rgba(232,234,236,.55);line-height:1.5;border-inline-start:2px solid rgba(63,211,154,.4);padding-inline-start:10px">{{ m.raw }}</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px">
+<div><div style="font-size:13.5px;font-weight:700">{{ m.title }}</div><div style="font-size:11px;color:rgba(232,234,236,.42);margin-top:2px">{{ m.guessLabel }} · {{ m.meta }}</div></div>
+<div style="font-size:18px;font-weight:700;color:{{ m.color }}">{{ m.amountText }}</div>
+</div>
+<div style="display:flex;gap:7px;margin-top:12px">
+<div style="flex:1;text-align:center;padding:10px 0;border-radius:12px;background:#0f9b6e;color:#04120c;font-size:12.5px;font-weight:700;cursor:pointer" onClick="{{ m.onConfirm }}">{{ t.confirm }}</div>
+<div style="flex:none;padding:10px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);font-size:12.5px;cursor:pointer" onClick="{{ m.onSplit }}">{{ t.split }}</div>
+<div style="flex:none;padding:10px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.14);font-size:12.5px;color:rgba(232,234,236,.5);cursor:pointer" onClick="{{ m.onIgnore }}">{{ t.ignore }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ L.rules }}</div><div style="font-size:11px;color:rgba(232,234,236,.35)">{{ L.rulesHint }}</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+<sc-for list="{{ rules }}" as="r" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:14px;background:#101318">
+<span style="width:8px;height:8px;border-radius:99px;flex:none;background:{{ r.dot }}"></span>
+<div style="flex:1"><div style="font-size:12.5px;font-weight:700">{{ r.bank }}</div><div style="font-size:11px;color:rgba(232,234,236,.4);margin-top:2px">{{ r.hint }}</div></div>
+<div style="font-size:11.5px;color:rgba(232,234,236,.5)">{{ r.state }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPeople }}" hint-placeholder-val="{{ false }}">
+<div style="animation:fadeIn .18s ease;padding:10px 22px 0">
+<div style="font-size:19px;font-weight:700">{{ L.people }}</div>
+<div style="display:flex;gap:10px;margin-top:14px">
+<div style="flex:1;padding:13px;border-radius:16px;background:#101a16;border:1px solid rgba(15,155,110,.22)"><div style="font-size:11.5px;color:rgba(232,234,236,.5)">{{ L.owedToMe }}</div><div style="font-size:17px;font-weight:700;color:#3fd39a;margin-top:3px">{{ owedText }}</div></div>
+<div style="flex:1;padding:13px;border-radius:16px;background:#1a1214;border:1px solid rgba(255,122,107,.22)"><div style="font-size:11.5px;color:rgba(232,234,236,.5)">{{ L.iOwe }}</div><div style="font-size:17px;font-weight:700;color:#ff7a6b;margin-top:3px">{{ oweText }}</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+<sc-for list="{{ peopleRows }}" as="p" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:13px;border-radius:16px;background:#101318;cursor:pointer" onClick="{{ p.onTap }}">
+<div style="width:34px;height:34px;border-radius:99px;background:#1a201e;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:{{ p.color }};flex:none">{{ p.ini }}</div>
+<div style="flex:1"><div style="font-size:13.5px;font-weight:700">{{ p.name }}</div><div style="font-size:11px;color:rgba(232,234,236,.4);margin-top:2px">{{ p.sub }}</div></div>
+<div style="font-size:14px;font-weight:700;color:{{ p.color }}">{{ p.amountText }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPerson }}" hint-placeholder-val="{{ false }}">
+<div style="animation:fadeIn .18s ease;padding:10px 22px 0">
+<div style="font-size:12px;color:#0f9b6e;cursor:pointer" onClick="{{ goPeople }}">‹ {{ L.people }}</div>
+<div style="display:flex;align-items:center;gap:14px;margin-top:14px">
+<div style="width:52px;height:52px;border-radius:99px;background:#161c1a;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:{{ person.color }};flex:none">{{ person.ini }}</div>
+<div><div style="font-size:18px;font-weight:700">{{ person.name }}</div><div style="font-size:11.5px;color:rgba(232,234,236,.45);margin-top:2px">{{ person.sub }}</div></div>
+</div>
+<div style="margin-top:16px;padding:18px;border-radius:20px;background:linear-gradient(155deg,#12241d 0%,#0b120f 70%);border:1px solid rgba(15,155,110,.25)">
+<div style="font-size:11.5px;color:rgba(232,234,236,.45)">{{ person.sub }}</div>
+<div style="font-size:30px;font-weight:700;margin-top:4px;color:{{ person.color }}">{{ person.amountText }}</div>
+<div style="text-align:center;padding:11px 0;border-radius:13px;background:#0f9b6e;color:#04120c;font-size:13px;font-weight:700;cursor:pointer;margin-top:14px" onClick="{{ settleUp }}">{{ L.settleUp }}</div>
+</div>
+<div style="margin-top:18px;padding-top:13px;border-top:1px solid rgba(255,255,255,.08)">
+<div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ L.ledger }}</div>
+<div style="display:flex;flex-direction:column;margin-top:4px">
+<sc-for list="{{ personLedger }}" as="e" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+<div style="flex:1"><div style="font-size:13px;font-weight:700">{{ e.title }}</div><div style="font-size:11px;color:rgba(232,234,236,.35);margin-top:2px">{{ e.date }}</div></div>
+<div style="font-size:13.5px;font-weight:700;color:{{ e.color }}">{{ e.amountText }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReports }}" hint-placeholder-val="{{ false }}">
+<div style="animation:fadeIn .18s ease;padding:10px 22px 0">
+<div style="font-size:19px;font-weight:700">{{ L.reports }}</div>
+<div style="display:flex;gap:6px;margin-top:14px">
+<sc-for list="{{ periodChips }}" as="c" hint-placeholder-count="3">
+<div style="flex:1;text-align:center;padding:8px 0;border-radius:11px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="margin-top:16px;padding:16px;border-radius:20px;background:#101318;border:1px solid rgba(255,255,255,.06)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:24px;font-weight:700">{{ periodTotal }}</div><div style="font-size:11.5px;color:rgba(232,234,236,.45)">{{ periodAvg }}</div></div>
+<div style="display:flex;align-items:flex-end;gap:5px;height:76px;margin-top:14px">
+<sc-for list="{{ periodBars }}" as="b" hint-placeholder-count="14">
+<div style="flex:1;border-radius:3px 3px 0 0;height:{{ b.h }};background:{{ b.bg }}"></div>
+</sc-for>
+</div>
+</div>
+<div style="margin-top:16px;padding-top:13px;border-top:1px solid rgba(255,255,255,.08)">
+<div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ L.breakdown }}</div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+<sc-for list="{{ catTable }}" as="c" hint-placeholder-count="5">
+<div>
+<div style="display:flex;justify-content:space-between;font-size:12.5px"><span style="display:flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:3px;background:{{ c.color }}"></span>{{ c.label }}</span><span style="color:rgba(232,234,236,.7);font-weight:700">{{ c.amountText }}</span></div>
+<div style="height:6px;border-radius:99px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden"><div style="height:100%;width:{{ c.w }};background:{{ c.color }}"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="margin-top:18px;padding-top:13px;border-top:1px solid rgba(255,255,255,.08)">
+<div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ L.budgets }}</div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+<sc-for list="{{ budgets }}" as="b" hint-placeholder-count="4">
+<div>
+<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(232,234,236,.7)"><span>{{ b.label }}</span><span>{{ b.text }}</span></div>
+<div style="height:6px;border-radius:99px;background:rgba(255,255,255,.06);margin-top:6px;overflow:hidden"><div style="height:100%;width:{{ b.w }};background:{{ b.color }}"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+
+<div style="flex:none;display:flex;justify-content:space-around;align-items:center;padding:12px 18px 22px;border-top:1px solid rgba(255,255,255,.07);background:#0a0c0b;font-size:10px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ nav.home.fg }}" onClick="{{ goHome }}"><div style="width:20px;height:20px;border-radius:6px;background:{{ nav.home.bg }};border:1.5px solid {{ nav.home.bd }}"></div>{{ t.navHome }}</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ nav.activity.fg }}" onClick="{{ goActivity }}"><div style="width:20px;height:20px;border-radius:6px;background:{{ nav.activity.bg }};border:1.5px solid {{ nav.activity.bd }}"></div>{{ t.navActivity }}</div>
+<div style="width:46px;height:46px;border-radius:99px;background:#0f9b6e;color:#04120c;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin-top:-16px;cursor:pointer;flex:none" onClick="{{ openAdd }}">+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ nav.people.fg }}" onClick="{{ goPeople }}"><div style="width:20px;height:20px;border-radius:99px;background:{{ nav.people.bg }};border:1.5px solid {{ nav.people.bd }}"></div>{{ t.navPeople }}</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:{{ nav.reports.fg }}" onClick="{{ goReports }}"><div style="width:20px;height:20px;border-radius:3px;background:{{ nav.reports.bg }};border:1.5px solid {{ nav.reports.bd }}"></div>{{ t.navReports }}</div>
+</div>
+
+<sc-if value="{{ sheetDetail }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(4,6,5,.66);display:flex;align-items:flex-end;animation:fadeIn .15s ease" onClick="{{ closeSheet }}">
+<div style="width:100%;max-height:76%;overflow-y:auto;padding:20px 22px 26px;border-radius:26px 26px 0 0;background:#101318;border-top:1px solid rgba(255,255,255,.09);animation:sheetUp .22s ease" onClick="{{ stop }}">
+<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ L.detail }}</div><div style="font-size:11.5px;color:#0f9b6e;cursor:pointer" onClick="{{ closeSheet }}">{{ L.close }}</div></div>
+<div style="font-size:17px;font-weight:700;margin-top:10px">{{ detail.title }}</div>
+<div style="font-size:32px;font-weight:700;margin-top:4px;color:{{ detail.color }}">{{ detail.amountText }}</div>
+<div style="display:flex;gap:10px;margin-top:14px">
+<div style="flex:1;padding:11px 13px;border-radius:14px;background:rgba(255,255,255,.04)"><div style="font-size:10.5px;color:rgba(232,234,236,.45)">{{ L.account }}</div><div style="font-size:12.5px;font-weight:700;margin-top:3px">{{ detail.account }}</div></div>
+<div style="flex:1;padding:11px 13px;border-radius:14px;background:rgba(255,255,255,.04)"><div style="font-size:10.5px;color:rgba(232,234,236,.45)">{{ L.date }}</div><div style="font-size:12.5px;font-weight:700;margin-top:3px">{{ detail.date }}</div></div>
+</div>
+<div style="font-size:11.5px;color:rgba(232,234,236,.4);margin-top:18px">{{ L.category }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
+<sc-for list="{{ detailCats }}" as="c" hint-placeholder-count="8">
+<div style="padding:8px 13px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px;margin-top:20px">
+<div style="flex:1;text-align:center;padding:12px 0;border-radius:14px;background:#0f9b6e;color:#04120c;font-size:13px;font-weight:700;cursor:pointer" onClick="{{ openSplitFromDetail }}">{{ L.splitBtn }}</div>
+<div style="flex:none;padding:12px 15px;border-radius:14px;border:1px solid rgba(255,122,107,.35);color:#ff7a6b;font-size:13px;cursor:pointer" onClick="{{ deleteTx }}">{{ L.delete }}</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheetSplit }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(4,6,5,.66);display:flex;align-items:flex-end;animation:fadeIn .15s ease" onClick="{{ closeSheet }}">
+<div style="width:100%;max-height:88%;overflow-y:auto;padding:20px 22px 26px;border-radius:26px 26px 0 0;background:#101318;border-top:1px solid rgba(255,255,255,.09);animation:sheetUp .22s ease" onClick="{{ stop }}">
+<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ L.splitTitle }}</div><div style="font-size:11.5px;color:#0f9b6e;cursor:pointer" onClick="{{ closeSheet }}">{{ L.close }}</div></div>
+<div style="font-size:15px;font-weight:700;margin-top:10px">{{ splitTitleText }}</div>
+<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:28px;font-weight:700">{{ splitAmountText }}</span><span style="font-size:12.5px;color:rgba(232,234,236,.45)">{{ t.tomanShort }}</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;margin-top:14px">
+<sc-for list="{{ splitModeChips }}" as="c" hint-placeholder-count="2">
+<div style="padding:11px 14px;border-radius:13px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="font-size:11.5px;color:rgba(232,234,236,.4);margin-top:18px">{{ L.quick }}</div>
+<div style="display:flex;gap:8px;margin-top:9px">
+<sc-for list="{{ quickSplits }}" as="q" hint-placeholder-count="3">
+<div style="flex:1;padding:12px 0;text-align:center;border-radius:15px;cursor:pointer;background:{{ q.bg }};border:1px solid {{ q.bd }}" onClick="{{ q.onPick }}"><div style="font-size:16px;font-weight:700">{{ q.label }}</div><div style="font-size:10px;color:rgba(232,234,236,.45);margin-top:2px">{{ q.amountText }}</div></div>
+</sc-for>
+</div>
+<div style="font-size:11.5px;color:rgba(232,234,236,.4);margin-top:18px">{{ L.who }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
+<sc-for list="{{ splitPeopleChips }}" as="p" hint-placeholder-count="4">
+<div style="padding:8px 13px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:{{ p.bg }};color:{{ p.fg }};border:1px solid {{ p.bd }}" onClick="{{ p.onPick }}">{{ p.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:18px"><div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ L.perPerson }}</div><div style="font-size:11.5px;color:rgba(232,234,236,.5)">÷ {{ splitWays }} · {{ splitPerText }}</div></div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:9px">
+<sc-for list="{{ splitRows }}" as="r" hint-placeholder-count="2">
+<div style="display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:15px;background:rgba(255,255,255,.04)">
+<div style="width:30px;height:30px;border-radius:99px;background:#1a201e;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:{{ r.color }};flex:none">{{ r.ini }}</div>
+<div style="flex:1"><div style="font-size:12.5px;font-weight:700">{{ r.name }}</div><div style="font-size:10.5px;color:rgba(232,234,236,.4);margin-top:2px">{{ r.sub }}</div></div>
+<div style="font-size:13px;font-weight:700;color:{{ r.color }}">{{ r.amountText }}</div>
+</div>
+</sc-for>
+</div>
+<div style="text-align:center;padding:13px 0;border-radius:14px;background:#0f9b6e;color:#04120c;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:18px" onClick="{{ saveSplit }}">{{ L.save }}</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheetAdd }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(4,6,5,.66);display:flex;align-items:flex-end;animation:fadeIn .15s ease" onClick="{{ closeSheet }}">
+<div style="width:100%;max-height:90%;overflow-y:auto;padding:20px 22px 26px;border-radius:26px 26px 0 0;background:#101318;border-top:1px solid rgba(255,255,255,.09);animation:sheetUp .22s ease" onClick="{{ stop }}">
+<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:11.5px;color:rgba(232,234,236,.4)">{{ L.add }}</div><div style="font-size:11.5px;color:#0f9b6e;cursor:pointer" onClick="{{ closeSheet }}">{{ L.close }}</div></div>
+<div style="display:flex;align-items:baseline;gap:6px;justify-content:center;padding:14px 0 4px"><span style="font-size:34px;font-weight:700">{{ addAmountText }}</span><span style="font-size:13px;color:rgba(232,234,236,.45)">{{ t.tomanShort }}</span></div>
+<div style="display:flex;gap:6px;margin-top:10px">
+<sc-for list="{{ addTypeChips }}" as="c" hint-placeholder-count="2">
+<div style="flex:1;text-align:center;padding:10px 0;border-radius:12px;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px">
+<sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+<div style="text-align:center;padding:13px 0;border-radius:14px;background:rgba(255,255,255,.05);font-size:17px;font-weight:700;cursor:pointer;user-select:none" onClick="{{ k.onPress }}">{{ k.label }}</div>
+</sc-for>
+</div>
+<div style="font-size:11.5px;color:rgba(232,234,236,.4);margin-top:16px">{{ L.category }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
+<sc-for list="{{ addCats }}" as="c" hint-placeholder-count="8">
+<div style="padding:8px 13px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="text-align:center;padding:13px 0;border-radius:14px;background:#0f9b6e;color:#04120c;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:18px" onClick="{{ saveAdd }}">{{ L.saveTx }}</div>
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:440,&quot;height&quot;:900},&quot;defaultLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;fa&quot;,&quot;en&quot;],&quot;default&quot;:&quot;fa&quot;,&quot;tsType&quot;:&quot;\&quot;fa\&quot;|\&quot;en\&quot;&quot;}}">
+const FAD = "۰۱۲۳۴۵۶۷۸۹";
+const CATS = [
+  { key: "grocery", en: "Groceries", fa: "خرید خانه", color: "#0f9b6e" },
+  { key: "transport", en: "Transport", fa: "حمل‌ونقل", color: "#3fa9e0" },
+  { key: "dining", en: "Eating out", fa: "رستوران", color: "#e09628" },
+  { key: "rent", en: "Rent", fa: "اجاره", color: "#c96bd8" },
+  { key: "health", en: "Health", fa: "سلامت", color: "#5b8def" },
+  { key: "fun", en: "Fun", fa: "تفریح", color: "#e0648c" },
+  { key: "income", en: "Income", fa: "درآمد", color: "#3fd39a" },
+  { key: "other", en: "Other", fa: "دیگر", color: "#5a6663" }
+];
+const STR = {
+  en: { clock: "9:41", currency: "IRT", monthLabel: "Shahrivar 1405", overview: "Overview", avatar: "SM", balance: "BALANCE / 1405-06", tomanShort: "T", in: "In", out: "Out", detected: "DETECTED FROM SMS", confirm: "Confirm", split: "Split…", ignore: "Ignore", dailySpend: "DAILY SPEND — LAST 14D", categories: "CATEGORIES", reportsLink: "Reports ›", recent: "RECENT", all: "All ›", navHome: "Home", navActivity: "Activity", navPeople: "People", navReports: "Reports", avgPrefix: "avg " },
+  fa: { clock: "۹:۴۱", currency: "تومان", monthLabel: "شهریور ۱۴۰۵", overview: "یک نگاه", avatar: "س‌م", balance: "موجودی / ۱۴۰۵-۰۶", tomanShort: "ت", in: "واریز", out: "برداشت", detected: "شناسایی شده از پیامک", confirm: "تأیید", split: "تقسیم…", ignore: "نادیده", dailySpend: "هزینه روزانه — ۱۴ روز", categories: "دسته‌بندی‌ها", reportsLink: "گزارش ›", recent: "آخرین تراکنش‌ها", all: "همه ›", navHome: "خانه", navActivity: "تراکنش‌ها", navPeople: "افراد", navReports: "گزارش", avgPrefix: "میانگین " }
+};
+const TXS = [
+  { id: 1, en: "Hyperstar Ekbatan", fa: "هایپراستار اکباتان", cat: "grocery", amt: -2450000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "today 18:04", dFa: "امروز ۱۸:۰۴", day: 0 },
+  { id: 2, en: "Snapp ride", fa: "اسنپ", cat: "transport", amt: -185000, acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲", dEn: "today 09:12", dFa: "امروز ۰۹:۱۲", day: 0 },
+  { id: 3, en: "Villa Chalus", fa: "ویلا چالوس", cat: "fun", amt: -12000000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "3 Sha", dFa: "۳ شهریور", day: 2, splitOf: 4 },
+  { id: 4, en: "Salary — Parsian Co", fa: "حقوق — شرکت پارسیان", cat: "income", amt: 42000000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "3 Sha", dFa: "۳ شهریور", day: 2 },
+  { id: 5, en: "Digikala order", fa: "سفارش دیجی‌کالا", cat: "other", amt: -1890000, acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲", dEn: "5 Sha", dFa: "۵ شهریور", day: 4 },
+  { id: 6, en: "Pharmacy 13 Aban", fa: "داروخانه ۱۳ آبان", cat: "health", amt: -640000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "6 Sha", dFa: "۶ شهریور", day: 5 },
+  { id: 7, en: "Cafe Lamiz", fa: "کافه لمیز", cat: "dining", amt: -420000, acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲", dEn: "7 Sha", dFa: "۷ شهریور", day: 6 },
+  { id: 8, en: "Rent — Sadeghieh", fa: "اجاره — صادقیه", cat: "rent", amt: -9000000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "8 Sha", dFa: "۸ شهریور", day: 7 },
+  { id: 9, en: "Refah market", fa: "فروشگاه رفاه", cat: "grocery", amt: -1320000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "9 Sha", dFa: "۹ شهریور", day: 8 },
+  { id: 10, en: "Freelance invoice", fa: "فاکتور آزاد", cat: "income", amt: 8500000, acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲", dEn: "10 Sha", dFa: "۱۰ شهریور", day: 9 }
+];
+const SMS = [
+  { id: "s1", amt: -2450000, guess: "grocery", en: "Bank Saman: bardasht 2,450,000 T — Hyperstar, mande 128,940,000 T", fa: "بانک سامان: برداشت ۲٬۴۵۰٬۰۰۰ ت — هایپراستار، مانده ۱۲۸٬۹۴۰٬۰۰۰ ت", titleEn: "Hyperstar Ekbatan", titleFa: "هایپراستار اکباتان", acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷" },
+  { id: "s2", amt: -680000, guess: "dining", en: "Blu Bank: purchase 680,000 T — Bistro Zafar", fa: "بلوبانک: خرید ۶۸۰٬۰۰۰ ت — بیسترو ظفر", titleEn: "Bistro Zafar", titleFa: "بیسترو ظفر", acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲" },
+  { id: "s3", amt: 3200000, guess: "income", en: "Bank Saman: variz 3,200,000 T from R. Moradi", fa: "بانک سامان: واریز ۳٬۲۰۰٬۰۰۰ ت از ر. مرادی", titleEn: "From R. Moradi", titleFa: "از ر. مرادی", acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷" }
+];
+const PEOPLE = [
+  { id: "p1", en: "Reza M.", fa: "رضا م.", ini: "RM", bal: 4500000 },
+  { id: "p2", en: "Nazanin A.", fa: "نازنین ا.", ini: "NA", bal: -1250000 },
+  { id: "p3", en: "Kaveh T.", fa: "کاوه ت.", ini: "KT", bal: 3000000 },
+  { id: "p4", en: "Sara P.", fa: "سارا پ.", ini: "SP", bal: 0 }
+];
+const BARS = [32, 54, 18, 71, 44, 26, 88, 38, 61, 12, 47, 100, 29, 56];
+
+class Component extends DCLogic {
+  state = { lang: null, screen: "home", sheet: null, txId: null, sms: SMS.slice(), txs: TXS.slice(), people: PEOPLE.slice(), typeFilter: "all", catFilter: "all", period: "month", personId: null, splitFrom: null, splitPeople: ["p1"], splitMode: "owed", splitCustom: null };
+
+  lang() { return this.state.lang || this.props.defaultLang || "fa"; }
+  fa() { return this.lang() === "fa"; }
+  digits(s) { return this.fa() ? String(s).replace(/[0-9]/g, d => FAD[+d]) : String(s); }
+  group(n) {
+    const s = Math.round(Math.abs(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, this.fa() ? "٬" : ",");
+    return this.digits(s);
+  }
+  money(n, signed) {
+    const sign = n < 0 ? "−" : (signed ? "+" : "");
+    return sign + this.group(n);
+  }
+  short(n) {
+    const a = Math.abs(n);
+    if (a >= 1e6) return this.digits((a / 1e6).toFixed(1)) + (this.fa() ? " م" : "M");
+    if (a >= 1e3) return this.digits(Math.round(a / 1e3)) + (this.fa() ? " ه" : "K");
+    return this.group(a);
+  }
+  cat(key) { return CATS.find(c => c.key === key) || CATS[7]; }
+  catName(key) { const c = this.cat(key); return this.fa() ? c.fa : c.en; }
+  txName(tx) { return this.fa() ? tx.fa : tx.en; }
+  acName(tx) { return this.fa() ? tx.acFa : tx.acEn; }
+  dateName(tx) { return this.fa() ? tx.dFa : tx.dEn; }
+  txColor(tx) { return tx.amt < 0 ? "#ff7a6b" : "#3fd39a"; }
+
+  go(screen) { return () => this.setState({ screen, sheet: null }); }
+  openSheet(sheet, extra) { return () => this.setState(Object.assign({ sheet }, extra || {})); }
+
+  resolveSms(id, catKey, asTx) {
+    this.setState(s => {
+      const m = s.sms.find(x => x.id === id);
+      const rest = s.sms.filter(x => x.id !== id);
+      if (!m || !asTx) return { sms: rest };
+      const tx = { id: Date.now(), en: m.titleEn, fa: m.titleFa, cat: catKey || m.guess, amt: m.amt, acEn: m.acEn, acFa: m.acFa, dEn: "today", dFa: "امروز", day: 0 };
+      return { sms: rest, txs: [tx].concat(s.txs) };
+    });
+  }
+
+  navItem(key) {
+    const on = this.state.screen === key;
+    return { fg: on ? "#0f9b6e" : "rgba(232,234,236,.4)", bg: on ? "#0f9b6e" : "transparent", bd: on ? "#0f9b6e" : "rgba(232,234,236,.4)" };
+  }
+
+  chip(on) { return { bg: on ? "#0f9b6e" : "transparent", fg: on ? "#04120c" : "rgba(232,234,236,.7)", bd: on ? "#0f9b6e" : "rgba(255,255,255,.14)" }; }
+
+  screenVals(fa, t, txs, shares, spend) {
+    const s = this.state;
+    const L = fa ? {
+      activity: "تراکنش‌ها", inbox: "پیامک‌ها", all: "همه", inn: "واریز", out: "برداشت", allCats: "همه دسته‌ها",
+      people: "افراد", owedToMe: "طلب من", iOwe: "بدهی من", settled: "تسویه", settleUp: "تسویه حساب", ledger: "ریز حساب",
+      reports: "گزارش", daily: "روزانه", weekly: "هفتگی", monthly: "ماهانه", breakdown: "تفکیک دسته‌ها", budgets: "بودجه‌ها",
+      detail: "جزئیات تراکنش", category: "دسته‌بندی", account: "حساب", date: "تاریخ", note: "یادداشت", noteHint: "یادداشت برای این تراکنش…",
+      splitTitle: "تقسیم هزینه", amount: "مبلغ", who: "با چه کسی؟", quick: "تقسیم سریع", equal: "مساوی", custom: "دلخواه",
+      iPaid: "من پرداخت کردم، آن‌ها بدهکارند", weSplit: "آن‌ها پرداخت کردند، من بدهکارم", perPerson: "سهم هر نفر", save: "ثبت رکوردها",
+      add: "ثبت دستی", withdraw: "برداشت", deposit: "واریز", title: "عنوان", titleHint: "مثلاً هایپراستار", saveTx: "ثبت تراکنش",
+      empty: "چیزی پیدا نشد", inboxEmpty: "پیامک تازه‌ای نیست", rules: "قوانین بانک‌ها", rulesHint: "کدام پیامک‌ها خوانده شود",
+      splitBtn: "تقسیم این هزینه", delete: "حذف", close: "بستن", of: "از", remaining: "مانده", you: "شما"
+    } : {
+      activity: "Activity", inbox: "SMS inbox", all: "All", inn: "In", out: "Out", allCats: "All categories",
+      people: "People", owedToMe: "Owed to me", iOwe: "I owe", settled: "Settled", settleUp: "Settle up", ledger: "Ledger",
+      reports: "Reports", daily: "Daily", weekly: "Weekly", monthly: "Monthly", breakdown: "Category breakdown", budgets: "Budgets",
+      detail: "Transaction", category: "Category", account: "Account", date: "Date", note: "Note", noteHint: "Add a note…",
+      splitTitle: "Split expense", amount: "Amount", who: "With whom?", quick: "Quick split", equal: "Equal", custom: "Custom",
+      iPaid: "I paid — they owe me", weSplit: "They paid — I owe", perPerson: "Per person", save: "Create records",
+      add: "Add record", withdraw: "Withdraw", deposit: "Deposit", title: "Title", titleHint: "e.g. Hyperstar", saveTx: "Save transaction",
+      empty: "Nothing here", inboxEmpty: "No new messages", rules: "Bank rules", rulesHint: "Which messages get read",
+      splitBtn: "Split this expense", delete: "Delete", close: "Close", of: "of", remaining: "left", you: "You"
+    };
+
+    let list = txs;
+    if (s.typeFilter === "in") list = list.filter(x => x.amt > 0);
+    if (s.typeFilter === "out") list = list.filter(x => x.amt < 0);
+    if (s.catFilter !== "all") list = list.filter(x => x.cat === s.catFilter);
+
+    const rows = list.map(tx => ({
+      title: this.txName(tx), meta: this.catName(tx.cat) + " · " + this.acName(tx),
+      amountText: this.money(tx.amt, true), dateText: this.dateName(tx), color: this.txColor(tx),
+      onTap: () => this.setState({ sheet: "detail", txId: tx.id })
+    }));
+
+    const owedTotal = s.people.filter(p => p.bal > 0).reduce((a, b) => a + b.bal, 0);
+    const oweTotal = s.people.filter(p => p.bal < 0).reduce((a, b) => a + Math.abs(b.bal), 0);
+    const person = s.people.find(p => p.id === s.personId);
+
+    const budgets = [
+      { cat: "grocery", limit: 14000000 }, { cat: "dining", limit: 5000000 },
+      { cat: "transport", limit: 3000000 }, { cat: "fun", limit: 12000000 }
+    ].map(b => {
+      const used = txs.filter(x => x.cat === b.cat && x.amt < 0).reduce((a, c) => a + Math.abs(c.amt), 0);
+      const pct = Math.min(100, Math.round(used / b.limit * 100));
+      return { label: this.catName(b.cat), text: this.group(used) + " / " + this.group(b.limit), w: pct + "%", color: used > b.limit ? "#ff7a6b" : this.cat(b.cat).color, pctText: this.digits(pct) + (fa ? "٪" : "%") };
+    });
+
+    const periodBars = s.period === "daily" ? BARS.slice(-7) : (s.period === "weekly" ? [62, 88, 47, 71] : BARS);
+    const maxP = Math.max.apply(null, periodBars);
+
+    const tx = s.txs.find(x => x.id === s.txId);
+    const sf = s.splitFrom;
+    const chosen = s.splitPeople;
+    const nWay = chosen.length + 1;
+    const per = sf ? Math.round(sf.amt / nWay) : 0;
+
+    return {
+      L,
+      isActivity: s.screen === "activity", isInbox: s.screen === "inbox", isPeople: s.screen === "people",
+      isPerson: s.screen === "person", isReports: s.screen === "reports",
+      goInbox: this.go("inbox"),
+      inboxBadge: this.digits(s.sms.length),
+      hasInbox: s.sms.length > 0, inboxEmpty: s.sms.length === 0,
+      typeChips: [["all", L.all], ["in", L.inn], ["out", L.out]].map(([k, label]) => Object.assign({ label, onPick: () => this.setState({ typeFilter: k }) }, this.chip(s.typeFilter === k))),
+      catChips: [{ key: "all", label: L.allCats }].concat(CATS.map(c => ({ key: c.key, label: this.catName(c.key) }))).map(c => Object.assign({ label: c.label, onPick: () => this.setState({ catFilter: c.key }) }, this.chip(s.catFilter === c.key))),
+      rows, hasRows: rows.length > 0, noRows: rows.length === 0,
+      rowsCount: this.digits(rows.length),
+
+      smsRows: s.sms.map(m => ({
+        raw: fa ? m.fa : m.en, amountText: this.money(m.amt, true), color: m.amt < 0 ? "#ff7a6b" : "#3fd39a",
+        title: fa ? m.titleFa : m.titleEn, guessLabel: this.catName(m.guess), meta: fa ? m.acFa : m.acEn,
+        onConfirm: () => this.resolveSms(m.id, m.guess, true),
+        onIgnore: () => this.resolveSms(m.id, null, false),
+        onSplit: () => this.setState({ sheet: "split", splitFrom: { amt: Math.abs(m.amt), title: fa ? m.titleFa : m.titleEn }, splitPeople: ["p1"], splitMode: "owed", splitCustom: null })
+      })),
+      rules: [
+        { bank: fa ? "بانک سامان ····۴۴۱۷" : "Saman ····4417", on: true, hint: fa ? "برداشت، واریز، مانده" : "withdraw, deposit, balance" },
+        { bank: fa ? "بلوبانک ····۹۹۰۲" : "Blu ····9902", on: true, hint: fa ? "خرید، انتقال" : "purchase, transfer" },
+        { bank: fa ? "تبلیغات و کد تأیید" : "Ads & OTP codes", on: false, hint: fa ? "نادیده گرفته می‌شود" : "always ignored" }
+      ].map(r => ({ bank: r.bank, hint: r.hint, dot: r.on ? "#0f9b6e" : "#5a6663", state: r.on ? (fa ? "روشن" : "On") : (fa ? "خاموش" : "Off") })),
+
+      owedText: this.group(owedTotal), oweText: this.group(oweTotal),
+      peopleRows: s.people.map(p => ({
+        name: fa ? p.fa : p.en, ini: p.ini,
+        amountText: p.bal === 0 ? L.settled : this.money(p.bal, true),
+        color: p.bal > 0 ? "#3fd39a" : (p.bal < 0 ? "#ff7a6b" : "rgba(232,234,236,.45)"),
+        sub: p.bal > 0 ? L.owedToMe : (p.bal < 0 ? L.iOwe : L.settled),
+        onTap: () => this.setState({ screen: "person", personId: p.id })
+      })),
+      person: person ? {
+        name: fa ? person.fa : person.en, ini: person.ini,
+        amountText: person.bal === 0 ? L.settled : this.money(person.bal, true),
+        color: person.bal > 0 ? "#3fd39a" : (person.bal < 0 ? "#ff7a6b" : "rgba(232,234,236,.45)"),
+        sub: person.bal > 0 ? L.owedToMe : (person.bal < 0 ? L.iOwe : L.settled)
+      } : {},
+      personLedger: person ? [
+        { title: fa ? "ویلا چالوس — تقسیم ۴ نفره" : "Villa Chalus — split 4", amountText: this.money(3000000, true), date: fa ? "۳ شهریور" : "3 Sha", color: "#3fd39a" },
+        { title: fa ? "شام بیسترو ظفر" : "Bistro Zafar dinner", amountText: this.money(1500000, true), date: fa ? "۷ شهریور" : "7 Sha", color: "#3fd39a" },
+        { title: fa ? "تسویه نقدی" : "Cash settle", amountText: this.money(-0, false), date: fa ? "۱ شهریور" : "1 Sha", color: "rgba(232,234,236,.45)" }
+      ] : [],
+      settleUp: () => this.setState(st => ({ people: st.people.map(p => p.id === st.personId ? Object.assign({}, p, { bal: 0 }) : p) })),
+
+      periodChips: [["daily", L.daily], ["weekly", L.weekly], ["monthly", L.monthly]].map(([k, label]) => Object.assign({ label, onPick: () => this.setState({ period: k }) }, this.chip(s.period === k))),
+      periodBars: periodBars.map(v => ({ h: Math.round(v / maxP * 100) + "%", bg: v >= maxP ? "#0f9b6e" : "#1f2b27" })),
+      periodTotal: this.group(spend), periodAvg: t.avgPrefix + this.short(spend / periodBars.length),
+      catTable: shares.map(c => ({ label: this.catName(c.key), amountText: this.group(c.amt), color: c.color, w: c.pct + "%", pctText: this.digits(c.pct) + (fa ? "٪" : "%") })),
+      budgets,
+
+      sheetNone: !s.sheet, sheetDetail: s.sheet === "detail", sheetAdd: s.sheet === "add", sheetSplit: s.sheet === "split",
+      closeSheet: () => this.setState({ sheet: null }),
+      detail: tx ? {
+        title: this.txName(tx), amountText: this.money(tx.amt, true), color: this.txColor(tx),
+        account: this.acName(tx), date: this.dateName(tx), typeLabel: tx.amt < 0 ? L.withdraw : L.deposit
+      } : {},
+      detailCats: tx ? CATS.map(c => Object.assign({ label: this.catName(c.key), onPick: () => this.setState(st => ({ txs: st.txs.map(x => x.id === tx.id ? Object.assign({}, x, { cat: c.key }) : x) })) }, this.chip(c.key === tx.cat))) : [],
+      openSplitFromDetail: () => tx && this.setState({ sheet: "split", splitFrom: { amt: Math.abs(tx.amt), title: this.txName(tx) }, splitPeople: ["p1"], splitMode: "owed", splitCustom: null }),
+      deleteTx: () => tx && this.setState(st => ({ txs: st.txs.filter(x => x.id !== tx.id), sheet: null })),
+
+      splitTitleText: sf ? sf.title : "", splitAmountText: sf ? this.group(sf.amt) : "",
+      splitModeChips: [["owed", L.iPaid], ["owe", L.weSplit]].map(([k, label]) => Object.assign({ label, onPick: () => this.setState({ splitMode: k }) }, this.chip(s.splitMode === k))),
+      splitPeopleChips: s.people.map(p => Object.assign({
+        label: fa ? p.fa : p.en,
+        onPick: () => this.setState(st => ({ splitPeople: st.splitPeople.indexOf(p.id) > -1 ? st.splitPeople.filter(x => x !== p.id) : st.splitPeople.concat([p.id]), splitCustom: null }))
+      }, this.chip(chosen.indexOf(p.id) > -1))),
+      quickSplits: [2, 3, 4].map(n => ({
+        label: "÷" + this.digits(n), amountText: sf ? this.group(sf.amt / n) : "",
+        onPick: () => this.setState(st => ({ splitPeople: st.people.slice(0, n - 1).map(p => p.id), splitCustom: null })),
+        bg: nWay === n ? "#152420" : "#101318", bd: nWay === n ? "#0f9b6e" : "rgba(255,255,255,.07)"
+      })),
+      splitWays: this.digits(nWay), splitPerText: this.group(per),
+      splitRows: [{ id: "me", name: L.you, ini: fa ? "من" : "Me", me: true }].concat(chosen.map(id => {
+        const p = s.people.find(x => x.id === id);
+        return { id: id, name: fa ? p.fa : p.en, ini: p.ini, me: false };
+      })).map(r => ({
+        name: r.name, ini: r.ini, amountText: this.group(per),
+        sub: r.me ? (fa ? "سهم خودم" : "my share") : (s.splitMode === "owed" ? L.owedToMe : L.iOwe),
+        color: r.me ? "rgba(232,234,236,.7)" : (s.splitMode === "owed" ? "#3fd39a" : "#ff7a6b")
+      })),
+      stop: (e) => e.stopPropagation(),
+      appName: fa ? "کیف پول" : "Wallet",
+      addAmountText: s.addAmt ? this.group(+s.addAmt) : this.digits(0),
+      addTypeChips: [["out", L.withdraw], ["in", L.deposit]].map(([k, label]) => Object.assign({ label, onPick: () => this.setState({ addType: k }) }, this.chip((s.addType || "out") === k))),
+      addCats: CATS.map(c => Object.assign({ label: this.catName(c.key), onPick: () => this.setState({ addCat: c.key }) }, this.chip((s.addCat || "grocery") === c.key))),
+      keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "000", "0", "⌫"].map(k => ({
+        label: k === "⌫" ? "⌫" : this.digits(k),
+        onPress: () => this.setState(st => ({ addAmt: k === "⌫" ? String(st.addAmt || "").slice(0, -1) : String(st.addAmt || "") + k }))
+      })),
+      saveAdd: () => this.setState(st => {
+        if (!st.addAmt) return {};
+        const v = +st.addAmt * ((st.addType || "out") === "out" ? -1 : 1);
+        const tx = { id: Date.now(), en: "Manual entry", fa: "ثبت دستی", cat: st.addCat || "grocery", amt: v, acEn: "Cash", acFa: "نقدی", dEn: "today", dFa: "امروز", day: 0 };
+        return { txs: [tx].concat(st.txs), sheet: null, addAmt: "", screen: "home" };
+      }),
+      saveSplit: () => this.setState(st => ({
+        people: st.people.map(p => st.splitPeople.indexOf(p.id) > -1 ? Object.assign({}, p, { bal: p.bal + (st.splitMode === "owed" ? per : -per) }) : p),
+        sheet: null, screen: "people"
+      }))
+    };
+  }
+
+  renderVals() {
+    const fa = this.fa(), t = STR[fa ? "fa" : "en"];
+    const txs = this.state.txs;
+    const income = txs.filter(x => x.amt > 0).reduce((a, b) => a + b.amt, 0);
+    const spend = txs.filter(x => x.amt < 0).reduce((a, b) => a + Math.abs(b.amt), 0);
+    const byCat = {};
+    txs.filter(x => x.amt < 0).forEach(x => { byCat[x.cat] = (byCat[x.cat] || 0) + Math.abs(x.amt); });
+    const shares = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).slice(0, 5).map(k => {
+      const pct = Math.round(byCat[k] / spend * 100);
+      return { w: pct + "%", color: this.cat(k).color, label: this.catName(k) + " " + this.digits(pct) + (fa ? "٪" : "%"), key: k, amt: byCat[k], pct: pct };
+    });
+    const top = this.state.sms[0];
+    const maxBar = Math.max.apply(null, BARS);
+
+    return {
+      t, dir: fa ? "rtl" : "ltr",
+      setEn: () => this.setState({ lang: "en" }), setFa: () => this.setState({ lang: "fa" }),
+      enChipBg: fa ? "transparent" : "#0f9b6e", enChipFg: fa ? "rgba(232,234,236,.55)" : "#04120c",
+      faChipBg: fa ? "#0f9b6e" : "transparent", faChipFg: fa ? "#04120c" : "rgba(232,234,236,.55)",
+      isHome: this.state.screen === "home",
+      goHome: this.go("home"), goActivity: this.go("activity"), goPeople: this.go("people"), goReports: this.go("reports"),
+      openAdd: this.openSheet("add"),
+      nav: { home: this.navItem("home"), activity: this.navItem("activity"), people: this.navItem("people"), reports: this.navItem("reports") },
+      balanceText: this.group(128940000), inText: this.group(income), outText: this.group(spend),
+      avgText: t.avgPrefix + this.short(spend / 14),
+      bars: BARS.map(v => ({ h: Math.round(v / maxBar * 100) + "%", bg: v > 70 ? "#0f9b6e" : "#1f2b27" })),
+      catShares: shares,
+      recent: txs.slice(0, 4).map(tx => ({
+        title: this.txName(tx), meta: this.catName(tx.cat) + " · " + this.acName(tx),
+        amountText: this.money(tx.amt, true), dateText: this.dateName(tx), color: this.txColor(tx),
+        onTap: () => this.setState({ sheet: "detail", txId: tx.id })
+      })),
+      hasSms: !!top, noSms: !top,
+      smsCounter: this.digits(1) + (fa ? " از " : " of ") + this.digits(this.state.sms.length),
+      topSms: top ? { raw: fa ? top.fa : top.en, amountText: this.money(top.amt, true), color: top.amt < 0 ? "#ff7a6b" : "#3fd39a", meta: (top.amt < 0 ? t.out : t.in) + " · " + (fa ? top.acFa : top.acEn) } : {},
+      topSmsCats: top ? CATS.filter(c => c.key === top.guess || ["grocery", "dining", "transport", "other"].indexOf(c.key) > -1).slice(0, 4).map(c => {
+        const on = c.key === top.guess;
+        return { label: this.catName(c.key) + (on ? " ✓" : ""), bg: on ? "#0f9b6e" : "transparent", fg: on ? "#04120c" : "rgba(232,234,236,.7)", border: on ? "#0f9b6e" : "rgba(255,255,255,.14)", onPick: () => this.setState(s => ({ sms: s.sms.map(m => m.id === top.id ? Object.assign({}, m, { guess: c.key }) : m) })) };
+      }) : [],
+      confirmSms: () => top && this.resolveSms(top.id, top.guess, true),
+      ignoreSms: () => top && this.resolveSms(top.id, null, false),
+      splitSms: () => top && this.setState({ sheet: "split", splitFrom: { amt: Math.abs(top.amt), title: fa ? top.titleFa : top.titleEn }, splitPeople: ["p1"], splitMode: "owed", splitCustom: null }),
+      ...this.screenVals(fa, t, txs, shares, spend)
+    };
+  }
+}
+</script>
+</body>
+</html>
