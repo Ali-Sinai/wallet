@@ -1,4 +1,10 @@
-const BASE = "/api";
+// Same-origin "/api" for local dev (proxied, see vite.config.ts) and for
+// same-origin production (backend serving the built frontend, per README).
+// When the frontend is deployed separately (e.g. Vercel) from the backend
+// (e.g. Fly.io), set VITE_API_BASE_URL to the backend's full origin at
+// build time and this switches to cross-origin requests automatically.
+const API_ORIGIN = import.meta.env.VITE_API_BASE_URL ?? "";
+const BASE = `${API_ORIGIN}/api`;
 
 export class ApiError extends Error {
   status: number;

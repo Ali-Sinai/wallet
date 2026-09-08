@@ -63,14 +63,27 @@ docker buildx build --platform linux/amd64,linux/arm64 -t wallet:latest --push .
 
 ## Push notifications (Firebase Cloud Messaging)
 
-Optional. To enable:
+Optional, and off by default on both sides — server and browser each check independently and degrade cleanly.
 
+**Server side:**
 1. Create a Firebase project, enable Cloud Messaging.
 2. Project settings → Service accounts → Generate new private key → save the JSON.
 3. Set `WALLET_FIREBASE_SERVICE_ACCOUNT_PATH` to that file's path (in Docker, mount it and point the env var at the mounted path — see the commented-out lines in `docker-compose.yml`).
-4. Add your Firebase web app config (`apiKey`, `projectId`, `messagingSenderId`, `appId`, and the project's VAPID key from Cloud Messaging settings) to the frontend before requesting a token in the browser.
 
-If this isn't configured, `/api/push/*` returns a clear "not configured" response and the summary/threshold jobs skip sending silently — everything else works normally.
+**Browser side:** fill in the same Firebase web app config in **two** places (a service worker can't import from your app bundle, so it's duplicated by design — see the comment in the second file):
+- `frontend/src/lib/firebaseConfig.ts` — `apiKey`, `authDomain`, `projectId`, `storageBucket`, `messagingSenderId`, `appId`, and `vapidKey` (from Cloud Messaging settings → Web Push certificates).
+- `frontend/public/firebase-messaging-sw.js` — the same six config fields (not the VAPID key).
+
+Once both are filled in, Settings → Notifications → "فعال‌سازی اعلان در این مرورگر" requests permission and registers the device. Until then, that button is disabled with an explanatory message, and the backend's `/api/push/*` returns a clear "not configured" response rather than erroring — the summary/threshold jobs just skip sending silently.
+
+## Deploying frontend and backend separately (e.g. Vercel + Fly.io)
+
+Same-origin (Docker / `uv run`, above) is simplest — skip this section unless you specifically want the frontend on a different host than the backend.
+
+1. **Backend** — deploy however you like (this repo includes `fly.toml` for Fly.io: `flyctl launch --no-deploy` once to create the app + volume, then `flyctl deploy`). Note its public URL, e.g. `https://wallet-toman-tracker.fly.dev`.
+2. **Backend env**: set `WALLET_CORS_ALLOW_ORIGINS` to your frontend's exact origin (e.g. `https://wallet.vercel.app`). This also switches the session cookie to `SameSite=None; Secure`, which is what makes a cross-site cookie work at all — it requires HTTPS on both ends (Fly and Vercel both give you this for free).
+3. **Frontend build**: set `VITE_API_BASE_URL` to the backend's origin (e.g. `https://wallet-toman-tracker.fly.dev`) as a build-time env var, then `npm run build` (or let Vercel do it — set the env var in the Vercel project settings). The frontend then calls the backend cross-origin instead of assuming same-origin `/api`.
+4. Redeploy the frontend any time `VITE_API_BASE_URL` changes — Vite inlines it at build time, not runtime.
 
 ## SMS ingestion
 

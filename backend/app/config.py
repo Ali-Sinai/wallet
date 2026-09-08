@@ -21,6 +21,22 @@ class Settings(BaseSettings):
 
     ingest_attempt_retention_days: int = 14
 
+    # Comma-separated list of allowed frontend origins, e.g.
+    # "https://wallet.vercel.app". Only needed when the frontend is deployed
+    # separately from the backend (same-origin deployments need nothing
+    # here). Setting this also switches the session cookie to
+    # SameSite=None; Secure — required for a cross-site cookie to work at
+    # all, and only valid over HTTPS.
+    cors_allow_origins: str = ""
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
+
+    @property
+    def cross_site_cookies(self) -> bool:
+        return len(self.cors_origins_list) > 0
+
     @property
     def sqlite_url(self) -> str:
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)

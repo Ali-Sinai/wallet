@@ -32,19 +32,28 @@ def login(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid credentials")
 
     cookie_value = create_session_cookie_value(user.username)
+    # Cross-site (frontend and backend on different domains, e.g. Vercel +
+    # Fly.io) requires SameSite=None + Secure — a cookie can't be sent
+    # cross-origin otherwise. Same-origin deployments keep the stricter
+    # Lax/non-Secure default, which also works over plain HTTP for local dev.
     response.set_cookie(
         key="wallet_session",
         value=cookie_value,
         max_age=settings.session_max_age_seconds,
         httponly=True,
-        samesite="lax",
+        samesite="none" if settings.cross_site_cookies else "lax",
+        secure=settings.cross_site_cookies,
     )
     return MeResponse(username=user.username)
 
 
 @router.post("/logout")
 def logout(response: Response) -> dict[str, bool]:
-    response.delete_cookie("wallet_session")
+    response.delete_cookie(
+        "wallet_session",
+        samesite="none" if settings.cross_site_cookies else "lax",
+        secure=settings.cross_site_cookies,
+    )
     return {"ok": True}
 
 
