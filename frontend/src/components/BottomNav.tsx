@@ -5,12 +5,13 @@ const TABS = [
   { to: "/activity", label: "تراکنش‌ها", icon: "📋", end: false },
   { to: "/people", label: "افراد", icon: "🤝", end: false },
   { to: "/reports", label: "گزارش", icon: "📊", end: false },
+  { to: "/settings", label: "تنظیمات", icon: "⚙️", end: false },
 ];
 
 export default function BottomNav() {
   return (
     <nav className="fixed bottom-0 inset-x-0 z-30 bg-[#0b0d0c]/95 backdrop-blur border-t border-border pb-[env(safe-area-inset-bottom)]">
-      <div className="max-w-lg mx-auto grid grid-cols-4">
+      <div className="max-w-lg mx-auto grid grid-cols-5">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}

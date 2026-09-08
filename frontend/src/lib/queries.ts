@@ -5,10 +5,12 @@ import type {
   Category,
   DashboardOut,
   Debt,
+  KeywordRule,
   Person,
   PersonBalance,
   Period,
   SmsAttempt,
+  SmsPattern,
   Transaction,
 } from "../types";
 
@@ -116,5 +118,100 @@ export function useSettleAllMutation() {
       qc.invalidateQueries({ queryKey: ["people"] });
       qc.invalidateQueries({ queryKey: ["debts"] });
     },
+  });
+}
+
+// --- SMS patterns & keyword rules (Settings -> Bank rules) ---
+
+export function useSmsPatterns() {
+  return useQuery({ queryKey: ["sms-patterns"], queryFn: () => api.get<SmsPattern[]>("/sms-patterns") });
+}
+
+export function useCreateSmsPatternMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Omit<SmsPattern, "id">) => api.post<SmsPattern>("/sms-patterns", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sms-patterns"] }),
+  });
+}
+
+export function useUpdateSmsPatternMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: SmsPattern) => api.patch<SmsPattern>(`/sms-patterns/${id}`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sms-patterns"] }),
+  });
+}
+
+export function useDeleteSmsPatternMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/sms-patterns/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sms-patterns"] }),
+  });
+}
+
+export function useTestSmsPatternMutation() {
+  return useMutation({
+    mutationFn: ({ id, sampleText }: { id: number; sampleText: string }) =>
+      api.post<{ matched: boolean; groups?: Record<string, string | null>; amount_cents?: number | null }>(
+        `/sms-patterns/${id}/test`,
+        { sample_text: sampleText },
+      ),
+  });
+}
+
+export function useKeywordRules() {
+  return useQuery({ queryKey: ["keyword-rules"], queryFn: () => api.get<KeywordRule[]>("/keyword-rules") });
+}
+
+export function useCreateKeywordRuleMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Omit<KeywordRule, "id">) => api.post<KeywordRule>("/keyword-rules", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["keyword-rules"] }),
+  });
+}
+
+export function useDeleteKeywordRuleMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/keyword-rules/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["keyword-rules"] }),
+  });
+}
+
+// --- Settings: webhook token, notifications, push ---
+
+export function useRotateWebhookTokenMutation() {
+  return useMutation({
+    mutationFn: () => api.post<{ token: string }>("/settings/webhook-token/rotate"),
+  });
+}
+
+export function usePushStatus() {
+  return useQuery({ queryKey: ["push", "status"], queryFn: () => api.get<{ enabled: boolean }>("/push/status") });
+}
+
+export function useNotificationSettings() {
+  return useQuery({
+    queryKey: ["settings", "notifications"],
+    queryFn: () =>
+      api.get<{ uncategorized_threshold: number; summary_frequency: string }>("/settings/notifications"),
+  });
+}
+
+export function useUpdateNotificationSettingsMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { uncategorized_threshold: number; summary_frequency: string }) =>
+      api.patch("/settings/notifications", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["settings", "notifications"] }),
+  });
+}
+
+export function useSubscribePushMutation() {
+  return useMutation({
+    mutationFn: (fcm_token: string) => api.post("/push/subscribe", { fcm_token }),
   });
 }

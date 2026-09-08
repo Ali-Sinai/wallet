@@ -6,7 +6,14 @@ import { api } from "../lib/api";
 import { formatToman, toPersianDigits } from "../lib/money";
 import type { SplitMode, Transaction } from "../types";
 
-type Method = "equal" | "amounts" | "percentages";
+type Method = "equal" | "amounts" | "percentages" | "items";
+
+interface LineItemRow {
+  id: string;
+  label: string;
+  amount: string; // Toman, as typed
+  participant: string; // "me" or person id as string
+}
 
 export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
   const { data: people } = usePeople();
@@ -19,6 +26,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
   const [ways, setWays] = useState(2);
   const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [percentages, setPercentages] = useState<Record<string, string>>({});
+  const [items, setItems] = useState<LineItemRow[]>([]);
 
   const total = tx.amount_cents;
 
@@ -49,6 +57,26 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
     return 100 - sum;
   }, [percentages, participants]);
 
+  const itemsRemaining = useMemo(() => {
+    const sum = items.reduce((acc, i) => acc + (Number(i.amount || "0") * 100 || 0), 0);
+    return total - sum;
+  }, [items, total]);
+
+  function addItem() {
+    setItems((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), label: "", amount: "", participant: participants[0] ?? "me" },
+    ]);
+  }
+
+  function updateItem(id: string, patch: Partial<LineItemRow>) {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+  }
+
+  function removeItem(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  }
+
   const splitMutation = useMutation({
     mutationFn: async () => {
       const body: Record<string, unknown> = {
@@ -63,9 +91,18 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
         body.custom_amounts = Object.fromEntries(
           participants.map((k) => [k, Math.round(Number(customAmounts[k] || "0") * 100)]),
         );
-      } else {
+      } else if (method === "percentages") {
         body.method = "percentage";
         body.percentages = Object.fromEntries(participants.map((k) => [k, Number(percentages[k] || "0")]));
+      } else {
+        body.method = "itemized";
+        body.line_items = items
+          .filter((i) => i.amount)
+          .map((i) => ({
+            participant: i.participant,
+            amount_cents: Math.round(Number(i.amount) * 100),
+            label: i.label || null,
+          }));
       }
       return api.post(`/transactions/${tx.id}/split`, body);
     },
@@ -81,7 +118,8 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
   const canSave =
     selected.length > 0 &&
     (method !== "amounts" || customRemaining === 0) &&
-    (method !== "percentages" || percentRemaining === 0);
+    (method !== "percentages" || percentRemaining === 0) &&
+    (method !== "items" || (items.length > 0 && itemsRemaining === 0));
 
   return (
     <Modal onClose={onClose} maxWidth={520}>
@@ -117,6 +155,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
             ["equal", "برابر"],
             ["amounts", "مبلغ دلخواه"],
             ["percentages", "درصد"],
+            ["items", "آیتمی"],
           ] as [Method, string][]
         ).map(([m, label]) => (
           <button
@@ -216,6 +255,52 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
             <span className="text-muted">باقی‌مانده</span>
             <span className={percentRemaining === 0 ? "text-income" : "text-expense"}>
               {toPersianDigits(String(percentRemaining))}٪
+            </span>
+          </div>
+        </div>
+      )}
+
+      {method === "items" && (
+        <div className="flex flex-col gap-2 mt-4">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-center gap-1.5 p-2.5 rounded-2xl bg-white/5">
+              <input
+                value={item.label}
+                onChange={(e) => updateItem(item.id, { label: e.target.value })}
+                placeholder="نام آیتم"
+                className="flex-1 min-w-0 bg-transparent text-[12.5px] outline-none"
+              />
+              <input
+                type="number"
+                inputMode="decimal"
+                value={item.amount}
+                onChange={(e) => updateItem(item.id, { amount: e.target.value })}
+                placeholder="۰"
+                className="w-16 bg-transparent text-left text-[12.5px] font-bold outline-none"
+              />
+              <select
+                value={item.participant}
+                onChange={(e) => updateItem(item.id, { participant: e.target.value })}
+                className="bg-black/30 rounded-lg text-[11px] px-1 py-1 outline-none"
+              >
+                {participants.map((key) => (
+                  <option key={key} value={key}>
+                    {key === "me" ? "شما" : people?.find((p) => String(p.id) === key)?.name ?? key}
+                  </option>
+                ))}
+              </select>
+              <button onClick={() => removeItem(item.id)} className="text-expense text-xs px-1">
+                ×
+              </button>
+            </div>
+          ))}
+          <button onClick={addItem} className="text-xs text-accent self-start">
+            + افزودن آیتم
+          </button>
+          <div className="flex justify-between text-xs mt-1">
+            <span className="text-muted">باقی‌مانده</span>
+            <span className={itemsRemaining === 0 ? "text-income" : "text-expense"}>
+              {formatToman(itemsRemaining)}
             </span>
           </div>
         </div>

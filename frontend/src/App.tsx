@@ -8,6 +8,7 @@ import Activity from "./pages/Activity";
 import People from "./pages/People";
 import Reports from "./pages/Reports";
 import Review from "./pages/Review";
+import Settings from "./pages/Settings";
 
 export default function App() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/people" element={<People />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/review" element={<Review />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomNav />
