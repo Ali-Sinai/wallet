@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,6 +9,16 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="WALLET_", extra="ignore")
 
     db_path: str = "data/wallet.db"
+
+    # Turso (libSQL) — used instead of a local SQLite file on serverless hosts
+    # (e.g. Vercel) with no persistent disk. Unprefixed env var names, matching
+    # Turso's and Vercel's own convention, so a Vercel/Turso integration that
+    # sets these automatically just works without renaming anything. When both
+    # are set, database_url below returns a libsql:// URL instead of the local
+    # sqlite:/// file — see db.py.
+    turso_database_url: str | None = Field(default=None, validation_alias="TURSO_DATABASE_URL")
+    turso_auth_token: str | None = Field(default=None, validation_alias="TURSO_AUTH_TOKEN")
+
     session_secret: str = "dev-secret-change-me"
     session_cookie_name: str = "wallet_session"
     session_max_age_seconds: int = 60 * 60 * 24 * 30
@@ -38,7 +49,16 @@ class Settings(BaseSettings):
         return len(self.cors_origins_list) > 0
 
     @property
-    def sqlite_url(self) -> str:
+    def uses_turso(self) -> bool:
+        return bool(self.turso_database_url and self.turso_auth_token)
+
+    @property
+    def database_url(self) -> str:
+        if self.uses_turso:
+            # sqlalchemy-libsql's dialect: sqlite+libsql://<host>?authToken=...&secure=true
+            assert self.turso_database_url is not None
+            host = self.turso_database_url.removeprefix("libsql://")
+            return f"sqlite+libsql://{host}?authToken={self.turso_auth_token}&secure=true"
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{self.db_path}"
 

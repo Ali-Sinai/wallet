@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from datetime import datetime, timedelta
 
@@ -279,3 +280,18 @@ def purge_expired_attempts(session: Session) -> int:
     if expired:
         session.commit()
     return len(expired)
+
+
+@router.get("/internal/purge-sms-attempts")
+def purge_sms_attempts_endpoint(
+    session: Session = Depends(get_session), authorization: str | None = Header(default=None)
+) -> dict[str, int]:
+    """Vercel Cron target — replaces the in-process background sweep used on a
+    long-running server (see main.py), since serverless functions can't run a
+    persistent background loop. Vercel automatically sends
+    `Authorization: Bearer $CRON_SECRET` on cron-triggered requests when a
+    CRON_SECRET env var is set on the project; we just check it matches."""
+    expected = os.environ.get("CRON_SECRET")
+    if expected and authorization != f"Bearer {expected}":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid cron secret")
+    return {"purged": purge_expired_attempts(session)}

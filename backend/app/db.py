@@ -7,13 +7,18 @@ from sqlmodel import Session, SQLModel, create_engine
 from app.config import get_settings
 
 settings = get_settings()
-engine = create_engine(settings.sqlite_url, connect_args={"check_same_thread": False})
+connect_args: dict[str, object] = {} if settings.uses_turso else {"check_same_thread": False}
+engine = create_engine(settings.database_url, connect_args=connect_args)
 
 
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(dbapi_connection: object, connection_record: object) -> None:
+    # WAL mode is a local-file concept; Turso/libSQL manages its own
+    # durability remotely and doesn't support PRAGMA journal_mode over the
+    # wire the same way, so skip it there. Foreign keys still apply either way.
     cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]
-    cursor.execute("PRAGMA journal_mode=WAL")
+    if not settings.uses_turso:
+        cursor.execute("PRAGMA journal_mode=WAL")
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 

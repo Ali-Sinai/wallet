@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -46,6 +47,13 @@ PURGE_INTERVAL_SECONDS = 60 * 60 * 6
 
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
 
+# Vercel sets this in both build and runtime environments. On a serverless
+# function there's no persistent process to run a background loop in, and
+# migrations shouldn't run per cold-start against a live shared DB — see
+# README "Deploying to Vercel" for the manual-migration + Cron-purge setup
+# that replaces both of these there.
+_IS_SERVERLESS = bool(os.environ.get("VERCEL"))
+
 
 def _run_migrations() -> None:
     alembic_cfg = AlembicConfig(str(_BACKEND_DIR / "alembic.ini"))
@@ -67,17 +75,20 @@ async def _purge_loop() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    _run_migrations()
+    if not _IS_SERVERLESS:
+        _run_migrations()
     with Session(engine) as session:
         ensure_admin_user(session)
         ensure_base_data(session)
-        purge_expired_attempts(session)
+        if not _IS_SERVERLESS:
+            purge_expired_attempts(session)
     init_firebase()
-    task = asyncio.create_task(_purge_loop())
+    task = None if _IS_SERVERLESS else asyncio.create_task(_purge_loop())
     try:
         yield
     finally:
-        task.cancel()
+        if task is not None:
+            task.cancel()
 
 
 app = FastAPI(title="Wallet", lifespan=lifespan)

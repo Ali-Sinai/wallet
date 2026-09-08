@@ -1,0 +1,18 @@
+# Vercel's Python builder installs from this file (repo root) for the
+# api/index.py serverless function. Kept separate from backend/pyproject.toml
+# (the source of truth for local/Docker installs via uv) because Vercel's
+# builder expects requirements.txt, not a pyproject/uv project — the two
+# lists must be kept in sync by hand when backend dependencies change.
+# uvicorn is intentionally omitted: Vercel provides its own ASGI entrypoint,
+# api/index.py never calls uvicorn.run().
+fastapi>=0.115
+sqlmodel>=0.0.22
+pydantic>=2.9
+pydantic-settings>=2.6
+alembic>=1.14
+jdatetime>=5.0
+bcrypt>=4.2
+itsdangerous>=2.2
+firebase-admin>=6.5
+python-multipart>=0.0.17
+sqlalchemy-libsql>=0.2
