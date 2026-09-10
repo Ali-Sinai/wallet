@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from alembic.config import Config as AlembicConfig
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Header, HTTPException, Request, status
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -126,6 +126,20 @@ for router in (
 @app.get("/api/health")
 def health() -> dict[str, bool]:
     return {"ok": True}
+
+
+@app.post("/api/internal/migrate")
+def run_migrations_endpoint(authorization: str | None = Header(default=None)) -> dict[str, str]:
+    """One-off migration trigger for serverless deploys (Vercel/Turso), where
+    there's no persistent process to run `alembic upgrade head` at startup —
+    see _IS_SERVERLESS above. Call this once after each deploy that adds a
+    migration. Protected by the same CRON_SECRET as the purge endpoint; only
+    meaningful when that env var is actually set."""
+    expected = os.environ.get("CRON_SECRET")
+    if expected and authorization != f"Bearer {expected}":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid secret")
+    _run_migrations()
+    return {"status": "ok"}
 
 
 _settings = get_settings()

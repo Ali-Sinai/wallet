@@ -76,6 +76,47 @@ Optional, and off by default on both sides — server and browser each check ind
 
 Once both are filled in, Settings → Notifications → "فعال‌سازی اعلان در این مرورگر" requests permission and registers the device. Until then, that button is disabled with an explanatory message, and the backend's `/api/push/*` returns a clear "not configured" response rather than erroring — the summary/threshold jobs just skip sending silently.
 
+## Deploying to Vercel (single project, Turso instead of local SQLite)
+
+Vercel's serverless functions have no persistent disk, so this mode swaps the
+local SQLite file for [Turso](https://turso.tech) (libSQL) — a
+network-accessed, SQLite-compatible database — and runs the frontend build
+and the FastAPI backend as one Vercel project (`api/index.py` serves `/api/*`,
+everything else is the static frontend build — see `vercel.json`).
+
+1. **Create a Turso database** (`turso db create wallet`, or via the Turso
+   dashboard). Note its `libsql://...` URL and generate an auth token
+   (`turso db tokens create wallet`).
+2. **Vercel project env vars** (Project Settings → Environment Variables, all
+   environments):
+   - `TURSO_DATABASE_URL` — the `libsql://...` URL
+   - `TURSO_AUTH_TOKEN` — the token
+   - `WALLET_SESSION_SECRET`, `WALLET_ADMIN_USERNAME`, `WALLET_ADMIN_PASSWORD`
+   - `CRON_SECRET` — protects the two endpoints below; Vercel automatically
+     sends `Authorization: Bearer $CRON_SECRET` on Cron-triggered requests
+     when this is set, which is what secures the purge job in step 4.
+3. **Run migrations once after each deploy that adds one** — there's no
+   persistent process to run `alembic upgrade head` at startup on a
+   serverless function, so this is a manual step instead:
+   ```bash
+   curl -X POST https://your-project.vercel.app/api/internal/migrate \
+     -H "Authorization: Bearer $CRON_SECRET"
+   ```
+4. **SMS ingest-attempt purge**: `vercel.json` already schedules a daily Cron
+   job against `/api/internal/purge-sms-attempts` — this replaces the
+   in-process background sweep used on a long-running server. Nothing to set
+   up beyond the `CRON_SECRET` env var above.
+5. Push notifications (Firebase) don't work on this deploy target — the
+   config expects a service-account **file**, and Vercel's function
+   filesystem can't hold one. Everything else works the same; push just
+   stays gracefully disabled (see "Push notifications" above).
+
+Local development is unaffected: `sqlalchemy-libsql` (needed for the Turso
+dialect) is an optional extra (`uv sync --extra turso`) specifically because
+its native dependency has no prebuilt wheel for Windows — local/Docker dev
+never needs it, since without `TURSO_DATABASE_URL`/`TURSO_AUTH_TOKEN` set the
+app just uses the local SQLite file as normal.
+
 ## Deploying frontend and backend separately (e.g. Vercel + Fly.io)
 
 Same-origin (Docker / `uv run`, above) is simplest — skip this section unless you specifically want the frontend on a different host than the backend.
