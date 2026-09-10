@@ -77,11 +77,19 @@ async def _purge_loop() -> None:
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if not _IS_SERVERLESS:
         _run_migrations()
-    with Session(engine) as session:
-        ensure_admin_user(session)
-        ensure_base_data(session)
-        if not _IS_SERVERLESS:
-            purge_expired_attempts(session)
+    try:
+        with Session(engine) as session:
+            ensure_admin_user(session)
+            ensure_base_data(session)
+            if not _IS_SERVERLESS:
+                purge_expired_attempts(session)
+    except Exception:
+        # A failure here (unreachable DB, schema not migrated yet) must not
+        # take the whole app down: on serverless the app *is* the only way to
+        # run /api/internal/migrate, so crashing startup makes the problem
+        # unfixable without a redeploy. Log it and let requests through —
+        # they'll surface the real DB error individually.
+        logger.exception("Startup bootstrap failed; continuing with app running")
     init_firebase()
     task = None if _IS_SERVERLESS else asyncio.create_task(_purge_loop())
     try:
