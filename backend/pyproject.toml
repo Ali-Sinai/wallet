@@ -15,8 +15,20 @@ dependencies = [
     "itsdangerous>=2.2",
     "firebase-admin>=6.5",
     "python-multipart>=0.0.17",
-    "sqlalchemy-libsql>=0.2",
 ]
+
+# Only needed for the Turso (libSQL) database backend used on serverless
+# hosts with no persistent disk (see db.py / config.py). It's a Rust
+# extension (libsql-experimental) with no prebuilt wheel for Windows, and no
+# working MSVC linker on this machine to build it from source — so it's kept
+# out of the default dependency set to avoid blocking local Windows dev,
+# which never needs it (local/Docker dev uses the plain SQLite file unless
+# TURSO_DATABASE_URL/TURSO_AUTH_TOKEN are set). Linux (Docker, Vercel's
+# build) has prebuilt wheels and can install this extra normally:
+# `uv sync --extra turso`. requirements.txt (used by Vercel) lists it
+# unconditionally since that's a Linux-only build target.
+[project.optional-dependencies]
+turso = ["sqlalchemy-libsql>=0.2"]
 
 [dependency-groups]
 dev = [
