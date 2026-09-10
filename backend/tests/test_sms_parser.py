@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from app.models import Direction
+from app.models import AmountUnit, Direction, SmsPattern
 from app.sms_parser import (
     dedup_hash,
     last4_from_account_text,
@@ -234,3 +234,67 @@ def test_repasting_same_message_produces_same_dedup_hash(patterns, keyword_rules
         direction=result2.fields.direction,
     )
     assert h1 == h2
+
+
+# Blu sends a multi-line SMS with no card number and a time-then-date footer
+# that uses "." as the date separator.
+BLU_BODY_REGEX = (
+    r"^[^\r\n]+\r?\n[^\r\n]*\r?\n"
+    r"[^\r\n]*?،\s*(?P<amount>[\d۰-۹٠-٩,،٬]+)\s*ریال\s+(?:از|به)\s+حساب\s+شما\s+"
+    r"(?P<type>پرید|نشست)[^\r\n]*\r?\n"
+    r"(?:(?:پذیرنده|فروشگاه)\s*:\s*(?P<merchant>[^\r\n]+?)\s*\r?\n)?"
+    r"موجودی\s*:[^\r\n]*"
+    r"(?:\r?\n\s*(?P<datetime>\d{1,2}:\d{2}\s*\r?\n\s*\d{4}[./]\d{1,2}[./]\d{1,2}))?"
+)
+
+BLU_BODY = (
+    "بلو\n"
+    "برداشت پول\n"
+    "علی عزیز، 30,300,000 ریال از حساب شما پرید.\n"
+    "موجودی: 57,881,254 ریال\n"
+    "۹:۵۰\n"
+    "۱۴۰۵.۰۶.۰۱"
+)
+
+
+def _blu_patterns(body_regex: str = BLU_BODY_REGEX) -> list[SmsPattern]:
+    return [
+        SmsPattern(
+            id=9,
+            name="بلوبانک",
+            sender_match="blu",
+            body_regex=body_regex,
+            amount_unit=AmountUnit.RIAL,
+            enabled=True,
+        )
+    ]
+
+
+def test_blu_multiline_withdrawal_is_parsed(keyword_rules):
+    result = parse_sms(
+        sender="blu",
+        body=BLU_BODY,
+        received_at=RECEIVED_AT,
+        patterns=_blu_patterns(),
+        keyword_rules=keyword_rules,
+        whitelisted_last4={"4417"},
+    )
+    assert result.status == "parsed"
+    assert result.fields.amount_cents == 30_300_000 * 10
+    # "پرید" isn't a keyword rule; direction comes from "برداشت" elsewhere in the body.
+    assert result.fields.direction == Direction.WITHDRAWAL
+    assert result.fields.account_last4 is None
+    assert result.fields.occurred_at == datetime(2026, 8, 23, 6, 20, tzinfo=UTC)
+
+
+def test_uncompilable_pattern_is_skipped_not_raised(keyword_rules):
+    # (?<name>...) is JS/PCRE syntax; Python's re rejects it.
+    result = parse_sms(
+        sender="blu",
+        body=BLU_BODY,
+        received_at=RECEIVED_AT,
+        patterns=_blu_patterns(r"(?<amount>\d+) ریال"),
+        keyword_rules=keyword_rules,
+        whitelisted_last4=set(),
+    )
+    assert result.status == "unparsed"

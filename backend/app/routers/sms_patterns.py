@@ -32,6 +32,22 @@ class PatternTestBody(BaseModel):
     sample_text: str
 
 
+def _validated_regex(body_regex: str) -> str:
+    """Reject an un-compilable regex with a 400 instead of letting `re` raise a 500.
+
+    Python's `re` wants `(?P<name>...)` for named groups; JS/PCRE's `(?<name>...)`
+    is the most common way to get here, so call that out by name.
+    """
+    try:
+        re.compile(body_regex, re.UNICODE)
+    except re.error as exc:
+        hint = ""
+        if re.search(r"\(\?<[A-Za-z_]", body_regex):
+            hint = " Python named groups are written (?P<name>...), not (?<name>...)."
+        raise HTTPException(status_code=400, detail=f"invalid regex: {exc}.{hint}") from exc
+    return body_regex
+
+
 @router.get("/sms-patterns", response_model=list[SmsPatternOut])
 def list_patterns(session: Session = Depends(get_session)) -> list[SmsPattern]:
     return list(session.exec(select(SmsPattern)).all())
@@ -39,6 +55,7 @@ def list_patterns(session: Session = Depends(get_session)) -> list[SmsPattern]:
 
 @router.post("/sms-patterns", response_model=SmsPatternOut)
 def create_pattern(body: SmsPatternIn, session: Session = Depends(get_session)) -> SmsPattern:
+    _validated_regex(body.body_regex)
     pattern = SmsPattern(**body.model_dump())
     session.add(pattern)
     session.commit()
@@ -53,6 +70,7 @@ def update_pattern(
     pattern = session.get(SmsPattern, pattern_id)
     if pattern is None:
         raise HTTPException(status_code=404, detail="pattern not found")
+    _validated_regex(body.body_regex)
     for key, value in body.model_dump().items():
         setattr(pattern, key, value)
     session.add(pattern)
@@ -79,7 +97,7 @@ def test_pattern(
     if pattern is None:
         raise HTTPException(status_code=404, detail="pattern not found")
 
-    match = re.search(pattern.body_regex, body.sample_text, re.UNICODE)
+    match = re.search(_validated_regex(pattern.body_regex), body.sample_text, re.UNICODE)
     if not match:
         return {"matched": False}
 

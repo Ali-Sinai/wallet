@@ -856,8 +856,12 @@ function SmsPatternsSection() {
                 <MiniButton
                   tone="accent"
                   onClick={async () => {
-                    const res = await testPattern.mutateAsync({ id: p.id, sampleText });
-                    setTestResult(JSON.stringify(res, null, 2));
+                    try {
+                      const res = await testPattern.mutateAsync({ id: p.id, sampleText });
+                      setTestResult(JSON.stringify(res, null, 2));
+                    } catch (err) {
+                      setTestResult(err instanceof Error ? err.message : String(err));
+                    }
                   }}
                 >
                   {s.runTest}

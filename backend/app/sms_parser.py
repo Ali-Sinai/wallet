@@ -78,28 +78,33 @@ def _parse_datetime_group(raw: str | None, fallback: datetime) -> datetime:
     if not raw:
         return fallback
     text = normalize_digits(raw.strip())
-    # Common bank formats: "1405/06/05-14:05" "1405/06/05 14:05:11" "05/06/1405 14:05"
-    m = re.search(
-        r"(?P<a>\d{4})[/-](?P<b>\d{1,2})[/-](?P<c>\d{1,2})[ T-]*"
-        r"(?P<h>\d{1,2}):(?P<mi>\d{1,2})(?::(?P<s>\d{1,2}))?",
-        text,
-    )
-    if m:
-        year = int(m["a"])
-        month, day = int(m["b"]), int(m["c"])
-        hour, minute = int(m["h"]), int(m["mi"])
-        second = int(m["s"]) if m["s"] else 0
+    tehran_fallback = fallback + TEHRAN_OFFSET
+    # Date and time are searched independently: banks put them in either order and
+    # separate the date with "/", "-" or "." — e.g. "1405/06/05-14:05",
+    # "1405/06/05 14:05:11", or Blu's two-line time-then-date "9:50" / "1405.06.01".
+    date_m = re.search(r"(?P<y>\d{4})[/.-](?P<mo>\d{1,2})[/.-](?P<d>\d{1,2})", text)
+    time_m = re.search(r"(?P<h>\d{1,2}):(?P<mi>\d{1,2})(?::(?P<s>\d{1,2}))?", text)
+
+    if time_m:
+        hour, minute = int(time_m["h"]), int(time_m["mi"])
+        second = int(time_m["s"]) if time_m["s"] else 0
+    else:
+        hour, minute, second = (
+            tehran_fallback.hour,
+            tehran_fallback.minute,
+            tehran_fallback.second,
+        )
+
+    if date_m:
         try:
-            j = jdatetime.datetime(year, month, day, hour, minute, second)
+            j = jdatetime.datetime(
+                int(date_m["y"]), int(date_m["mo"]), int(date_m["d"]), hour, minute, second
+            )
             return j.togregorian().replace(tzinfo=fallback.tzinfo) - TEHRAN_OFFSET
         except ValueError:
             return fallback
-    m2 = re.search(r"(?P<h>\d{1,2}):(?P<mi>\d{1,2})", text)
-    if m2:
-        tehran_fallback = fallback + TEHRAN_OFFSET
-        replaced = tehran_fallback.replace(
-            hour=int(m2["h"]), minute=int(m2["mi"]), second=0, microsecond=0
-        )
+    if time_m:
+        replaced = tehran_fallback.replace(hour=hour, minute=minute, second=second, microsecond=0)
         return replaced - TEHRAN_OFFSET
     return fallback
 
@@ -145,7 +150,11 @@ def parse_sms(
             continue
         if pattern.sender_match and pattern.sender_match not in sender:
             continue
-        match = re.search(pattern.body_regex, body, re.UNICODE)
+        try:
+            match = re.search(pattern.body_regex, body, re.UNICODE)
+        except re.error:
+            # A pattern saved before validation existed shouldn't break ingest.
+            continue
         if not match:
             continue
 
