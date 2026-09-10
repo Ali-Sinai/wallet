@@ -102,6 +102,14 @@ everything else is the static frontend build — see `vercel.json`).
    curl -X POST https://your-project.vercel.app/api/internal/migrate \
      -H "Authorization: Bearer $CRON_SECRET"
    ```
+   **Routing note**: `vercel.json` deliberately has *no* rewrite for `/api/*`.
+   A rewrite's `destination` replaces the path the function actually receives,
+   so `{"source": "/api/(.*)", "destination": "/api/index"}` makes every API
+   request arrive at the app as `/api/index` and 404. Unmatched paths already
+   fall through to `api/index.py` with the original path intact, so `/api/*`
+   is left alone; the single rewrite that *is* there is the SPA fallback,
+   sending non-API, non-file paths (`/activity`, `/people`, …) to
+   `/index.html` so client-side deep links work.
 4. **SMS ingest-attempt purge**: `vercel.json` already schedules a daily Cron
    job against `/api/internal/purge-sms-attempts` — this replaces the
    in-process background sweep used on a long-running server. Nothing to set
