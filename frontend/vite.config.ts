@@ -48,7 +48,11 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "../backend/static",
+    // On Vercel the frontend is its own project with Root Directory =
+    // frontend/, and Vercel can only publish output inside that root — so
+    // build to the Vite default there. Everywhere else (local, Docker) keep
+    // writing straight into backend/static, which FastAPI serves directly.
+    outDir: process.env.VERCEL ? "dist" : "../backend/static",
     emptyOutDir: true,
   },
 });

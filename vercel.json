@@ -1,14 +1,9 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "backend/static",
   "functions": {
     "api/index.py": {
       "maxDuration": 30
     }
   },
-  "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ],
   "crons": [
     { "path": "/api/internal/purge-sms-attempts", "schedule": "0 3 * * *" }
   ]

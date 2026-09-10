@@ -1,9 +1,0 @@
-{
-  "name": "wallet",
-  "private": true,
-  "version": "0.1.0",
-  "description": "Root manifest so Vercel detects a Node build step and builds the frontend. Without a package.json here, the repo looks Python-only (api/ + requirements.txt) and the frontend is never built. The real frontend project lives in frontend/.",
-  "scripts": {
-    "build": "npm --prefix frontend install && npm --prefix frontend run build"
-  }
-}
