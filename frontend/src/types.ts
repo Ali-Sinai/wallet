@@ -117,3 +117,96 @@ export interface CategorySlice {
   amount_cents: number;
   percentage: number;
 }
+
+// --- Write payloads (mirror the backend's *In models) ---
+
+export interface AccountIn {
+  name_fa: string;
+  name_en: string;
+  bank_name: string;
+  last4: string;
+  is_active: boolean;
+}
+
+export interface CategoryIn {
+  name_fa: string;
+  name_en: string;
+  icon: string;
+  color: string;
+  parent_id: number | null;
+  sort_order: number;
+}
+
+export interface BudgetIn {
+  category_id: number;
+  limit_cents: number;
+  month_jalali: string | null;
+}
+
+export interface PersonIn {
+  name: string;
+  contact_note: string | null;
+}
+
+export interface TransactionIn {
+  amount_cents: number;
+  direction: Direction;
+  account_id: number;
+  occurred_at: string;
+  category_id: number | null;
+  note: string | null;
+  merchant_text: string | null;
+}
+
+// --- Reports ---
+
+export interface Point {
+  label: string;
+  amount_cents: number;
+}
+
+export interface IncomeExpense {
+  income_cents: number;
+  expense_cents: number;
+}
+
+export interface MonthCategoryDelta {
+  category_id: number | null;
+  label: string;
+  current_cents: number;
+  previous_cents: number;
+  delta_percentage: number | null;
+}
+
+export interface AccountBreakdown {
+  account_id: number;
+  label: string;
+  total_in_cents: number;
+  total_out_cents: number;
+}
+
+// --- Splits ---
+
+export interface SplitShareOut {
+  person_id: number | null;
+  amount_cents: number;
+}
+
+export interface SplitOut {
+  id: number;
+  transaction_id: number;
+  mode: SplitMode;
+  shares: SplitShareOut[];
+}
+
+// --- Settings ---
+
+export interface GeneralSettings {
+  digit_style: string;
+  default_lang: string;
+}
+
+export interface NotificationSettings {
+  uncategorized_threshold: number;
+  summary_frequency: string;
+}

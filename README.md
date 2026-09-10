@@ -39,9 +39,16 @@ cd backend
 uv sync
 cp .env.example .env   # edit as above
 uv run alembic upgrade head    # also runs automatically at app startup
-uv run python scripts/seed.py  # optional: realistic fake Persian data
+uv run python scripts/seed.py  # LOCAL DEV ONLY: fake Persian data (see note)
 uv run uvicorn app.main:app --reload
 ```
+
+> **Do not seed an instance you actually use.** `scripts/seed.py` inserts fake
+> accounts, people and transactions for demoing the UI. A real instance needs
+> none of it: the app creates the categories, bank SMS patterns and keyword
+> rules it needs on startup, and you add your own accounts, people and budgets
+> from **Settings**. To clear a seeded local database, stop the server and
+> delete `backend/data/wallet.db*`.
 
 Frontend, for local development with hot reload (proxies `/api` to `:8000` — see `frontend/vite.config.ts`):
 

@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Rooyin Free — the typeface the design bundle ships in project/uploads. */
+@font-face {
+  font-family: Rooyin;
+  src: url("/fonts/RooyinFree-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: Rooyin;
+  src: url("/fonts/RooyinFree-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html,
 body,
 #root {
@@ -10,19 +28,44 @@ body,
 
 body {
   margin: 0;
-  background: radial-gradient(120% 70% at 8% -10%, #0f2a20 0%, #08090a 60%);
+  background: #08090a;
   color: #e8eaec;
-  font-family: "Vazirmatn", system-ui, sans-serif;
+  font-family: Rooyin, Vazirmatn, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: #0f9b6e;
+  text-decoration: none;
+}
+a:hover {
+  color: #12b17e;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.12);
   border-radius: 6px;
+}
+
+/* The phone layout hides scrollbars the way the app design does. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 @keyframes fadeIn {
@@ -36,6 +79,32 @@ body {
   }
 }
 
+@keyframes fadeInFlat {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(18px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 .fade-in {
-  animation: fadeIn 0.18s ease;
+  animation: fadeIn 0.2s ease;
+}
+.fade-in-flat {
+  animation: fadeInFlat 0.15s ease;
+}
+.sheet-up {
+  animation: sheetUp 0.22s ease;
 }

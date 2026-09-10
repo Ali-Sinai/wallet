@@ -1,9 +1,22 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import Modal, { ModalHeader } from "./Modal";
-import { useAccounts, useCategories } from "../lib/queries";
-import { api } from "../lib/api";
-import { formatToman } from "../lib/money";
-import type { Transaction } from "../types";
+import { useState } from "react";
+import { Chip, Field, Input, Overlay, OverlayHeader, Select } from "./ui";
+import {
+  useAccounts,
+  useCategories,
+  useCategorizeMutation,
+  useDeleteSplitMutation,
+  useDeleteTransactionMutation,
+  useTransactionSplit,
+  useUpdateTransactionMutation,
+} from "../lib/queries";
+import { useI18n } from "../lib/i18n";
+import { accountLabel, categoryName, signedCents, txTitle } from "../lib/domain";
+import type { Direction, Transaction } from "../types";
+
+/** `datetime-local` wants exactly "YYYY-MM-DDTHH:mm". */
+function toLocalInput(iso: string): string {
+  return iso.slice(0, 16);
+}
 
 export default function TransactionDetailModal({
   tx,
@@ -14,84 +27,254 @@ export default function TransactionDetailModal({
   onClose: () => void;
   onSplit: () => void;
 }) {
+  const { t, fa, digits, money, localize } = useI18n();
   const { data: categories } = useCategories();
   const { data: accounts } = useAccounts();
-  const qc = useQueryClient();
+  const { data: split } = useTransactionSplit(tx.is_shared ? tx.id : null);
 
-  const categorize = useMutation({
-    mutationFn: (categoryId: number) => api.patch(`/transactions/${tx.id}/categorize`, { category_id: categoryId }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-    },
+  const categorize = useCategorizeMutation();
+  const update = useUpdateTransactionMutation();
+  const remove = useDeleteTransactionMutation();
+  const deleteSplit = useDeleteSplitMutation();
+
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    amount: String(Math.round(tx.amount_cents / 100)),
+    direction: tx.direction as Direction,
+    account_id: String(tx.account_id),
+    occurred_at: toLocalInput(tx.occurred_at),
+    merchant_text: tx.merchant_text ?? "",
+    note: tx.note ?? "",
+    category_id: tx.category_id === null ? "" : String(tx.category_id),
   });
 
-  const remove = useMutation({
-    mutationFn: () => api.delete(`/transactions/${tx.id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      onClose();
-    },
-  });
-
+  const signed = signedCents(tx);
   const account = accounts?.find((a) => a.id === tx.account_id);
-  const color = tx.direction === "withdrawal" ? "text-expense" : "text-income";
+
+  function save() {
+    if (!form.amount || !form.account_id) return;
+    update.mutate(
+      {
+        id: tx.id,
+        amount_cents: Math.round(Number(form.amount) * 100),
+        direction: form.direction,
+        account_id: Number(form.account_id),
+        occurred_at: new Date(form.occurred_at).toISOString(),
+        category_id: form.category_id ? Number(form.category_id) : null,
+        note: form.note || null,
+        merchant_text: form.merchant_text || null,
+      },
+      { onSuccess: () => setEditing(false) },
+    );
+  }
 
   return (
-    <Modal onClose={onClose}>
-      <ModalHeader title="جزئیات تراکنش" onClose={onClose} />
-      <div className="text-lg font-bold mt-3">{tx.merchant_text ?? tx.note ?? "تراکنش"}</div>
-      <div className={`text-[32px] font-bold mt-1 ${color}`}>
-        {tx.direction === "withdrawal" ? "−" : "+"}
-        {formatToman(tx.amount_cents)}
-      </div>
-      <div className="flex gap-2.5 mt-4">
-        <div className="flex-1 px-3.5 py-3 rounded-2xl bg-white/5">
-          <div className="text-[11px] text-muted">حساب</div>
-          <div className="text-[13px] font-bold mt-1">
-            {account ? `${account.bank_name} ····${account.last4}` : "-"}
+    <Overlay onClose={onClose} maxWidth={460} sheetMaxHeight="86%">
+      <OverlayHeader title={t.detail} onClose={onClose} closeLabel={t.close} />
+
+      {editing ? (
+        <div className="flex flex-col" style={{ gap: 12, marginTop: 14 }}>
+          <div className="flex" style={{ gap: 10 }}>
+            <Field label={t.amount}>
+              <Input
+                type="number"
+                dir="ltr"
+                value={form.amount}
+                onChange={(v) => setForm({ ...form, amount: v })}
+              />
+            </Field>
+            <Field label={t.category}>
+              <Select
+                value={form.direction}
+                onChange={(v) => setForm({ ...form, direction: v as Direction })}
+                options={[
+                  { value: "withdrawal", label: t.withdraw },
+                  { value: "deposit", label: t.deposit },
+                ]}
+              />
+            </Field>
+          </div>
+
+          <Field label={t.account}>
+            <Select
+              value={form.account_id}
+              onChange={(v) => setForm({ ...form, account_id: v })}
+              options={(accounts ?? []).map((a) => ({
+                value: String(a.id),
+                label: accountLabel(a, fa, digits),
+              }))}
+            />
+          </Field>
+
+          <Field label={t.date}>
+            <Input
+              type="datetime-local"
+              dir="ltr"
+              value={form.occurred_at}
+              onChange={(v) => setForm({ ...form, occurred_at: v })}
+            />
+          </Field>
+
+          <Field label={t.merchant}>
+            <Input value={form.merchant_text} onChange={(v) => setForm({ ...form, merchant_text: v })} />
+          </Field>
+
+          <Field label={t.note}>
+            <Input value={form.note} onChange={(v) => setForm({ ...form, note: v })} />
+          </Field>
+
+          <div className="flex" style={{ gap: 8, marginTop: 6 }}>
+            <button
+              type="button"
+              onClick={save}
+              style={{
+                flex: 1,
+                textAlign: "center",
+                padding: "12px 0",
+                borderRadius: 14,
+                background: "#0f9b6e",
+                color: "#04120c",
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {t.saveChanges}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              style={{
+                padding: "12px 16px",
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,.14)",
+                color: "rgba(232,234,236,.7)",
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {t.cancel}
+            </button>
           </div>
         </div>
-        <div className="flex-1 px-3.5 py-3 rounded-2xl bg-white/5">
-          <div className="text-[11px] text-muted">تاریخ</div>
-          <div className="text-[13px] font-bold mt-1">{tx.occurred_at_jalali}</div>
-        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: 18, fontWeight: 700, marginTop: 12 }}>{txTitle(tx, t.transaction)}</div>
+          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 4, color: signed < 0 ? "#ff7a6b" : "#3fd39a" }}>
+            {money(signed, true)}
+          </div>
+
+          <div className="flex" style={{ gap: 10, marginTop: 16 }}>
+            <InfoBox label={t.account} value={accountLabel(account, fa, digits)} />
+            <InfoBox label={t.date} value={localize(tx.occurred_at_jalali)} />
+          </div>
+
+          {tx.note && (
+            <div className="flex" style={{ gap: 10, marginTop: 10 }}>
+              <InfoBox label={t.note} value={tx.note} />
+            </div>
+          )}
+
+          <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.category}</div>
+          <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
+            {categories?.map((c) => (
+              <Chip
+                key={c.id}
+                active={tx.category_id === c.id}
+                onClick={() => categorize.mutate({ id: tx.id, categoryId: c.id })}
+              >
+                {categoryName(c, fa, "")}
+              </Chip>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap" style={{ gap: 8, marginTop: 22 }}>
+            {tx.direction === "withdrawal" && !tx.is_shared && (
+              <button
+                type="button"
+                onClick={onSplit}
+                style={{
+                  flex: 1,
+                  textAlign: "center",
+                  padding: "12px 0",
+                  borderRadius: 14,
+                  background: "#0f9b6e",
+                  color: "#04120c",
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                {t.splitBtn}
+              </button>
+            )}
+
+            {tx.is_shared && split && (
+              <button
+                type="button"
+                onClick={() => deleteSplit.mutate(split.id)}
+                style={{
+                  flex: 1,
+                  textAlign: "center",
+                  padding: "12px 0",
+                  borderRadius: 14,
+                  border: "1px solid rgba(255,255,255,.14)",
+                  color: "rgba(232,234,236,.8)",
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                {t.unsplit}
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              style={{
+                padding: "12px 16px",
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,.14)",
+                color: "rgba(232,234,236,.8)",
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {t.edit}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => remove.mutate(tx.id, { onSuccess: onClose })}
+              style={{
+                padding: "12px 16px",
+                borderRadius: 14,
+                border: "1px solid rgba(255,122,107,.35)",
+                color: "#ff7a6b",
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {t.delete}
+            </button>
+          </div>
+
+          {deleteSplit.isError && (
+            <div className="text-center" style={{ color: "#ff7a6b", fontSize: 12, marginTop: 10 }}>
+              {(deleteSplit.error as Error).message}
+            </div>
+          )}
+        </>
+      )}
+    </Overlay>
+  );
+}
+
+function InfoBox({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ flex: 1, padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,.04)" }}>
+      <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)" }}>{label}</div>
+      <div className="truncate" style={{ fontSize: 13, fontWeight: 700, marginTop: 3 }}>
+        {value}
       </div>
-      <div className="text-xs text-muted mt-4">دسته‌بندی</div>
-      <div className="flex flex-wrap gap-1.5 mt-2">
-        {categories?.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => categorize.mutate(c.id)}
-            className="px-3 py-2 rounded-pill text-xs font-bold border"
-            style={
-              tx.category_id === c.id
-                ? { background: c.color, borderColor: c.color, color: "#04120c" }
-                : { borderColor: "rgba(255,255,255,.14)", color: "rgba(232,234,236,.8)" }
-            }
-          >
-            {c.icon} {c.name_fa}
-          </button>
-        ))}
-      </div>
-      <div className="flex gap-2 mt-6">
-        {tx.direction === "withdrawal" && !tx.is_shared && (
-          <button
-            onClick={onSplit}
-            className="flex-1 text-center py-3 rounded-2xl bg-accent text-[#04120c] font-bold text-[13px]"
-          >
-            تقسیم این هزینه
-          </button>
-        )}
-        <button
-          onClick={() => remove.mutate()}
-          className="px-4 py-3 rounded-2xl border text-[13px] font-bold text-expense"
-          style={{ borderColor: "rgba(255,122,107,.35)" }}
-        >
-          حذف
-        </button>
-      </div>
-    </Modal>
+    </div>
   );
 }

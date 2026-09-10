@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
+import AppShell from "../components/shell/AppShell";
+import { Card, EmptyNote } from "../components/ui";
 import { useCategories, useCategorizeMutation, useUncategorized } from "../lib/queries";
-import { formatToman } from "../lib/money";
+import { useI18n } from "../lib/i18n";
+import { categoryName, signedCents, txTitle } from "../lib/domain";
 
+/** Keyboard-driven triage of uncategorized transactions. */
 export default function Review() {
+  const { t, fa, digits, money, localize } = useI18n();
   const { data: transactions, isLoading } = useUncategorized();
   const { data: categories } = useCategories();
   const categorize = useCategorizeMutation();
@@ -19,72 +23,102 @@ export default function Review() {
       if (e.key === "ArrowRight") setIndex((i) => Math.min(transactions.length - 1, i + 1));
       if (e.key === "ArrowLeft") setIndex((i) => Math.max(0, i - 1));
       const n = Number(e.key);
-      if (!Number.isNaN(n) && n >= 1 && categories && n <= categories.length) {
-        pick(categories[n - 1].id);
+      if (!Number.isNaN(n) && n >= 1 && categories && n <= categories.length && current) {
+        categorize.mutate(
+          { id: current.id, categoryId: categories[n - 1].id },
+          { onSuccess: () => setIndex((i) => Math.max(0, Math.min(i, transactions.length - 2))) },
+        );
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactions, categories, current]);
+  }, [transactions, categories, current, categorize]);
 
   function pick(categoryId: number) {
     if (!current) return;
     categorize.mutate(
       { id: current.id, categoryId },
-      {
-        onSuccess: () => setIndex((i) => Math.min(i, (transactions?.length ?? 1) - 2)),
-      },
+      { onSuccess: () => setIndex((i) => Math.max(0, Math.min(i, (transactions?.length ?? 1) - 2))) },
     );
   }
 
-  if (isLoading) return <div className="text-center text-muted py-10 text-sm">در حال بارگذاری…</div>;
+  if (isLoading) {
+    return (
+      <AppShell sidebar={false}>
+        <EmptyNote>{t.loading}</EmptyNote>
+      </AppShell>
+    );
+  }
 
   if (!transactions || transactions.length === 0) {
     return (
-      <div className="max-w-lg mx-auto pb-24">
-        <Header title="دسته‌بندی نشده" />
-        <div className="text-center text-muted py-16 text-sm">همه چیز دسته‌بندی شده است 🎉</div>
-      </div>
+      <AppShell sidebar={false}>
+        <Card style={{ padding: 22 }}>
+          <EmptyNote pad={56}>{t.allCategorized}</EmptyNote>
+        </Card>
+      </AppShell>
     );
   }
 
+  const signed = current ? signedCents(current) : 0;
+
   return (
-    <div className="max-w-lg mx-auto pb-24">
-      <Header title="دسته‌بندی نشده" />
-      <div className="px-4 mt-6 flex flex-col items-center gap-4">
-        <div className="text-xs text-muted">
-          {index + 1} / {transactions.length}
+    <AppShell sidebar={false}>
+      <div className="mx-auto flex w-full flex-col items-center fade-in" style={{ maxWidth: 520, gap: 16, padding: "10px 22px 0" }}>
+        <div style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>
+          {digits(index + 1)} / {digits(transactions.length)}
         </div>
+
         {current && (
-          <div className="w-full p-6 rounded-card bg-card border border-border text-center">
-            <div className="text-base font-bold">{current.merchant_text ?? current.note ?? "تراکنش"}</div>
-            <div className={`text-3xl font-bold mt-3 ${current.direction === "withdrawal" ? "text-expense" : "text-income"}`}>
-              {formatToman(current.amount_cents)}
+          <Card className="w-full text-center" style={{ padding: 24 }}>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>{txTitle(current, t.transaction)}</div>
+            <div
+              style={{
+                fontSize: 30,
+                fontWeight: 700,
+                marginTop: 10,
+                color: signed < 0 ? "#ff7a6b" : "#3fd39a",
+              }}
+            >
+              {money(signed, true)}
             </div>
-            <div className="text-xs text-muted mt-2">{current.occurred_at_jalali}</div>
-          </div>
+            <div style={{ fontSize: 12, color: "rgba(232,234,236,.45)", marginTop: 8 }}>
+              {localize(current.occurred_at_jalali)}
+            </div>
+          </Card>
         )}
-        <div className="grid grid-cols-2 gap-2.5 w-full">
+
+        <div className="grid w-full" style={{ gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
           {categories?.map((c, i) => (
             <button
               key={c.id}
+              type="button"
               onClick={() => pick(c.id)}
-              className="px-4 py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition"
-              style={{ background: c.color, color: "#04120c" }}
+              className="flex items-center justify-center transition active:scale-95"
+              style={{
+                gap: 8,
+                padding: "16px 12px",
+                borderRadius: 16,
+                background: c.color,
+                color: "#04120c",
+                fontSize: 13.5,
+                fontWeight: 700,
+              }}
             >
-              <span className="text-xs opacity-70">{i + 1}</span>
-              {c.icon} {c.name_fa}
+              <span style={{ fontSize: 11, opacity: 0.7 }}>{digits(i + 1)}</span>
+              {categoryName(c, fa, "")}
             </button>
           ))}
         </div>
-        <div className="text-[11px] text-mutedSoft text-center mt-2">
-          کلید عدد برای انتخاب دسته · فلش‌ها برای جابه‌جایی
+
+        <div className="text-center" style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+          {t.reviewHint}
         </div>
-        <button onClick={() => navigate("/")} className="text-xs text-accent mt-2">
-          بازگشت به داشبورد
+
+        <button type="button" onClick={() => navigate("/")} style={{ fontSize: 12, color: "#0f9b6e" }}>
+          {t.backToDash}
         </button>
       </div>
-    </div>
+    </AppShell>
   );
 }

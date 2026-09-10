@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import Modal, { ModalHeader } from "./Modal";
+import { Avatar, Chip, Overlay, OverlayHeader } from "./ui";
 import { usePeople } from "../lib/queries";
 import { api } from "../lib/api";
-import { formatToman, toPersianDigits } from "../lib/money";
+import { useI18n } from "../lib/i18n";
+import { initials, txTitle } from "../lib/domain";
 import type { SplitMode, Transaction } from "../types";
 
 type Method = "equal" | "amounts" | "percentages" | "items";
@@ -12,10 +13,11 @@ interface LineItemRow {
   id: string;
   label: string;
   amount: string; // Toman, as typed
-  participant: string; // "me" or person id as string
+  participant: string; // "me" or a person id
 }
 
 export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const { t, fa, digits, group, money, short } = useI18n();
   const { data: people } = usePeople();
   const qc = useQueryClient();
 
@@ -30,51 +32,36 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
 
   const total = tx.amount_cents;
 
-  function toggle(personId: number) {
-    setSelected((prev) => (prev.includes(personId) ? prev.filter((p) => p !== personId) : [...prev, personId]));
-  }
+  const participants = useMemo(
+    () => (includeMe ? ["me", ...selected.map(String)] : selected.map(String)),
+    [includeMe, selected],
+  );
 
-  const participants = useMemo(() => {
-    const keys = includeMe ? ["me", ...selected.map(String)] : selected.map(String);
-    return keys;
-  }, [includeMe, selected]);
+  const perPerson = Math.floor(total / Math.max(1, ways));
 
   const equalShares = useMemo(() => {
     const n = Math.max(1, ways);
     const base = Math.floor(total / n);
     const remainder = total % n;
-    const keys = participants.slice(0, n);
-    return keys.map((k, i) => ({ key: k, amount: base + (i < remainder ? 1 : 0) }));
+    return participants.slice(0, n).map((key, i) => ({ key, amount: base + (i < remainder ? 1 : 0) }));
   }, [total, ways, participants]);
 
-  const customRemaining = useMemo(() => {
-    const sum = participants.reduce((acc, k) => acc + (Number(customAmounts[k] || "0") * 100 || 0), 0);
-    return total - sum;
-  }, [customAmounts, participants, total]);
+  const customRemaining = useMemo(
+    () => total - participants.reduce((acc, k) => acc + (Number(customAmounts[k] || "0") * 100 || 0), 0),
+    [customAmounts, participants, total],
+  );
+  const percentRemaining = useMemo(
+    () => 100 - participants.reduce((acc, k) => acc + Number(percentages[k] || "0"), 0),
+    [percentages, participants],
+  );
+  const itemsRemaining = useMemo(
+    () => total - items.reduce((acc, i) => acc + (Number(i.amount || "0") * 100 || 0), 0),
+    [items, total],
+  );
 
-  const percentRemaining = useMemo(() => {
-    const sum = participants.reduce((acc, k) => acc + Number(percentages[k] || "0"), 0);
-    return 100 - sum;
-  }, [percentages, participants]);
-
-  const itemsRemaining = useMemo(() => {
-    const sum = items.reduce((acc, i) => acc + (Number(i.amount || "0") * 100 || 0), 0);
-    return total - sum;
-  }, [items, total]);
-
-  function addItem() {
-    setItems((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), label: "", amount: "", participant: participants[0] ?? "me" },
-    ]);
-  }
-
-  function updateItem(id: string, patch: Partial<LineItemRow>) {
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
-  }
-
-  function removeItem(id: string) {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  function nameOf(key: string): string {
+    if (key === "me") return t.you;
+    return people?.find((p) => String(p.id) === key)?.name ?? key;
   }
 
   const splitMutation = useMutation({
@@ -121,211 +108,334 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
     (method !== "percentages" || percentRemaining === 0) &&
     (method !== "items" || (items.length > 0 && itemsRemaining === 0));
 
+  const shareColor = mode === "i_paid" ? "#3fd39a" : "#ff7a6b";
+  const shareSub = mode === "i_paid" ? t.owes : t.youOwe;
+
   return (
-    <Modal onClose={onClose} maxWidth={520}>
-      <ModalHeader title="تقسیم هزینه" onClose={onClose} />
-      <div className="text-base font-bold mt-2">{tx.merchant_text ?? tx.note ?? "تراکنش"}</div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-[30px] font-bold">{formatToman(total)}</span>
-        <span className="text-[13px] text-muted">ت</span>
+    <Overlay onClose={onClose} maxWidth={520} sheetMaxHeight="88%">
+      <OverlayHeader title={t.splitTitle} onClose={onClose} closeLabel={t.close} />
+
+      <div style={{ fontSize: 16, fontWeight: 700, marginTop: 10 }}>{txTitle(tx, t.transaction)}</div>
+      <div className="flex items-baseline" style={{ gap: 6 }}>
+        <span style={{ fontSize: 30, fontWeight: 700 }}>{group(total)}</span>
+        <span style={{ fontSize: 13, color: "rgba(232,234,236,.45)" }}>{t.tomanShort}</span>
       </div>
 
-      <div className="flex flex-col gap-1.5 mt-4">
+      <div className="flex flex-col" style={{ gap: 7, marginTop: 16 }}>
         {(
           [
-            ["i_paid", "من پرداخت کردم، آن‌ها بدهکارند"],
-            ["they_paid", "آن‌ها پرداخت کردند، من بدهکارم"],
+            ["i_paid", t.iPaid],
+            ["they_paid", t.weSplit],
           ] as [SplitMode, string][]
         ).map(([m, label]) => (
           <button
             key={m}
+            type="button"
             onClick={() => setMode(m)}
-            className={`px-4 py-3 rounded-2xl text-[13px] font-bold text-right border ${
-              mode === m ? "bg-accent text-[#04120c] border-accent" : "border-border text-text/70"
-            }`}
+            style={{
+              padding: "12px 15px",
+              borderRadius: 13,
+              fontSize: 13,
+              fontWeight: 700,
+              textAlign: "start",
+              background: mode === m ? "#0f9b6e" : "transparent",
+              color: mode === m ? "#04120c" : "rgba(232,234,236,.7)",
+              border: `1px solid ${mode === m ? "#0f9b6e" : "rgba(255,255,255,.14)"}`,
+            }}
           >
             {label}
           </button>
         ))}
       </div>
 
-      <div className="flex gap-1.5 mt-4">
+      <div className="flex flex-wrap" style={{ gap: 6, marginTop: 12 }}>
         {(
           [
-            ["equal", "برابر"],
-            ["amounts", "مبلغ دلخواه"],
-            ["percentages", "درصد"],
-            ["items", "آیتمی"],
+            ["equal", t.equal],
+            ["amounts", t.customAmounts],
+            ["percentages", t.percentages],
+            ["items", t.itemized],
           ] as [Method, string][]
         ).map(([m, label]) => (
-          <button
-            key={m}
-            onClick={() => setMethod(m)}
-            className={`flex-1 py-2 rounded-xl text-xs font-bold border ${
-              method === m ? "bg-accent text-[#04120c] border-accent" : "border-border text-text/70"
-            }`}
-          >
+          <Chip key={m} active={method === m} onClick={() => setMethod(m)} className="px-[12px] py-[7px]">
             {label}
-          </button>
+          </Chip>
         ))}
       </div>
 
-      <label className="flex items-center gap-2 mt-3 text-xs text-text/70">
+      <label
+        className="flex cursor-pointer items-center"
+        style={{ gap: 8, marginTop: 12, fontSize: 12, color: "rgba(232,234,236,.6)" }}
+      >
         <input type="checkbox" checked={includeMe} onChange={(e) => setIncludeMe(e.target.checked)} />
-        شامل خودم شود
+        {t.includeMe}
       </label>
 
       {method === "equal" && (
         <>
-          <div className="text-xs text-muted mt-4">تقسیم سریع</div>
-          <div className="flex gap-2 mt-2">
+          <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.quick}</div>
+          <div className="flex" style={{ gap: 8, marginTop: 9 }}>
             {[2, 3, 4].map((n) => (
               <button
                 key={n}
+                type="button"
                 onClick={() => setWays(n)}
-                className={`flex-1 py-3 text-center rounded-2xl border ${
-                  ways === n ? "bg-[#12241d] border-accent" : "border-border"
-                }`}
+                style={{
+                  flex: 1,
+                  padding: "13px 0",
+                  textAlign: "center",
+                  borderRadius: 15,
+                  background: ways === n ? "#12241d" : "#141820",
+                  border: `1px solid ${ways === n ? "#0f9b6e" : "rgba(255,255,255,.07)"}`,
+                }}
               >
-                <div className="text-[17px] font-bold">÷{toPersianDigits(String(n))}</div>
-                <div className="text-[10.5px] text-muted mt-0.5">{formatToman(Math.floor(total / n))}</div>
+                <div style={{ fontSize: 17, fontWeight: 700 }}>÷{digits(n)}</div>
+                <div style={{ fontSize: 10.5, color: "rgba(232,234,236,.45)", marginTop: 3 }}>
+                  {short(Math.floor(total / n))}
+                </div>
               </button>
             ))}
           </div>
         </>
       )}
 
-      <div className="text-xs text-muted mt-4">با چه کسی؟</div>
-      <div className="flex flex-wrap gap-1.5 mt-2">
+      <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.who}</div>
+      <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
         {people?.map((p) => (
-          <button
+          <Chip
             key={p.id}
-            onClick={() => toggle(p.id)}
-            className={`px-3 py-2 rounded-pill text-xs font-bold border ${
-              selected.includes(p.id) ? "bg-accent text-[#04120c] border-accent" : "border-border text-text/70"
-            }`}
+            active={selected.includes(p.id)}
+            onClick={() =>
+              setSelected((prev) => (prev.includes(p.id) ? prev.filter((x) => x !== p.id) : [...prev, p.id]))
+            }
           >
             {p.name}
-          </button>
+          </Chip>
         ))}
       </div>
 
       {method === "equal" && (
-        <div className="flex flex-col gap-2 mt-4">
-          {equalShares.map(({ key, amount }) => (
-            <ShareRow key={key} name={key === "me" ? "شما" : people?.find((p) => String(p.id) === key)?.name ?? key}>
-              {formatToman(amount)}
-            </ShareRow>
-          ))}
-        </div>
+        <>
+          <div className="flex items-baseline justify-between" style={{ marginTop: 18 }}>
+            <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)" }}>{t.perPerson}</div>
+            <div style={{ fontSize: 12, color: "rgba(232,234,236,.5)" }}>
+              ÷ {digits(ways)} · {group(perPerson)}
+            </div>
+          </div>
+          <div className="flex flex-col" style={{ gap: 8, marginTop: 10 }}>
+            {equalShares.map(({ key, amount }) => (
+              <ShareRow
+                key={key}
+                name={nameOf(key)}
+                sub={key === "me" ? t.settled : shareSub}
+                amount={money(amount)}
+                color={key === "me" ? "rgba(232,234,236,.6)" : shareColor}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {method === "amounts" && (
-        <div className="flex flex-col gap-2 mt-4">
+        <EditorList
+          label={t.perPerson}
+          remainingLabel={t.remaining}
+          remainingText={money(customRemaining)}
+          ok={customRemaining === 0}
+        >
           {participants.map((key) => (
             <AmountRow
               key={key}
-              label={key === "me" ? "شما" : people?.find((p) => String(p.id) === key)?.name ?? key}
+              label={nameOf(key)}
               value={customAmounts[key] ?? ""}
               onChange={(v) => setCustomAmounts((prev) => ({ ...prev, [key]: v }))}
-              unit="ت"
+              unit={t.tomanShort}
             />
           ))}
-          <div className="flex justify-between text-xs mt-1">
-            <span className="text-muted">باقی‌مانده</span>
-            <span className={customRemaining === 0 ? "text-income" : "text-expense"}>
-              {formatToman(customRemaining)}
-            </span>
-          </div>
-        </div>
+        </EditorList>
       )}
 
       {method === "percentages" && (
-        <div className="flex flex-col gap-2 mt-4">
+        <EditorList
+          label={t.perPerson}
+          remainingLabel={t.remaining}
+          remainingText={`${digits(percentRemaining)}${fa ? "٪" : "%"}`}
+          ok={percentRemaining === 0}
+        >
           {participants.map((key) => (
             <AmountRow
               key={key}
-              label={key === "me" ? "شما" : people?.find((p) => String(p.id) === key)?.name ?? key}
+              label={nameOf(key)}
               value={percentages[key] ?? ""}
               onChange={(v) => setPercentages((prev) => ({ ...prev, [key]: v }))}
-              unit="٪"
+              unit={fa ? "٪" : "%"}
             />
           ))}
-          <div className="flex justify-between text-xs mt-1">
-            <span className="text-muted">باقی‌مانده</span>
-            <span className={percentRemaining === 0 ? "text-income" : "text-expense"}>
-              {toPersianDigits(String(percentRemaining))}٪
-            </span>
-          </div>
-        </div>
+        </EditorList>
       )}
 
       {method === "items" && (
-        <div className="flex flex-col gap-2 mt-4">
+        <EditorList
+          label={t.itemized}
+          remainingLabel={t.remaining}
+          remainingText={money(itemsRemaining)}
+          ok={itemsRemaining === 0}
+        >
           {items.map((item) => (
-            <div key={item.id} className="flex items-center gap-1.5 p-2.5 rounded-2xl bg-white/5">
+            <div
+              key={item.id}
+              className="flex items-center"
+              style={{ gap: 6, padding: "10px 12px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+            >
               <input
                 value={item.label}
-                onChange={(e) => updateItem(item.id, { label: e.target.value })}
-                placeholder="نام آیتم"
-                className="flex-1 min-w-0 bg-transparent text-[12.5px] outline-none"
+                onChange={(e) =>
+                  setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, label: e.target.value } : i)))
+                }
+                placeholder={t.itemName}
+                className="min-w-0 flex-1 bg-transparent outline-none"
+                style={{ fontSize: 12.5 }}
               />
               <input
                 type="number"
                 inputMode="decimal"
                 value={item.amount}
-                onChange={(e) => updateItem(item.id, { amount: e.target.value })}
-                placeholder="۰"
-                className="w-16 bg-transparent text-left text-[12.5px] font-bold outline-none"
+                onChange={(e) =>
+                  setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, amount: e.target.value } : i)))
+                }
+                placeholder="0"
+                className="bg-transparent font-bold outline-none"
+                style={{ width: 70, fontSize: 12.5, textAlign: "end" }}
               />
               <select
                 value={item.participant}
-                onChange={(e) => updateItem(item.id, { participant: e.target.value })}
-                className="bg-black/30 rounded-lg text-[11px] px-1 py-1 outline-none"
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev.map((i) => (i.id === item.id ? { ...i, participant: e.target.value } : i)),
+                  )
+                }
+                className="rounded-lg outline-none"
+                style={{ background: "rgba(0,0,0,.3)", fontSize: 11, padding: "4px 6px" }}
               >
                 {participants.map((key) => (
                   <option key={key} value={key}>
-                    {key === "me" ? "شما" : people?.find((p) => String(p.id) === key)?.name ?? key}
+                    {nameOf(key)}
                   </option>
                 ))}
               </select>
-              <button onClick={() => removeItem(item.id)} className="text-expense text-xs px-1">
+              <button
+                type="button"
+                onClick={() => setItems((prev) => prev.filter((i) => i.id !== item.id))}
+                style={{ color: "#ff7a6b", fontSize: 13, padding: "0 4px" }}
+              >
                 ×
               </button>
             </div>
           ))}
-          <button onClick={addItem} className="text-xs text-accent self-start">
-            + افزودن آیتم
+          <button
+            type="button"
+            onClick={() =>
+              setItems((prev) => [
+                ...prev,
+                {
+                  id: crypto.randomUUID(),
+                  label: "",
+                  amount: "",
+                  participant: participants[0] ?? "me",
+                },
+              ])
+            }
+            className="self-start"
+            style={{ fontSize: 12, color: "#0f9b6e" }}
+          >
+            {t.addItem}
           </button>
-          <div className="flex justify-between text-xs mt-1">
-            <span className="text-muted">باقی‌مانده</span>
-            <span className={itemsRemaining === 0 ? "text-income" : "text-expense"}>
-              {formatToman(itemsRemaining)}
-            </span>
-          </div>
-        </div>
+        </EditorList>
       )}
 
       <button
+        type="button"
         onClick={() => splitMutation.mutate()}
         disabled={!canSave || splitMutation.isPending}
-        className="w-full text-center py-3 rounded-2xl bg-accent text-[#04120c] font-bold text-sm mt-5 disabled:opacity-50"
+        style={{
+          width: "100%",
+          textAlign: "center",
+          padding: "13px 0",
+          borderRadius: 14,
+          background: "#0f9b6e",
+          color: "#04120c",
+          fontSize: 13.5,
+          fontWeight: 700,
+          marginTop: 20,
+          opacity: !canSave || splitMutation.isPending ? 0.5 : 1,
+        }}
       >
-        ثبت رکوردها
+        {t.save}
       </button>
+
       {splitMutation.isError && (
-        <div className="text-expense text-xs text-center mt-2">{(splitMutation.error as Error).message}</div>
+        <div className="text-center" style={{ color: "#ff7a6b", fontSize: 12, marginTop: 8 }}>
+          {(splitMutation.error as Error).message}
+        </div>
       )}
-    </Modal>
+    </Overlay>
   );
 }
 
-function ShareRow({ name, children }: { name: string; children: React.ReactNode }) {
+function ShareRow({
+  name,
+  sub,
+  amount,
+  color,
+}: {
+  name: string;
+  sub: string;
+  amount: string;
+  color: string;
+}) {
   return (
-    <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-2xl bg-white/5">
-      <div className="flex-1 text-[13px] font-bold">{name}</div>
-      <div className="text-[13.5px] font-bold">{children}</div>
+    <div
+      className="flex items-center"
+      style={{ gap: 11, padding: "12px 14px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+    >
+      <Avatar size={32} color={color} background="#1a201e">
+        {initials(name)}
+      </Avatar>
+      <div className="min-w-0 flex-1">
+        <div className="truncate" style={{ fontSize: 13, fontWeight: 700 }}>
+          {name}
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>{sub}</div>
+      </div>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color }}>{amount}</div>
     </div>
+  );
+}
+
+function EditorList({
+  label,
+  remainingLabel,
+  remainingText,
+  ok,
+  children,
+}: {
+  label: string;
+  remainingLabel: string;
+  remainingText: string;
+  ok: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{label}</div>
+      <div className="flex flex-col" style={{ gap: 8, marginTop: 9 }}>
+        {children}
+        <div className="flex justify-between" style={{ fontSize: 12, marginTop: 2 }}>
+          <span style={{ color: "rgba(232,234,236,.4)" }}>{remainingLabel}</span>
+          <span style={{ color: ok ? "#3fd39a" : "#ff7a6b", fontWeight: 700 }}>{remainingText}</span>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -341,17 +451,23 @@ function AmountRow({
   unit: string;
 }) {
   return (
-    <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-white/5">
-      <div className="flex-1 text-[13px] font-bold">{label}</div>
+    <div
+      className="flex items-center"
+      style={{ gap: 11, padding: "10px 14px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+    >
+      <div className="min-w-0 flex-1 truncate" style={{ fontSize: 13, fontWeight: 700 }}>
+        {label}
+      </div>
       <input
         type="number"
         inputMode="decimal"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-24 bg-transparent text-left text-[13.5px] font-bold outline-none"
-        placeholder="۰"
+        placeholder="0"
+        className="bg-transparent font-bold outline-none"
+        style={{ width: 96, fontSize: 13.5, textAlign: "end" }}
       />
-      <span className="text-xs text-muted">{unit}</span>
+      <span style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>{unit}</span>
     </div>
   );
 }

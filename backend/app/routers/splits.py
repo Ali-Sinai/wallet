@@ -140,6 +140,22 @@ def create_split(tx_id: int, body: SplitRequest, session: Session = Depends(get_
     return split
 
 
+@router.get("/transactions/{tx_id}/split", response_model=SplitOut | None)
+def get_split_for_transaction(tx_id: int, session: Session = Depends(get_session)) -> dict | None:
+    """The split covering a transaction, if it has one. Lets a client reach the
+    existing split endpoints (notably DELETE) from a transaction it already has."""
+    split = session.exec(select(Split).where(Split.transaction_id == tx_id)).first()
+    if split is None:
+        return None
+    shares = session.exec(select(SplitShare).where(SplitShare.split_id == split.id)).all()
+    return {
+        "id": split.id,
+        "transaction_id": split.transaction_id,
+        "mode": split.mode,
+        "shares": [{"person_id": s.person_id, "amount_cents": s.amount_cents} for s in shares],
+    }
+
+
 @router.get("/splits/{split_id}", response_model=SplitOut)
 def get_split(split_id: int, session: Session = Depends(get_session)) -> dict:
     split = session.get(Split, split_id)
