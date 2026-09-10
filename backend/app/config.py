@@ -55,10 +55,17 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         if self.uses_turso:
-            # sqlalchemy-libsql's dialect: sqlite+libsql://<host>?authToken=...&secure=true
+            # sqlalchemy-libsql's create_connect_args() only recognizes a fixed
+            # pysqlite-style arg list (uri/timeout/isolation_level/detect_types/
+            # check_same_thread/cached_statements/secure) from the URL query
+            # string — anything else, including authToken, is put on the
+            # connect URL but never actually read by libsql_experimental's
+            # connect(), which instead expects it as a Python kwarg
+            # (auth_token=...). So: `secure` stays in the URL (recognized),
+            # the token goes through connect_args in db.py instead (not here).
             assert self.turso_database_url is not None
             host = self.turso_database_url.removeprefix("libsql://")
-            return f"sqlite+libsql://{host}?authToken={self.turso_auth_token}&secure=true"
+            return f"sqlite+libsql://{host}?secure=true"
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{self.db_path}"
 

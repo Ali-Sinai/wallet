@@ -7,7 +7,14 @@ from sqlmodel import Session, SQLModel, create_engine
 from app.config import get_settings
 
 settings = get_settings()
-connect_args: dict[str, object] = {} if settings.uses_turso else {"check_same_thread": False}
+# libsql_experimental's connect() takes the auth token as a Python kwarg
+# (auth_token=...), not from the connection URL — see config.py's
+# database_url docstring for why it can't just live in the URL query string.
+connect_args: dict[str, object] = (
+    {"auth_token": settings.turso_auth_token}
+    if settings.uses_turso
+    else {"check_same_thread": False}
+)
 engine = create_engine(settings.database_url, connect_args=connect_args)
 
 
