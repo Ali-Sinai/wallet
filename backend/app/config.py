@@ -42,7 +42,24 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
+        """Parsed allowed origins, normalized.
+
+        CORS matching is an exact string compare against the browser's Origin
+        header, which is always `scheme://host[:port]` with no trailing slash.
+        A value pasted from a browser address bar usually has neither the
+        scheme nor the missing slash right, so normalize rather than silently
+        rejecting every request: strip quotes/whitespace, drop any trailing
+        slash or path, and assume https when no scheme is given.
+        """
+        origins: list[str] = []
+        for raw in self.cors_allow_origins.split(","):
+            origin = raw.strip().strip('"').strip("'").rstrip("/")
+            if not origin:
+                continue
+            if "://" not in origin:
+                origin = f"https://{origin}"
+            origins.append(origin)
+        return origins
 
     @property
     def cross_site_cookies(self) -> bool:

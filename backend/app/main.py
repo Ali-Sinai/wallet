@@ -104,6 +104,7 @@ app = FastAPI(title="Wallet", lifespan=lifespan)
 if get_settings().cors_origins_list:
     from fastapi.middleware.cors import CORSMiddleware
 
+    logger.info("CORS enabled for origins: %s", get_settings().cors_origins_list)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=get_settings().cors_origins_list,
