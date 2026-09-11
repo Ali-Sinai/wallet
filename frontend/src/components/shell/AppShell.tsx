@@ -59,9 +59,13 @@ export default function AppShell({
   }
 
   return (
-    <div className="flex flex-col" style={{ minHeight: "100dvh", background: "#08090a" }}>
+    // Fixed to the viewport so only the middle scrolls and the tab bar stays put.
+    <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", background: "#08090a" }}>
       <MobileStatusBar />
-      <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar" style={{ paddingBottom: 8 }}>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto no-scrollbar"
+        style={{ paddingBottom: 8, overscrollBehavior: "contain" }}
+      >
         {children}
       </div>
       <MobileTabBar />
