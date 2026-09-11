@@ -153,8 +153,27 @@ export default function Settings() {
           <KeywordRulesSection />
         </div>
         <LogoutRow />
+        <IconCredit />
       </div>
     </AppShell>
+  );
+}
+
+/** Flaticon's free license requires attribution for the tab bar icons. */
+function IconCredit() {
+  const s = useS();
+  const link = { color: "rgba(232,234,236,.55)", textDecoration: "underline" };
+  return (
+    <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+      {s.iconCredit}{" "}
+      <a href="https://www.flaticon.com/authors/rajan-pyakurel" target="_blank" rel="noreferrer" style={link}>
+        Rajan Pyakurel
+      </a>{" "}
+      –{" "}
+      <a href="https://www.flaticon.com/" target="_blank" rel="noreferrer" style={link}>
+        Flaticon
+      </a>
+    </div>
   );
 }
 

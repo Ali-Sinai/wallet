@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/*.png"],
+      includeAssets: ["icons/**/*.png"],
       manifest: {
         name: "کیف پول",
         short_name: "کیف پول",

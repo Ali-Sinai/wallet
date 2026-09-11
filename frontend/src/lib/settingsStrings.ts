@@ -99,6 +99,7 @@ export const S = {
     none: "چیزی ثبت نشده",
     disablePush: "غیرفعال‌سازی اعلان روی این مرورگر",
     pushDisabled: "اعلان‌ها روی این دستگاه غیرفعال شد",
+    iconCredit: "آیکن‌ها از",
   },
   en: {
     title: "Settings",
@@ -196,6 +197,7 @@ export const S = {
     none: "Nothing yet",
     disablePush: "Turn off notifications on this browser",
     pushDisabled: "Notifications turned off on this device",
+    iconCredit: "Icons by",
   },
 } as const;
 

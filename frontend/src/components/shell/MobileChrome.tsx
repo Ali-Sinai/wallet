@@ -52,12 +52,37 @@ export function MobileStatusBar() {
   );
 }
 
+// Icons: "UI" pack by Rajan Pyakurel on Flaticon (credited in Settings).
 const TABS = [
-  { to: "/", key: "navHome", end: true, radius: 6 },
-  { to: "/activity", key: "navActivity", end: false, radius: 6 },
-  { to: "/people", key: "navPeople", end: false, radius: 99 },
-  { to: "/reports", key: "navReports", end: false, radius: 3 },
+  { to: "/", key: "navHome", end: true, icon: "home" },
+  { to: "/activity", key: "navActivity", end: false, icon: "activity" },
+  { to: "/people", key: "navPeople", end: false, icon: "people" },
+  { to: "/reports", key: "navReports", end: false, icon: "reports" },
 ] as const;
+
+/** The PNGs are black-on-transparent, so they're used as masks and tinted with `color`. */
+function TabIcon({ name, size, color }: { name: string; size: number; color: string }) {
+  const url = `url(/icons/tabs/${name}.png)`;
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: "block",
+        width: size,
+        height: size,
+        background: color,
+        WebkitMaskImage: url,
+        maskImage: url,
+        WebkitMaskSize: "contain",
+        maskSize: "contain",
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+        WebkitMaskPosition: "center",
+        maskPosition: "center",
+      }}
+    />
+  );
+}
 
 export function MobileTabBar() {
   const { t } = useI18n();
@@ -71,15 +96,7 @@ export function MobileTabBar() {
             className="flex flex-col items-center"
             style={{ gap: 4, color: isActive ? "#0f9b6e" : "rgba(232,234,236,.4)" }}
           >
-            <div
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: item.radius,
-                background: isActive ? "#0f9b6e" : "transparent",
-                border: `1.5px solid ${isActive ? "#0f9b6e" : "rgba(232,234,236,.4)"}`,
-              }}
-            />
+            <TabIcon name={item.icon} size={22} color="currentColor" />
             {t[item.key]}
           </div>
         )}
@@ -101,19 +118,17 @@ export function MobileTabBar() {
       <button
         type="button"
         onClick={openAdd}
+        aria-label={t.add}
         className="flex flex-none items-center justify-center"
         style={{
           width: 46,
           height: 46,
           borderRadius: 99,
           background: "#0f9b6e",
-          color: "#04120c",
-          fontSize: 24,
-          fontWeight: 700,
           marginTop: -16,
         }}
       >
-        +
+        <TabIcon name="add" size={22} color="#04120c" />
       </button>
       {tab(TABS[2])}
       {tab(TABS[3])}
