@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input as InputPrimitive } from "@base-ui/react/input";
+import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Avatar, BusyLabel, Chip, Overlay, OverlayHeader } from "./ui";
+import { Avatar, BusyLabel, Chip, Overlay, OverlayHeader } from "@/components/primitives";
 import { usePeople } from "../lib/queries";
 import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
@@ -128,7 +132,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
             ["they_paid", t.weSplit],
           ] as [SplitMode, string][]
         ).map(([m, label]) => (
-          <button
+          <Button variant="plain" size="plain"
             key={m}
             type="button"
             onClick={() => setMode(m)}
@@ -144,7 +148,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
             }}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -167,7 +171,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
         className="flex cursor-pointer items-center"
         style={{ gap: 8, marginTop: 12, fontSize: 12, color: "rgba(232,234,236,.6)" }}
       >
-        <input type="checkbox" checked={includeMe} onChange={(e) => setIncludeMe(e.target.checked)} />
+        <Checkbox checked={includeMe} onCheckedChange={(checked) => setIncludeMe(checked)} />
         {t.includeMe}
       </label>
 
@@ -176,7 +180,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
           <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.quick}</div>
           <div className="flex" style={{ gap: 8, marginTop: 9 }}>
             {[2, 3, 4].map((n) => (
-              <button
+              <Button variant="plain" size="plain"
                 key={n}
                 type="button"
                 onClick={() => setWays(n)}
@@ -193,7 +197,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
                 <div style={{ fontSize: 10.5, color: "rgba(232,234,236,.45)", marginTop: 3 }}>
                   {short(Math.floor(total / n))}
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
         </>
@@ -287,16 +291,16 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
               className="flex items-center"
               style={{ gap: 6, padding: "10px 12px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
             >
-              <input
+              <InputPrimitive
                 value={item.label}
                 onChange={(e) =>
                   setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, label: e.target.value } : i)))
                 }
                 placeholder={t.itemName}
-                className="min-w-0 flex-1 bg-transparent outline-none"
+                className="min-w-0 flex-1 bg-transparent outline-hidden"
                 style={{ fontSize: 12.5 }}
               />
-              <input
+              <InputPrimitive
                 type="number"
                 inputMode="decimal"
                 value={item.amount}
@@ -304,36 +308,34 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
                   setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, amount: e.target.value } : i)))
                 }
                 placeholder="0"
-                className="bg-transparent font-bold outline-none"
+                className="bg-transparent font-bold outline-hidden"
                 style={{ width: 70, fontSize: 12.5, textAlign: "end" }}
               />
-              <select
+              <NativeSelect
+                size="sm"
                 value={item.participant}
                 onChange={(e) =>
                   setItems((prev) =>
                     prev.map((i) => (i.id === item.id ? { ...i, participant: e.target.value } : i)),
                   )
                 }
-                className="rounded-lg outline-none"
-                style={{ background: "rgba(0,0,0,.3)", fontSize: 11, padding: "4px 6px" }}
+                className="h-auto rounded-lg border-0 py-[4px] ps-[6px] pe-6 text-[11px] shadow-none dark:bg-black/30 dark:hover:bg-black/30"
               >
                 {participants.map((key) => (
-                  <option key={key} value={key}>
+                  <NativeSelectOption key={key} value={key} className="bg-cardAlt text-foreground">
                     {nameOf(key)}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
-              <button
-                type="button"
+              </NativeSelect>
+              <Button variant="plain" size="plain"
                 onClick={() => setItems((prev) => prev.filter((i) => i.id !== item.id))}
                 style={{ color: "#ff7a6b", fontSize: 13, padding: "0 4px" }}
               >
                 ×
-              </button>
+              </Button>
             </div>
           ))}
-          <button
-            type="button"
+          <Button variant="plain" size="plain"
             onClick={() =>
               setItems((prev) => [
                 ...prev,
@@ -349,12 +351,11 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
             style={{ fontSize: 12, color: "#0f9b6e" }}
           >
             {t.addItem}
-          </button>
+          </Button>
         </EditorList>
       )}
 
-      <button
-        type="button"
+      <Button variant="plain" size="plain"
         onClick={() => splitMutation.mutate()}
         disabled={!canSave || splitMutation.isPending}
         aria-busy={splitMutation.isPending}
@@ -372,7 +373,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
         }}
       >
         <BusyLabel busy={splitMutation.isPending}>{t.save}</BusyLabel>
-      </button>
+      </Button>
 
       {splitMutation.isError && (
         <div className="text-center" style={{ color: "#ff7a6b", fontSize: 12, marginTop: 8 }}>
@@ -459,13 +460,13 @@ function AmountRow({
       <div className="min-w-0 flex-1 truncate" style={{ fontSize: 13, fontWeight: 700 }}>
         {label}
       </div>
-      <input
+      <InputPrimitive
         type="number"
         inputMode="decimal"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="0"
-        className="bg-transparent font-bold outline-none"
+        className="bg-transparent font-bold outline-hidden"
         style={{ width: 96, fontSize: 13.5, textAlign: "end" }}
       />
       <span style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>{unit}</span>

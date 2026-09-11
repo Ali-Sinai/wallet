@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "../../lib/i18n";
 import { useModals } from "../../lib/modals";
@@ -14,7 +15,7 @@ import {
   useUpdateSmsPatternMutation,
 } from "../../lib/queries";
 import { categoryName, initials } from "../../lib/domain";
-import { Avatar, BusyLabel, Chip, Toggle } from "../ui";
+import { Avatar, BusyLabel, Chip, Toggle } from "@/components/primitives";
 import type { Transaction } from "../../types";
 
 export default function Sidebar() {
@@ -67,15 +68,14 @@ function SmsInboxCard() {
     >
       <div className="flex items-center justify-between">
         <div style={{ fontSize: 12, fontWeight: 700, color: "#3fd39a" }}>{t.detected}</div>
-        <button type="button" onClick={() => navigate("/inbox")} style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>
+        <Button variant="plain" size="plain" onClick={() => navigate("/inbox")} style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>
           {items.length ? `${digits(items.length)} ${t.pending} ` : ""}
           {t.all}
-        </button>
+        </Button>
       </div>
 
       {unparsedCount > 0 && (
-        <button
-          type="button"
+        <Button variant="plain" size="plain"
           onClick={() => navigate("/inbox")}
           className="flex w-full items-center justify-between"
           style={{
@@ -91,7 +91,7 @@ function SmsInboxCard() {
         >
           <span>{t.unparsed}</span>
           <span>{digits(unparsedCount)}</span>
-        </button>
+        </Button>
       )}
 
       {items.length === 0 ? (
@@ -142,7 +142,7 @@ function SmsInboxCard() {
                       key={c.id}
                       active={picked[m.id] === c.id}
                       onClick={() => setPicked((p) => ({ ...p, [m.id]: c.id }))}
-                      className="px-[11px] py-[6px] !text-[11.5px]"
+                      className="px-[11px] py-[6px] text-[11.5px]!"
                     >
                       {categoryName(c, fa, "")}
                     </Chip>
@@ -150,8 +150,7 @@ function SmsInboxCard() {
                 </div>
 
                 <div className="flex" style={{ gap: 6, marginTop: 12 }}>
-                  <button
-                    type="button"
+                  <Button variant="plain" size="plain"
                     onClick={() => confirm.mutate({ id: m.id, categoryId: picked[m.id] ?? null })}
                     disabled={busy}
                     aria-busy={confirming}
@@ -167,9 +166,8 @@ function SmsInboxCard() {
                     }}
                   >
                     <BusyLabel busy={confirming}>{t.confirm}</BusyLabel>
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button variant="plain" size="plain"
                     onClick={() => confirmThenSplit(m.id)}
                     disabled={busy}
                     aria-busy={splitting}
@@ -182,9 +180,8 @@ function SmsInboxCard() {
                     }}
                   >
                     <BusyLabel busy={splitting}>{t.split}</BusyLabel>
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button variant="plain" size="plain"
                     onClick={() => ignore.mutate(m.id)}
                     disabled={busy}
                     aria-busy={ignoring}
@@ -197,7 +194,7 @@ function SmsInboxCard() {
                     }}
                   >
                     <BusyLabel busy={ignoring}>{t.ignore}</BusyLabel>
-                  </button>
+                  </Button>
                 </div>
               </div>
             );
@@ -217,9 +214,9 @@ function PeopleCard() {
     <div style={{ padding: 18, borderRadius: 20, background: "#0e1110", border: "1px solid rgba(255,255,255,.07)" }}>
       <div className="flex items-baseline justify-between">
         <div style={{ fontSize: 13, fontWeight: 700 }}>{t.people}</div>
-        <button type="button" onClick={() => navigate("/people")} style={{ fontSize: 11.5, color: "#0f9b6e" }}>
+        <Button variant="plain" size="plain" onClick={() => navigate("/people")} style={{ fontSize: 11.5, color: "#0f9b6e" }}>
           {t.all}
-        </button>
+        </Button>
       </div>
       <div className="flex flex-col" style={{ gap: 9, marginTop: 12 }}>
         {(balances ?? []).map((p) => {

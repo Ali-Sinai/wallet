@@ -1,17 +1,27 @@
 import { useState } from "react";
+import { addDays, startOfDay } from "@/lib/persian-date";
+import { DateField } from "@/components/DateFields";
+import { Input as UiInput } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Card, Chip, EmptyNote, Field, Input, SectionTitle, Select } from "../components/ui";
+import { Card, Chip, EmptyNote, Field, Input, SectionTitle, Select } from "@/components/primitives";
 import { TxRowDesktop, TxRowMobile } from "../components/TxRow";
 import { useI18n } from "../lib/i18n";
-import { useIsDesktop } from "../lib/useMediaQuery";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { useAccounts, useCategories, useSmsPending, useTransactions } from "../lib/queries";
 import { accountLabel, categoryName } from "../lib/domain";
 import type { Direction } from "../types";
 
 type TypeFilter = Direction | "all";
 
-const EMPTY_RANGE = { dateFrom: "", dateTo: "", amountMin: "", amountMax: "", accountId: "" };
+const EMPTY_RANGE = {
+  dateFrom: null as Date | null,
+  dateTo: null as Date | null,
+  amountMin: "",
+  amountMax: "",
+  accountId: "",
+};
 
 function useFilters() {
   const [direction, setDirection] = useState<TypeFilter>("all");
@@ -23,8 +33,10 @@ function useFilters() {
     direction: direction === "all" ? undefined : direction,
     category_id: categoryId === "all" ? undefined : categoryId,
     search: search || undefined,
-    date_from: range.dateFrom ? new Date(range.dateFrom).toISOString() : undefined,
-    date_to: range.dateTo ? new Date(range.dateTo).toISOString() : undefined,
+    // Whole local days: from the start of "from" up to (not including) the
+    // day after "to", since the API's date_to is exclusive.
+    date_from: range.dateFrom ? startOfDay(range.dateFrom).toISOString() : undefined,
+    date_to: range.dateTo ? addDays(startOfDay(range.dateTo), 1).toISOString() : undefined,
     amount_min: range.amountMin ? Math.round(Number(range.amountMin) * 100) : undefined,
     amount_max: range.amountMax ? Math.round(Number(range.amountMax) * 100) : undefined,
     account_id: range.accountId ? Number(range.accountId) : undefined,
@@ -59,20 +71,10 @@ function RangeFilters({ f }: { f: ReturnType<typeof useFilters> }) {
     >
       <div className="flex flex-wrap" style={{ gap: 10 }}>
         <Field label={t.fromDate}>
-          <Input
-            type="date"
-            dir="ltr"
-            value={f.range.dateFrom}
-            onChange={(v) => f.setRange({ ...f.range, dateFrom: v })}
-          />
+          <DateField value={f.range.dateFrom} onChange={(v) => f.setRange({ ...f.range, dateFrom: v })} />
         </Field>
         <Field label={t.toDate}>
-          <Input
-            type="date"
-            dir="ltr"
-            value={f.range.dateTo}
-            onChange={(v) => f.setRange({ ...f.range, dateTo: v })}
-          />
+          <DateField value={f.range.dateTo} onChange={(v) => f.setRange({ ...f.range, dateTo: v })} />
         </Field>
       </div>
       <div className="flex flex-wrap" style={{ gap: 10 }}>
@@ -103,14 +105,13 @@ function RangeFilters({ f }: { f: ReturnType<typeof useFilters> }) {
           ]}
         />
       </Field>
-      <button
-        type="button"
+      <Button variant="plain" size="plain"
         onClick={f.clearRange}
         className="self-start"
         style={{ fontSize: 12, color: "#0f9b6e", fontWeight: 700 }}
       >
         {t.clearFilters}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -152,7 +153,8 @@ function DesktopActivity() {
       <div className="flex flex-wrap items-center justify-between" style={{ gap: 12 }}>
         <SectionTitle>{t.activity}</SectionTitle>
         <div className="flex flex-wrap items-center" style={{ gap: 6 }}>
-          <input
+          <UiInput
+            className="h-auto md:text-xs"
             value={f.search}
             onChange={(e) => f.setSearch(e.target.value)}
             placeholder={t.search}
@@ -240,7 +242,7 @@ function MobileActivity() {
 
       <div className="flex" style={{ gap: 6, padding: "12px 22px 0" }}>
         {typeChips.map((c) => (
-          <button
+          <Button variant="plain" size="plain"
             key={c.key}
             type="button"
             onClick={() => f.setDirection(c.key)}
@@ -257,7 +259,7 @@ function MobileActivity() {
             }}
           >
             {c.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -266,7 +268,7 @@ function MobileActivity() {
         style={{ gap: 6, padding: "10px 22px 0" }}
       >
         {catChips.map((c) => (
-          <button
+          <Button variant="plain" size="plain"
             key={String(c.key)}
             type="button"
             onClick={() => f.setCategoryId(c.key)}
@@ -282,7 +284,7 @@ function MobileActivity() {
             }}
           >
             {c.label}
-          </button>
+          </Button>
         ))}
       </div>
 

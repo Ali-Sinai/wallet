@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import AppShell from "../components/shell/AppShell";
-import { Avatar, BusyLabel, Card, EmptyNote, SectionTitle } from "../components/ui";
+import { Avatar, BusyLabel, Card, EmptyNote, SectionTitle } from "@/components/primitives";
 import { useI18n } from "../lib/i18n";
-import { useIsDesktop } from "../lib/useMediaQuery";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { usePeopleBalances, useSettleAllMutation } from "../lib/queries";
 import { initials } from "../lib/domain";
 import type { PersonBalance } from "../types";
@@ -83,8 +84,7 @@ function DesktopPeople() {
                   {p.net_cents === 0 ? t.settled : money(p.net_cents, true)}
                 </div>
                 {p.open_debt_count > 0 && (
-                  <button
-                    type="button"
+                  <Button variant="plain" size="plain"
                     onClick={() => settleAll.mutate(p.person_id)}
                     disabled={settling}
                     aria-busy={settling}
@@ -98,7 +98,7 @@ function DesktopPeople() {
                     }}
                   >
                     <BusyLabel busy={settling}>{t.settleUp}</BusyLabel>
-                  </button>
+                  </Button>
                 )}
               </div>
             );

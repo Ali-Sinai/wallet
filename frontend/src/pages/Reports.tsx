@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import AppShell from "../components/shell/AppShell";
-import { Card, CardTitle, Chip, Meter, SectionTitle } from "../components/ui";
+import { Card, CardTitle, Chip, Meter, SectionTitle } from "@/components/primitives";
 import { BudgetsCard } from "./Dashboard";
 import { useI18n } from "../lib/i18n";
-import { useIsDesktop } from "../lib/useMediaQuery";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { sliceLabel } from "../lib/domain";
 import {
   useByAccount,
@@ -188,7 +189,7 @@ function MobileReports({
 
       <div className="flex" style={{ gap: 6, marginTop: 14 }}>
         {chips.map((c) => (
-          <button
+          <Button variant="plain" size="plain"
             key={c.key}
             type="button"
             onClick={() => setBucket(c.key)}
@@ -205,7 +206,7 @@ function MobileReports({
             }}
           >
             {c.label}
-          </button>
+          </Button>
         ))}
       </div>
 

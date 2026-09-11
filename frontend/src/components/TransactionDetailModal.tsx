@@ -1,25 +1,35 @@
 import { useState } from "react";
-import { BusyLabel, Chip, Field, Input, Overlay, OverlayHeader, Select } from "./ui";
+import { DateTimeField } from "@/components/DateFields";
+import { Button } from "@/components/ui/button";
+import { BusyLabel, Chip, Field, Input, Overlay, OverlayHeader, Select } from "@/components/primitives";
 import {
   useAccounts,
   useCategories,
   useCategorizeMutation,
   useDeleteSplitMutation,
   useDeleteTransactionMutation,
+  useLiveTransaction,
   useTransactionSplit,
   useUpdateTransactionMutation,
 } from "../lib/queries";
 import { useI18n } from "../lib/i18n";
-import { accountLabel, categoryName, signedCents, txTitle } from "../lib/domain";
+import { accountLabel, categoryName, parseApiDate, signedCents, txTitle } from "../lib/domain";
 import type { Direction, Transaction } from "../types";
 
-/** `datetime-local` wants exactly "YYYY-MM-DDTHH:mm". */
-function toLocalInput(iso: string): string {
-  return iso.slice(0, 16);
+function formFrom(tx: Transaction) {
+  return {
+    amount: String(Math.round(tx.amount_cents / 100)),
+    direction: tx.direction as Direction,
+    account_id: String(tx.account_id),
+    occurred_at: parseApiDate(tx.occurred_at),
+    merchant_text: tx.merchant_text ?? "",
+    note: tx.note ?? "",
+    category_id: tx.category_id === null ? "" : String(tx.category_id),
+  };
 }
 
 export default function TransactionDetailModal({
-  tx,
+  tx: snapshot,
   onClose,
   onSplit,
 }: {
@@ -28,6 +38,7 @@ export default function TransactionDetailModal({
   onSplit: () => void;
 }) {
   const { t, fa, digits, money, localize } = useI18n();
+  const tx = useLiveTransaction(snapshot);
   const { data: categories } = useCategories();
   const { data: accounts } = useAccounts();
   const { data: split } = useTransactionSplit(tx.is_shared ? tx.id : null);
@@ -38,15 +49,7 @@ export default function TransactionDetailModal({
   const deleteSplit = useDeleteSplitMutation();
 
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({
-    amount: String(Math.round(tx.amount_cents / 100)),
-    direction: tx.direction as Direction,
-    account_id: String(tx.account_id),
-    occurred_at: toLocalInput(tx.occurred_at),
-    merchant_text: tx.merchant_text ?? "",
-    note: tx.note ?? "",
-    category_id: tx.category_id === null ? "" : String(tx.category_id),
-  });
+  const [form, setForm] = useState(() => formFrom(tx));
 
   const signed = signedCents(tx);
   const account = accounts?.find((a) => a.id === tx.account_id);
@@ -59,7 +62,7 @@ export default function TransactionDetailModal({
         amount_cents: Math.round(Number(form.amount) * 100),
         direction: form.direction,
         account_id: Number(form.account_id),
-        occurred_at: new Date(form.occurred_at).toISOString(),
+        occurred_at: form.occurred_at.toISOString(),
         category_id: form.category_id ? Number(form.category_id) : null,
         note: form.note || null,
         merchant_text: form.merchant_text || null,
@@ -107,12 +110,7 @@ export default function TransactionDetailModal({
           </Field>
 
           <Field label={t.date}>
-            <Input
-              type="datetime-local"
-              dir="ltr"
-              value={form.occurred_at}
-              onChange={(v) => setForm({ ...form, occurred_at: v })}
-            />
+            <DateTimeField value={form.occurred_at} onChange={(v) => setForm({ ...form, occurred_at: v })} />
           </Field>
 
           <Field label={t.merchant}>
@@ -124,8 +122,7 @@ export default function TransactionDetailModal({
           </Field>
 
           <div className="flex" style={{ gap: 8, marginTop: 6 }}>
-            <button
-              type="button"
+            <Button variant="plain" size="plain"
               onClick={save}
               disabled={update.isPending}
               aria-busy={update.isPending}
@@ -141,9 +138,8 @@ export default function TransactionDetailModal({
               }}
             >
               <BusyLabel busy={update.isPending}>{t.saveChanges}</BusyLabel>
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button variant="plain" size="plain"
               onClick={() => setEditing(false)}
               style={{
                 padding: "12px 16px",
@@ -155,7 +151,7 @@ export default function TransactionDetailModal({
               }}
             >
               {t.cancel}
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -191,8 +187,7 @@ export default function TransactionDetailModal({
 
           <div className="flex flex-wrap" style={{ gap: 8, marginTop: 22 }}>
             {tx.direction === "withdrawal" && !tx.is_shared && (
-              <button
-                type="button"
+              <Button variant="plain" size="plain"
                 onClick={onSplit}
                 style={{
                   flex: 1,
@@ -206,12 +201,11 @@ export default function TransactionDetailModal({
                 }}
               >
                 {t.splitBtn}
-              </button>
+              </Button>
             )}
 
             {tx.is_shared && split && (
-              <button
-                type="button"
+              <Button variant="plain" size="plain"
                 onClick={() => deleteSplit.mutate(split.id)}
                 disabled={deleteSplit.isPending}
                 aria-busy={deleteSplit.isPending}
@@ -227,12 +221,14 @@ export default function TransactionDetailModal({
                 }}
               >
                 <BusyLabel busy={deleteSplit.isPending}>{t.unsplit}</BusyLabel>
-              </button>
+              </Button>
             )}
 
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
+            <Button variant="plain" size="plain"
+              onClick={() => {
+                setForm(formFrom(tx));
+                setEditing(true);
+              }}
               style={{
                 padding: "12px 16px",
                 borderRadius: 14,
@@ -243,10 +239,9 @@ export default function TransactionDetailModal({
               }}
             >
               {t.edit}
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button variant="plain" size="plain"
               onClick={() => remove.mutate(tx.id, { onSuccess: onClose })}
               disabled={remove.isPending}
               aria-busy={remove.isPending}
@@ -260,7 +255,7 @@ export default function TransactionDetailModal({
               }}
             >
               <BusyLabel busy={remove.isPending}>{t.delete}</BusyLabel>
-            </button>
+            </Button>
           </div>
 
           {deleteSplit.isError && (

@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "../lib/i18n";
 import { useModals } from "../lib/modals";
 import { api } from "../lib/api";
 import { useCategories, useConfirmSmsMutation, useIgnoreSmsMutation } from "../lib/queries";
 import { categoryName } from "../lib/domain";
-import { BusyLabel, Chip } from "./ui";
+import { BusyLabel, Chip } from "@/components/primitives";
 import type { SmsAttempt, Transaction } from "../types";
 
 /**
@@ -60,8 +61,7 @@ export default function MobileSmsCard({
 
   const actions = (
     <div className="flex" style={{ gap: highlight ? 8 : 7, marginTop: highlight ? 14 : 12 }}>
-      <button
-        type="button"
+      <Button variant="plain" size="plain"
         onClick={() => confirm.mutate({ id: attempt.id, categoryId: picked })}
         disabled={busy}
         aria-busy={confirming}
@@ -77,9 +77,8 @@ export default function MobileSmsCard({
         }}
       >
         <BusyLabel busy={confirming}>{t.confirm}</BusyLabel>
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button variant="plain" size="plain"
         onClick={confirmThenSplit}
         disabled={busy}
         aria-busy={splitting}
@@ -93,9 +92,8 @@ export default function MobileSmsCard({
         }}
       >
         <BusyLabel busy={splitting}>{t.split}</BusyLabel>
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button variant="plain" size="plain"
         onClick={() => ignore.mutate(attempt.id)}
         disabled={busy}
         aria-busy={ignore.isPending}
@@ -109,7 +107,7 @@ export default function MobileSmsCard({
         }}
       >
         <BusyLabel busy={ignore.isPending}>{t.ignore}</BusyLabel>
-      </button>
+      </Button>
     </div>
   );
 
@@ -194,7 +192,7 @@ export default function MobileSmsCard({
             key={c.id}
             active={picked === c.id}
             onClick={() => setPicked(c.id)}
-            className="px-[11px] py-[6px] !text-[11.5px]"
+            className="px-[11px] py-[6px] text-[11.5px]!"
           >
             {categoryName(c, fa, "")}
           </Chip>

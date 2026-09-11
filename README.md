@@ -10,7 +10,7 @@ Design source: [`Design/iranian-finance-tracking-app`](Design/iranian-finance-tr
 ## Stack
 
 - **Backend**: Python 3.12+, FastAPI, SQLModel, Pydantic v2, Alembic, SQLite (WAL), `uv`
-- **Frontend**: React + Vite + TypeScript + Tailwind (RTL), Recharts, PWA (`vite-plugin-pwa`)
+- **Frontend**: React 19 + Vite + TypeScript + Tailwind v4 (RTL), shadcn/ui on Base UI with the [Persian Labs](https://ui.persian-labs.ir) registry (`@persianlabsui/*`, see `frontend/components.json`), Recharts, PWA (`vite-plugin-pwa`)
 - **Dates**: Jalali conversion via `jdatetime`, always computed server-side, Tehran time, weeks start Saturday
 - **Money**: every amount is an `int` — Toman ×100 ("Toman-cents") — never a float or Decimal
 - **Runtime**: `docker compose up`, or `uv run` without Docker; the Docker image builds for both `linux/amd64` and `linux/arm64`

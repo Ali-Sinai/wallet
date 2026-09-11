@@ -1,6 +1,9 @@
 import { useState, type ReactNode } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Input as UiInput } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import AppShell from "../components/shell/AppShell";
-import { BusyLabel, DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "../components/ui";
+import { BusyLabel, DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "@/components/primitives";
 import { useI18n } from "../lib/i18n";
 import { useAuth } from "../lib/auth";
 import { S } from "../lib/settingsStrings";
@@ -87,8 +90,7 @@ function SaveRow({
 }) {
   return (
     <div className="flex" style={{ gap: 8 }}>
-      <button
-        type="button"
+      <Button variant="plain" size="plain"
         onClick={onSave}
         disabled={busy}
         aria-busy={busy}
@@ -104,10 +106,9 @@ function SaveRow({
         }}
       >
         <BusyLabel busy={busy}>{saveLabel}</BusyLabel>
-      </button>
+      </Button>
       {onCancel && (
-        <button
-          type="button"
+        <Button variant="plain" size="plain"
           onClick={onCancel}
           style={{
             padding: "10px 16px",
@@ -119,7 +120,7 @@ function SaveRow({
           }}
         >
           {cancelLabel}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -182,8 +183,7 @@ function LogoutRow() {
   const { logout } = useAuth();
   const [busy, setBusy] = useState(false);
   return (
-    <button
-      type="button"
+    <Button variant="plain" size="plain"
       onClick={async () => {
         setBusy(true);
         try {
@@ -205,7 +205,7 @@ function LogoutRow() {
       }}
     >
       <BusyLabel busy={busy}>{s.logout}</BusyLabel>
-    </button>
+    </Button>
   );
 }
 
@@ -464,8 +464,9 @@ function CategoriesSection() {
           <Input value={form.icon} onChange={(v) => setForm({ ...form, icon: v })} />
         </Field>
         <Field label={s.color}>
-          <input
+          <UiInput
             type="color"
+            className="h-auto"
             value={form.color}
             onChange={(e) => setForm({ ...form, color: e.target.value })}
             style={{
@@ -741,8 +742,7 @@ function PushSection() {
 
   return (
     <Section title={s.notifications} hint={status?.enabled ? s.pushReady : s.pushNotReady}>
-      <button
-        type="button"
+      <Button variant="plain" size="plain"
         onClick={onEnable}
         disabled={!canEnable || enabling}
         aria-busy={enabling}
@@ -759,7 +759,7 @@ function PushSection() {
         }}
       >
         <BusyLabel busy={enabling}>{s.enablePush}</BusyLabel>
-      </button>
+      </Button>
       {!isFirebaseConfigured && (
         <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)" }}>{s.firebaseIncomplete}</div>
       )}
@@ -809,8 +809,7 @@ function WebhookSection() {
 
   return (
     <Section title={s.webhookTitle} hint={s.webhookHint}>
-      <button
-        type="button"
+      <Button variant="plain" size="plain"
         onClick={async () => {
           const res = await rotate.mutateAsync();
           setToken(res.token);
@@ -829,7 +828,7 @@ function WebhookSection() {
         }}
       >
         <BusyLabel busy={rotate.isPending}>{s.generateToken}</BusyLabel>
-      </button>
+      </Button>
       {token && (
         <div
           className="select-all break-all font-mono"
@@ -899,14 +898,14 @@ function SmsPatternsSection() {
             <div dir="ltr" style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
               sender: {p.sender_match}
             </div>
-            <textarea
+            <Textarea
               defaultValue={p.body_regex}
               dir="ltr"
               rows={2}
               onBlur={(e) => {
                 if (e.target.value !== p.body_regex) updatePattern.mutate({ ...p, body_regex: e.target.value });
               }}
-              className="font-mono"
+              className="inline-block min-h-0 field-sizing-fixed font-mono leading-[1.5] md:text-[11px]"
               style={TEXTAREA_STYLE}
             />
             <MiniButton tone="accent" onClick={() => setTestFor(testFor === p.id ? null : p.id)}>
@@ -914,7 +913,8 @@ function SmsPatternsSection() {
             </MiniButton>
             {testFor === p.id && (
               <div className="flex flex-col" style={{ gap: 8 }}>
-                <textarea
+                <Textarea
+                  className="inline-block min-h-0 field-sizing-fixed leading-[1.5] md:text-xs"
                   value={sampleText}
                   onChange={(e) => setSampleText(e.target.value)}
                   rows={2}
@@ -959,13 +959,13 @@ function SmsPatternsSection() {
         placeholder={s.senderPlaceholder}
         dir="ltr"
       />
-      <textarea
+      <Textarea
         placeholder={s.regexPlaceholder}
         dir="ltr"
         rows={2}
         value={form.body_regex}
         onChange={(e) => setForm({ ...form, body_regex: e.target.value })}
-        className="font-mono"
+        className="inline-block min-h-0 field-sizing-fixed font-mono leading-[1.5] md:text-[11px]"
         style={{ ...TEXTAREA_STYLE, background: "rgba(255,255,255,.05)", borderRadius: 12, padding: 10 }}
       />
       <SaveRow

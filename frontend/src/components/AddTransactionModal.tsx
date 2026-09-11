@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { DateTimeField } from "@/components/DateFields";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { BusyLabel, Chip, Field, Input, Overlay, OverlayHeader } from "./ui";
+import { BusyLabel, Chip, Field, Input, Overlay, OverlayHeader } from "@/components/primitives";
 import {
   useAccounts,
   useCategories,
@@ -31,7 +33,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
   const [accountId, setAccountId] = useState<number | null>(null);
   const [merchant, setMerchant] = useState("");
   const [note, setNote] = useState("");
-  const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 16));
+  const [occurredAt, setOccurredAt] = useState(() => new Date());
   const [saving, setSaving] = useState(false);
   const [queued, setQueued] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
       amount_cents: Number(amount) * 100,
       direction,
       account_id: effectiveAccountId,
-      occurred_at: new Date(occurredAt).toISOString(),
+      occurred_at: occurredAt.toISOString(),
       category_id: categoryId,
       note: note || null,
       merchant_text: merchant || null,
@@ -117,7 +119,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
 
           <div className="flex" style={{ gap: 6, marginTop: 10 }}>
             {(["withdrawal", "deposit"] as Direction[]).map((d) => (
-              <button
+              <Button variant="plain" size="plain"
                 key={d}
                 type="button"
                 onClick={() => setDirection(d)}
@@ -134,13 +136,13 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
                 }}
               >
                 {d === "withdrawal" ? t.withdraw : t.deposit}
-              </button>
+              </Button>
             ))}
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginTop: 14 }}>
             {KEYS.map((k) => (
-              <button
+              <Button variant="plain" size="plain"
                 key={k}
                 type="button"
                 onClick={() => pressKey(k)}
@@ -155,7 +157,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
                 }}
               >
                 {k === "⌫" ? k : digits(k)}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -164,7 +166,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
               <Input value={merchant} onChange={setMerchant} />
             </Field>
             <Field label={t.date}>
-              <Input type="datetime-local" dir="ltr" value={occurredAt} onChange={setOccurredAt} />
+              <DateTimeField value={occurredAt} onChange={setOccurredAt} />
             </Field>
           </div>
 
@@ -203,8 +205,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
             ))}
           </div>
 
-          <button
-            type="button"
+          <Button variant="plain" size="plain"
             onClick={save}
             disabled={saving || !amount || !effectiveAccountId}
             aria-busy={saving}
@@ -222,7 +223,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
             }}
           >
             <BusyLabel busy={saving}>{queued ? t.queued : t.saveTx}</BusyLabel>
-          </button>
+          </Button>
 
           {error && (
             <div className="text-center" style={{ color: "#ff7a6b", fontSize: 12, marginTop: 8 }}>

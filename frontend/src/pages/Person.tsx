@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Avatar, BusyLabel, Card, EmptyNote, Input, MiniButton } from "../components/ui";
+import { Avatar, BusyLabel, Card, EmptyNote, Input, MiniButton } from "@/components/primitives";
 import { useI18n } from "../lib/i18n";
-import { useIsDesktop } from "../lib/useMediaQuery";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import {
   usePeopleBalances,
   usePersonDebts,
@@ -36,9 +37,9 @@ export default function Person() {
     <EmptyNote>{t.loading}</EmptyNote>
   ) : (
     <>
-      <button type="button" onClick={() => navigate("/people")} style={{ fontSize: 12, color: "#0f9b6e" }}>
+      <Button variant="plain" size="plain" onClick={() => navigate("/people")} style={{ fontSize: 12, color: "#0f9b6e" }}>
         ‹ {t.people}
-      </button>
+      </Button>
 
       <div className="flex items-center" style={{ gap: 14, marginTop: 14 }}>
         <Avatar size={52} color={color}>
@@ -66,8 +67,7 @@ export default function Person() {
           {person.net_cents === 0 ? t.settled : money(person.net_cents, true)}
         </div>
         {person.open_debt_count > 0 && (
-          <button
-            type="button"
+          <Button variant="plain" size="plain"
             onClick={() => settleAll.mutate(person.person_id)}
             disabled={settleAll.isPending}
             aria-busy={settleAll.isPending}
@@ -84,7 +84,7 @@ export default function Person() {
             }}
           >
             <BusyLabel busy={settleAll.isPending}>{t.settleUp}</BusyLabel>
-          </button>
+          </Button>
         )}
       </div>
 
@@ -180,8 +180,7 @@ function DebtRow({ debt }: { debt: Debt }) {
             onChange={setAmount}
             placeholder={String(Math.round(remaining / 100))}
           />
-          <button
-            type="button"
+          <Button variant="plain" size="plain"
             onClick={() => {
               const cents = amount ? Math.round(Number(amount) * 100) : remaining;
               if (cents <= 0 || cents > remaining) return;
@@ -208,7 +207,7 @@ function DebtRow({ debt }: { debt: Debt }) {
             }}
           >
             <BusyLabel busy={settle.isPending}>{t.settle}</BusyLabel>
-          </button>
+          </Button>
         </div>
       )}
 

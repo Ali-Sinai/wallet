@@ -1,8 +1,18 @@
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { useIsDesktop } from "../lib/useMediaQuery";
+import { Button } from "@/components/ui/button";
+import { DialogBackdrop, DialogPortal, DialogViewport } from "@/components/ui/dialog";
+import { Drawer, DrawerPanel, DrawerPopup } from "@/components/ui/drawer";
+import { Input as UiInput } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Spinner as UiSpinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { useIsDesktop } from "@/hooks/use-media-query";
+import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ *
- * Primitives. Every literal here comes straight out of the design
+ * App primitives, built on the shadcn / Persian Labs components in
+ * components/ui. Every literal here comes straight out of the design
  * bundle, so keep them in sync with project/*.dc.html rather than
  * "rounding" them to Tailwind's scale.
  * ------------------------------------------------------------------ */
@@ -19,11 +29,7 @@ export function Card({
   onClick?: () => void;
 }) {
   return (
-    <div
-      onClick={onClick}
-      className={`rounded-card bg-card border border-line ${className}`}
-      style={style}
-    >
+    <div onClick={onClick} className={cn("rounded-card bg-card border border-line", className)} style={style}>
       {children}
     </div>
   );
@@ -52,28 +58,27 @@ export function Chip({
   title?: string;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="plain"
+      size="plain"
       title={title}
+      aria-pressed={active}
       onClick={onClick}
-      className={`rounded-pill text-xs font-bold border transition-colors ${className}`}
-      style={
+      className={cn(
+        "rounded-pill text-xs font-bold border transition-colors",
         active
-          ? { background: "#0f9b6e", color: "#04120c", borderColor: "#0f9b6e" }
-          : {
-              background: "transparent",
-              color: "rgba(232,234,236,.7)",
-              borderColor: "rgba(255,255,255,.14)",
-            }
-      }
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-transparent text-foreground/70 border-white/14",
+        className,
+      )}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
 export function Spinner() {
-  return <span className="spinner" aria-hidden="true" />;
+  return <UiSpinner aria-hidden="true" aria-label={undefined} role={undefined} className="size-[1.15em]" />;
 }
 
 /**
@@ -109,15 +114,17 @@ export function PrimaryButton({
   type?: "button" | "submit";
 }) {
   return (
-    <button
+    <Button
+      variant="plain"
+      size="plain"
       type={type}
       onClick={onClick}
       disabled={disabled || busy}
       aria-busy={busy}
-      className={`bg-accent text-accentInk font-bold disabled:opacity-50 ${className}`}
+      className={cn("bg-primary text-primary-foreground font-bold disabled:opacity-50", className)}
     >
       <BusyLabel busy={busy}>{children}</BusyLabel>
-    </button>
+    </Button>
   );
 }
 
@@ -134,34 +141,30 @@ export function GhostButton({
   className?: string;
   tone?: "normal" | "muted" | "danger";
 }) {
-  const color =
-    tone === "muted"
-      ? "rgba(232,234,236,.5)"
-      : tone === "danger"
-        ? "#ff7a6b"
-        : "rgba(232,234,236,.8)";
-  const borderColor = tone === "danger" ? "rgba(255,122,107,.35)" : "rgba(255,255,255,.14)";
   return (
-    <button
-      type="button"
+    <Button
+      variant="plain"
+      size="plain"
       onClick={onClick}
       disabled={busy}
       aria-busy={busy}
-      className={`border font-bold ${className}`}
-      style={{ color, borderColor }}
+      className={cn(
+        "border font-bold",
+        tone === "danger" ? "border-destructive/35 text-destructive" : "border-white/14",
+        tone === "muted" && "text-foreground/50",
+        tone === "normal" && "text-foreground/80",
+        className,
+      )}
     >
       <BusyLabel busy={busy}>{children}</BusyLabel>
-    </button>
+    </Button>
   );
 }
 
 /** Thin rounded meter used by the budget and breakdown rows. */
 export function Meter({ width, color, height = 7 }: { width: string; color: string; height?: number }) {
   return (
-    <div
-      className="rounded-pill overflow-hidden"
-      style={{ height, background: "rgba(255,255,255,.07)", marginTop: 7 }}
-    >
+    <div className="rounded-pill overflow-hidden" style={{ height, background: "rgba(255,255,255,.07)", marginTop: 7 }}>
       <div style={{ height: "100%", width, background: color }} />
     </div>
   );
@@ -169,31 +172,7 @@ export function Meter({ width, color, height = 7 }: { width: string; color: stri
 
 /** The bank-rule switch from the web design's sidebar. */
 export function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      onClick={onToggle}
-      className="rounded-pill flex flex-none items-center"
-      style={{
-        width: 34,
-        height: 20,
-        padding: 2,
-        background: on ? "#0f9b6e" : "rgba(255,255,255,.12)",
-        justifyContent: on ? "flex-end" : "flex-start",
-      }}
-    >
-      <span
-        style={{
-          width: 16,
-          height: 16,
-          borderRadius: 99,
-          background: on ? "#04120c" : "rgba(232,234,236,.6)",
-        }}
-      />
-    </button>
-  );
+  return <Switch checked={on} onCheckedChange={onToggle} className="flex-none border-0 p-[2px] shadow-none data-[size=default]:h-5 data-[size=default]:w-[34px]" />;
 }
 
 export function Avatar({
@@ -219,18 +198,16 @@ export function Avatar({
 
 export function EmptyNote({ children, pad = 40 }: { children: ReactNode; pad?: number }) {
   return (
-    <div
-      className="text-center text-[13px]"
-      style={{ padding: `${pad}px 0`, color: "rgba(232,234,236,.35)" }}
-    >
+    <div className="text-center text-[13px]" style={{ padding: `${pad}px 0`, color: "rgba(232,234,236,.35)" }}>
       {children}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ *
- * Overlay: a centred modal on the web layout, a bottom sheet on the
- * phone layout — exactly the two treatments in the bundle.
+ * Overlay: a centred Base UI dialog on the web layout, a swipeable
+ * Persian Labs drawer on the phone layout — exactly the two treatments
+ * in the bundle.
  * ------------------------------------------------------------------ */
 
 export function Overlay({
@@ -245,62 +222,40 @@ export function Overlay({
   sheetMaxHeight?: string;
 }) {
   const isDesktop = useIsDesktop();
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [onClose]);
+  const onOpenChange = (open: boolean) => {
+    if (!open) onClose();
+  };
 
   if (isDesktop) {
     return (
-      <div
-        className="fixed inset-0 z-40 flex items-center justify-center p-6"
-        style={{ background: "rgba(4,6,5,.7)" }}
-        onClick={onClose}
-      >
-        <div
-          className="w-full overflow-y-auto rounded-modal bg-cardAlt fade-in"
-          style={{
-            maxWidth,
-            maxHeight: "86vh",
-            padding: 26,
-            border: "1px solid rgba(255,255,255,.09)",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {children}
-        </div>
-      </div>
+      <DialogPrimitive.Root open onOpenChange={onOpenChange}>
+        <DialogPortal>
+          <DialogBackdrop className="z-40 bg-[rgba(4,6,5,.7)] backdrop-blur-none" />
+          <DialogViewport className="z-40 flex items-center justify-center p-6">
+            <DialogPrimitive.Popup
+              className="w-full overflow-y-auto rounded-modal bg-cardAlt fade-in outline-none"
+              style={{ maxWidth, maxHeight: "86vh", padding: 26, border: "1px solid rgba(255,255,255,.09)" }}
+            >
+              {children}
+            </DialogPrimitive.Popup>
+          </DialogViewport>
+        </DialogPortal>
+      </DialogPrimitive.Root>
     );
   }
 
   return (
-    <div
-      className="fixed inset-0 z-40 flex items-end fade-in-flat"
-      style={{ background: "rgba(4,6,5,.66)" }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full overflow-y-auto bg-cardAlt sheet-up no-scrollbar"
-        style={{
-          maxHeight: sheetMaxHeight,
-          padding: "20px 22px calc(26px + env(safe-area-inset-bottom))",
-          borderRadius: "26px 26px 0 0",
-          borderTop: "1px solid rgba(255,255,255,.09)",
-        }}
-        onClick={(e) => e.stopPropagation()}
+    <Drawer open onOpenChange={onOpenChange}>
+      <DrawerPopup
+        backdropClassName="bg-[rgba(4,6,5,.66)] backdrop-blur-none"
+        className="max-w-none rounded-t-sheet border-white/9 bg-cardAlt shadow-none before:hidden"
+        style={{ maxHeight: sheetMaxHeight }}
       >
-        {children}
-      </div>
-    </div>
+        <DrawerPanel className="no-scrollbar" style={{ padding: "20px 22px 26px" }}>
+          {children}
+        </DrawerPanel>
+      </DrawerPopup>
+    </Drawer>
   );
 }
 
@@ -310,9 +265,9 @@ export function OverlayHeader({ title, onClose, closeLabel }: { title: string; o
       <div className="text-[11.5px] md:text-xs" style={{ color: "rgba(232,234,236,.4)" }}>
         {title}
       </div>
-      <button type="button" className="text-[11.5px] md:text-xs text-accent" onClick={onClose}>
+      <Button variant="plain" size="plain" className="text-[11.5px] md:text-xs text-primary" onClick={onClose}>
         {closeLabel}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -323,16 +278,8 @@ export function OverlayHeader({ title, onClose, closeLabel }: { title: string; o
  * radii, hairlines and muted greys as the cards.
  * ------------------------------------------------------------------ */
 
-const FIELD_STYLE: CSSProperties = {
-  width: "100%",
-  borderRadius: 12,
-  background: "rgba(255,255,255,.05)",
-  border: "1px solid rgba(255,255,255,.09)",
-  padding: "10px 13px",
-  fontSize: 13,
-  color: "#e8eaec",
-  outline: "none",
-};
+export const FIELD_CLASS =
+  "h-auto w-full rounded-[12px] border-white/9 bg-white/5 px-[13px] py-[10px] text-[13px] md:text-[13px] text-foreground dark:bg-white/5";
 
 export function Field({
   label,
@@ -368,14 +315,15 @@ export function Input({
   style?: CSSProperties;
 }) {
   return (
-    <input
+    <UiInput
       type={type}
       dir={dir}
       inputMode={type === "number" ? "decimal" : undefined}
       value={value}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      style={{ ...FIELD_STYLE, ...style }}
+      className={FIELD_CLASS}
+      style={style}
     />
   );
 }
@@ -392,17 +340,19 @@ export function Select({
   style?: CSSProperties;
 }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      style={{ ...FIELD_STYLE, ...style }}
+      wrapperClassName="w-full"
+      className={cn(FIELD_CLASS, "ps-[13px] pe-9 leading-none shadow-none dark:hover:bg-white/5")}
+      style={style}
     >
       {options.map((o) => (
-        <option key={o.value} value={o.value} style={{ background: "#101318" }}>
+        <NativeSelectOption key={o.value} value={o.value} className="bg-cardAlt text-foreground">
           {o.label}
-        </option>
+        </NativeSelectOption>
       ))}
-    </select>
+    </NativeSelect>
   );
 }
 
@@ -436,32 +386,23 @@ export function MiniButton({
   title?: string;
   busy?: boolean;
 }) {
-  const color = tone === "danger" ? "#ff7a6b" : tone === "accent" ? "#0f9b6e" : "rgba(232,234,236,.7)";
-  const borderColor =
-    tone === "danger"
-      ? "rgba(255,122,107,.3)"
-      : tone === "accent"
-        ? "rgba(15,155,110,.35)"
-        : "rgba(255,255,255,.12)";
   return (
-    <button
-      type="button"
+    <Button
+      variant="plain"
+      size="plain"
       title={title}
       onClick={onClick}
       disabled={busy}
       aria-busy={busy}
-      style={{
-        padding: "6px 10px",
-        borderRadius: 9,
-        border: `1px solid ${borderColor}`,
-        color,
-        fontSize: 11.5,
-        fontWeight: 700,
-        whiteSpace: "nowrap",
-      }}
+      className={cn(
+        "rounded-[9px] border px-[10px] py-[6px] text-[11.5px] font-bold whitespace-nowrap",
+        tone === "danger" && "border-destructive/30 text-destructive",
+        tone === "accent" && "border-primary/35 text-primary",
+        tone === "normal" && "border-white/12 text-foreground/70",
+      )}
     >
       <BusyLabel busy={busy}>{children}</BusyLabel>
-    </button>
+    </Button>
   );
 }
 

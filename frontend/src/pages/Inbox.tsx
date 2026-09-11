@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { DateTimeField } from "@/components/DateFields";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { BusyLabel, Card, EmptyNote, Field, Input, MiniButton, Select } from "../components/ui";
+import { BusyLabel, Card, EmptyNote, Field, Input, MiniButton, Select } from "@/components/primitives";
 import MobileSmsCard from "../components/MobileSmsCard";
 import { useI18n } from "../lib/i18n";
-import { useIsDesktop } from "../lib/useMediaQuery";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { accountLabel, categoryName } from "../lib/domain";
 import {
   useAccounts,
@@ -131,7 +134,8 @@ function PasteBox() {
     >
       <div style={{ fontSize: 12, fontWeight: 700 }}>{t.pasteSms}</div>
       <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 3 }}>{t.pasteHint}</div>
-      <textarea
+      <Textarea
+        className="inline-block min-h-0 field-sizing-fixed leading-[1.5] md:text-xs"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={3}
@@ -151,8 +155,7 @@ function PasteBox() {
         <Field label={t.senderHint}>
           <Input value={sender} onChange={setSender} dir="ltr" />
         </Field>
-        <button
-          type="button"
+        <Button variant="plain" size="plain"
           onClick={async () => {
             if (!text.trim()) return;
             const created = await paste.mutateAsync({ text, senderHint: sender || "paste" });
@@ -172,7 +175,7 @@ function PasteBox() {
           }}
         >
           <BusyLabel busy={paste.isPending}>{t.parse}</BusyLabel>
-        </button>
+        </Button>
       </div>
       {result !== null && (
         <div style={{ fontSize: 11.5, color: "#3fd39a", marginTop: 8 }}>
@@ -195,7 +198,7 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
   const [amount, setAmount] = useState("");
   const [direction, setDirection] = useState<Direction>("withdrawal");
   const [accountId, setAccountId] = useState("");
-  const [occurredAt, setOccurredAt] = useState(new Date().toISOString().slice(0, 16));
+  const [occurredAt, setOccurredAt] = useState(() => new Date());
   const [categoryId, setCategoryId] = useState("");
 
   const effectiveAccount = accountId || String(accounts?.[0]?.id ?? "");
@@ -252,7 +255,7 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
           </Field>
           <div className="flex" style={{ gap: 10 }}>
             <Field label={t.date}>
-              <Input type="datetime-local" dir="ltr" value={occurredAt} onChange={setOccurredAt} />
+              <DateTimeField value={occurredAt} onChange={setOccurredAt} />
             </Field>
             <Field label={t.category}>
               <Select
@@ -265,8 +268,7 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
               />
             </Field>
           </div>
-          <button
-            type="button"
+          <Button variant="plain" size="plain"
             onClick={() => {
               if (!amount || !effectiveAccount) return;
               resolve.mutate({
@@ -274,7 +276,7 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
                 amount_cents: Math.round(Number(amount) * 100),
                 direction,
                 account_id: Number(effectiveAccount),
-                occurred_at: new Date(occurredAt).toISOString(),
+                occurred_at: occurredAt.toISOString(),
                 category_id: categoryId ? Number(categoryId) : null,
                 note: null,
               });
@@ -292,7 +294,7 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
             }}
           >
             <BusyLabel busy={resolve.isPending}>{t.saveTx}</BusyLabel>
-          </button>
+          </Button>
         </div>
       )}
     </div>

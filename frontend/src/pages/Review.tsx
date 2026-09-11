@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { BusyLabel, Card, EmptyNote } from "../components/ui";
+import { BusyLabel, Card, EmptyNote } from "@/components/primitives";
 import { useCategories, useCategorizeMutation, useUncategorized } from "../lib/queries";
 import { useI18n } from "../lib/i18n";
 import { categoryName, signedCents, txTitle } from "../lib/domain";
@@ -90,7 +91,7 @@ export default function Review() {
 
         <div className="grid w-full" style={{ gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
           {categories?.map((c, i) => (
-            <button
+            <Button variant="plain" size="plain"
               key={c.id}
               type="button"
               onClick={() => pick(c.id)}
@@ -112,7 +113,7 @@ export default function Review() {
                   {categoryName(c, fa, "")}
                 </span>
               </BusyLabel>
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -120,9 +121,9 @@ export default function Review() {
           {t.reviewHint}
         </div>
 
-        <button type="button" onClick={() => navigate("/")} style={{ fontSize: 12, color: "#0f9b6e" }}>
+        <Button variant="plain" size="plain" onClick={() => navigate("/")} style={{ fontSize: 12, color: "#0f9b6e" }}>
           {t.backToDash}
-        </button>
+        </Button>
       </div>
     </AppShell>
   );

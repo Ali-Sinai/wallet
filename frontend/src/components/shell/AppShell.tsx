@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useIsDesktop } from "../../lib/useMediaQuery";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
 import { useI18n } from "../../lib/i18n";
 import TopBar from "./TopBar";

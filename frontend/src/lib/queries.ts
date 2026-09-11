@@ -261,6 +261,35 @@ export function useTransaction(id: number | null) {
   });
 }
 
+/**
+ * The cached copy of a transaction the caller already holds, kept current by
+ * mutations and refetches. Views that were handed a row snapshot (the detail
+ * modal) read through this so edits show up without reopening them.
+ */
+export function useLiveTransaction(tx: Transaction): Transaction {
+  const { data } = useQuery({
+    queryKey: ["transactions", "one", tx.id],
+    queryFn: () => api.get<Transaction>(`/transactions/${tx.id}`),
+    initialData: tx,
+  });
+  return data;
+}
+
+/** Apply `patch` to transaction `id` wherever it sits in the query cache. */
+function patchCachedTransaction(qc: QueryClient, id: number, patch: Partial<Transaction>) {
+  qc.setQueriesData<unknown>({ queryKey: ["transactions"] }, (old: unknown) => {
+    if (Array.isArray(old)) {
+      return old.some((t: Transaction) => t.id === id)
+        ? old.map((t: Transaction) => (t.id === id ? { ...t, ...patch } : t))
+        : old;
+    }
+    if (old && typeof old === "object" && "amount_cents" in old && (old as Transaction).id === id) {
+      return { ...(old as Transaction), ...patch };
+    }
+    return old;
+  });
+}
+
 export function useUncategorized() {
   return useQuery({
     queryKey: ["transactions", "uncategorized"],
@@ -281,7 +310,10 @@ export function useUpdateTransactionMutation() {
   return useMutation({
     mutationFn: ({ id, ...body }: TransactionIn & { id: number }) =>
       api.patch<Transaction>(`/transactions/${id}`, body),
-    onSuccess: () => invalidateMoney(qc),
+    onSuccess: (saved) => {
+      patchCachedTransaction(qc, saved.id, saved);
+      invalidateMoney(qc);
+    },
   });
 }
 
@@ -297,8 +329,20 @@ export function useCategorizeMutation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, categoryId }: { id: number; categoryId: number }) =>
-      api.patch(`/transactions/${id}/categorize`, { category_id: categoryId }),
-    onSuccess: () => invalidateMoney(qc),
+      api.patch<Transaction>(`/transactions/${id}/categorize`, { category_id: categoryId }),
+    // Picking a category is a single tap, so show it immediately rather than
+    // after the round trip; roll back if the server refuses.
+    onMutate: async ({ id, categoryId }) => {
+      await qc.cancelQueries({ queryKey: ["transactions"] });
+      const snapshot = qc.getQueriesData({ queryKey: ["transactions"] });
+      patchCachedTransaction(qc, id, { category_id: categoryId });
+      return { snapshot };
+    },
+    onError: (_err, _vars, ctx) => {
+      ctx?.snapshot.forEach(([key, data]) => qc.setQueryData(key, data));
+    },
+    onSuccess: (saved) => patchCachedTransaction(qc, saved.id, saved),
+    onSettled: () => invalidateMoney(qc),
   });
 }
 

@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Card, CardTitle, Meter } from "../components/ui";
+import { Card, CardTitle, Meter } from "@/components/primitives";
 import { api, withQuery } from "../lib/api";
 import { useI18n } from "../lib/i18n";
-import { useIsDesktop } from "../lib/useMediaQuery";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { useBudgets, useCategories, useDashboard, useSmsPending, useTransactions } from "../lib/queries";
 import { categoryColor, categoryName, dayTick, jalaliMonthLabel, sliceLabel } from "../lib/domain";
 import { Wordmark } from "../components/shell/TopBar";
@@ -118,9 +119,9 @@ function DesktopDashboard() {
       <Card style={{ padding: 22 }}>
         <div className="flex items-baseline justify-between">
           <CardTitle>{t.breakdown}</CardTitle>
-          <button type="button" onClick={() => navigate("/reports")} style={{ fontSize: 12, color: "#0f9b6e" }}>
+          <Button variant="plain" size="plain" onClick={() => navigate("/reports")} style={{ fontSize: 12, color: "#0f9b6e" }}>
             {t.reportsLink}
-          </button>
+          </Button>
         </div>
         <div className="flex overflow-hidden" style={{ height: 11, borderRadius: 4, marginTop: 16 }}>
           {slices.map((c) => (

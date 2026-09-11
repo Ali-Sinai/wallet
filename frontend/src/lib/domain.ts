@@ -67,3 +67,11 @@ export function jalaliMonthLabel(lang: "fa" | "en"): string {
 export function dayTick(label: string): string {
   return label.split(" ")[0] ?? label;
 }
+
+/**
+ * The API serialises UTC datetimes without an offset ("2026-09-11T17:14:57").
+ * `new Date()` would read that as local time, so pin it to UTC first.
+ */
+export function parseApiDate(iso: string): Date {
+  return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`);
+}

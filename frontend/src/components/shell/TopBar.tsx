@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "../../lib/i18n";
 import { useModals } from "../../lib/modals";
 import { useUncategorized } from "../../lib/queries";
@@ -18,7 +19,7 @@ export function Wordmark({ size = 21 }: { size?: number }) {
         {t.appName}
       </div>
       <div
-        className="flex-none bg-accent"
+        className="flex-none bg-primary"
         style={{ width: 6, height: 6, borderRadius: 2, marginBottom: 3 }}
       />
     </div>
@@ -68,8 +69,7 @@ export default function TopBar() {
 
         <div className="flex items-center" style={{ gap: 10 }}>
           {pendingCount > 0 && (
-            <button
-              type="button"
+            <Button variant="plain" size="plain"
               onClick={() => navigate("/review")}
               className="flex items-center"
               style={{
@@ -85,11 +85,10 @@ export default function TopBar() {
             >
               <span style={{ width: 6, height: 6, borderRadius: 99, background: "#0f9b6e" }} />
               {t.uncategorized} {digits(pendingCount)}
-            </button>
+            </Button>
           )}
 
-          <button
-            type="button"
+          <Button variant="plain" size="plain"
             onClick={openAdd}
             style={{
               padding: "8px 13px",
@@ -101,10 +100,9 @@ export default function TopBar() {
             }}
           >
             {t.add}
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button variant="plain" size="plain"
             onClick={toggle}
             style={{
               padding: "7px 11px",
@@ -116,7 +114,7 @@ export default function TopBar() {
             }}
           >
             {t.langLabel}
-          </button>
+          </Button>
 
           <NavLink
             to="/settings"

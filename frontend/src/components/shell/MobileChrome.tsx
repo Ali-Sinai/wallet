@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { useI18n } from "../../lib/i18n";
 import { useModals } from "../../lib/modals";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
@@ -27,12 +28,12 @@ export function MobileStatusBar() {
         color: "rgba(232,234,236,.45)",
       }}
     >
-      <button type="button" onClick={() => navigate("/settings")} className="flex items-center" style={{ gap: 7 }}>
+      <Button variant="plain" size="plain" onClick={() => navigate("/settings")} className="flex items-center" style={{ gap: 7 }}>
         <span style={{ fontSize: 13, lineHeight: 1, color: "rgba(232,234,236,.45)" }}>⚙</span>
         {!online && (
           <span style={{ fontSize: 11, color: "#ff7a6b" }}>{t.offline}</span>
         )}
-      </button>
+      </Button>
 
       <div className="flex items-center" style={{ gap: 6 }}>
         <span>{t.currency}</span>
@@ -40,12 +41,12 @@ export function MobileStatusBar() {
           className="flex"
           style={{ gap: 2, padding: 2, borderRadius: 99, background: "rgba(255,255,255,.07)" }}
         >
-          <button type="button" onClick={() => setLang("en")} style={chip(lang === "en")}>
+          <Button variant="plain" size="plain" onClick={() => setLang("en")} style={chip(lang === "en")}>
             EN
-          </button>
-          <button type="button" onClick={() => setLang("fa")} style={chip(lang === "fa")}>
+          </Button>
+          <Button variant="plain" size="plain" onClick={() => setLang("fa")} style={chip(lang === "fa")}>
             فا
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -115,8 +116,7 @@ export function MobileTabBar() {
     >
       {tab(TABS[0])}
       {tab(TABS[1])}
-      <button
-        type="button"
+      <Button variant="plain" size="plain"
         onClick={openAdd}
         aria-label={t.add}
         className="flex flex-none items-center justify-center"
@@ -129,7 +129,7 @@ export function MobileTabBar() {
         }}
       >
         <TabIcon name="add" size={22} color="#04120c" />
-      </button>
+      </Button>
       {tab(TABS[2])}
       {tab(TABS[3])}
     </div>

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { Wordmark } from "../components/shell/TopBar";
-import { BusyLabel } from "../components/ui";
+import { BusyLabel } from "@/components/primitives";
 
 export default function Login() {
   const { login, loginError } = useAuth();
@@ -43,7 +45,8 @@ export default function Login() {
           <Wordmark size={26} />
         </div>
 
-        <input
+        <Input
+          className="h-auto md:text-[13.5px]"
           style={field}
           placeholder={t.username}
           value={username}
@@ -51,7 +54,8 @@ export default function Login() {
           autoFocus
           autoComplete="username"
         />
-        <input
+        <Input
+          className="h-auto md:text-[13.5px]"
           style={field}
           placeholder={t.password}
           type="password"
@@ -66,7 +70,7 @@ export default function Login() {
           </div>
         )}
 
-        <button
+        <Button variant="plain" size="plain"
           type="submit"
           disabled={busy}
           aria-busy={busy}
@@ -81,10 +85,9 @@ export default function Login() {
           }}
         >
           <BusyLabel busy={busy}>{t.login}</BusyLabel>
-        </button>
+        </Button>
 
-        <button
-          type="button"
+        <Button variant="plain" size="plain"
           onClick={() => setLang(lang === "fa" ? "en" : "fa")}
           className="self-center"
           style={{
@@ -98,7 +101,7 @@ export default function Login() {
           }}
         >
           {lang === "fa" ? "EN" : "فا"}
-        </button>
+        </Button>
       </form>
     </div>
   );
