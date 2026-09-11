@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Chip, Field, Input, Overlay, OverlayHeader } from "./ui";
+import { BusyLabel, Chip, Field, Input, Overlay, OverlayHeader } from "./ui";
 import {
   useAccounts,
   useCategories,
@@ -207,6 +207,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
             type="button"
             onClick={save}
             disabled={saving || !amount || !effectiveAccountId}
+            aria-busy={saving}
             style={{
               width: "100%",
               textAlign: "center",
@@ -217,10 +218,10 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
               fontSize: 13.5,
               fontWeight: 700,
               marginTop: 20,
-              opacity: saving || !amount || !effectiveAccountId ? 0.5 : 1,
+              opacity: !amount || !effectiveAccountId ? 0.5 : 1,
             }}
           >
-            {queued ? t.queued : t.saveTx}
+            <BusyLabel busy={saving}>{queued ? t.queued : t.saveTx}</BusyLabel>
           </button>
 
           {error && (

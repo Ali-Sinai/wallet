@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import AppShell from "../components/shell/AppShell";
-import { DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "../components/ui";
+import { BusyLabel, DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "../components/ui";
 import { useI18n } from "../lib/i18n";
 import { useAuth } from "../lib/auth";
 import { S } from "../lib/settingsStrings";
@@ -77,17 +77,21 @@ function SaveRow({
   onCancel,
   saveLabel,
   cancelLabel,
+  busy = false,
 }: {
   onSave: () => void;
   onCancel?: () => void;
   saveLabel: string;
   cancelLabel: string;
+  busy?: boolean;
 }) {
   return (
     <div className="flex" style={{ gap: 8 }}>
       <button
         type="button"
         onClick={onSave}
+        disabled={busy}
+        aria-busy={busy}
         style={{
           flex: 1,
           textAlign: "center",
@@ -99,7 +103,7 @@ function SaveRow({
           fontWeight: 700,
         }}
       >
-        {saveLabel}
+        <BusyLabel busy={busy}>{saveLabel}</BusyLabel>
       </button>
       {onCancel && (
         <button
@@ -157,10 +161,20 @@ export default function Settings() {
 function LogoutRow() {
   const s = useS();
   const { logout } = useAuth();
+  const [busy, setBusy] = useState(false);
   return (
     <button
       type="button"
-      onClick={() => logout()}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          await logout();
+        } finally {
+          setBusy(false);
+        }
+      }}
+      disabled={busy}
+      aria-busy={busy}
       className="self-start"
       style={{
         padding: "10px 16px",
@@ -171,7 +185,7 @@ function LogoutRow() {
         fontWeight: 700,
       }}
     >
-      {s.logout}
+      <BusyLabel busy={busy}>{s.logout}</BusyLabel>
     </button>
   );
 }
@@ -219,6 +233,7 @@ function GeneralSection() {
       <SaveRow
         saveLabel={s.saveSettings}
         cancelLabel={s.cancel}
+        busy={update.isPending}
         onSave={() => {
           update.mutate({ default_lang: effectiveLang, digit_style: effectiveDigits });
           if (effectiveLang === "fa" || effectiveLang === "en") setLang(effectiveLang);
@@ -252,10 +267,12 @@ function AccountsSection() {
 
   function submit() {
     if (!form.bank_name && !form.name_fa) return;
-    if (editing === null) create.mutate(form);
-    else update.mutate({ id: editing, ...form });
-    reset();
+    if (editing === null) create.mutate(form, { onSuccess: reset });
+    else update.mutate({ id: editing, ...form }, { onSuccess: reset });
   }
+
+  // The row toggles also use `update`; only spin Save for the account being edited.
+  const saving = create.isPending || (update.isPending && update.variables?.id === editing);
 
   return (
     <Section title={s.accounts} hint={s.accountsHint}>
@@ -292,7 +309,12 @@ function AccountsSection() {
                 >
                   {s.edit}
                 </MiniButton>
-                <DeleteButton label={s.remove} confirmLabel={s.confirmRemove} onConfirm={() => remove.mutate(a.id)} />
+                <DeleteButton
+                  label={s.remove}
+                  confirmLabel={s.confirmRemove}
+                  onConfirm={() => remove.mutate(a.id)}
+                  busy={remove.isPending && remove.variables === a.id}
+                />
               </>
             }
           >
@@ -325,6 +347,7 @@ function AccountsSection() {
       <SaveRow
         saveLabel={editing === null ? s.addAccount : s.save}
         cancelLabel={s.cancel}
+        busy={saving}
         onSave={submit}
         onCancel={editing === null ? undefined : reset}
       />
@@ -363,9 +386,8 @@ function CategoriesSection() {
 
   function submit() {
     if (!form.name_fa && !form.name_en) return;
-    if (editing === null) create.mutate(form);
-    else update.mutate({ id: editing, ...form });
-    reset();
+    if (editing === null) create.mutate(form, { onSuccess: reset });
+    else update.mutate({ id: editing, ...form }, { onSuccess: reset });
   }
 
   return (
@@ -391,7 +413,12 @@ function CategoriesSection() {
                 >
                   {s.edit}
                 </MiniButton>
-                <DeleteButton label={s.remove} confirmLabel={s.confirmRemove} onConfirm={() => remove.mutate(c.id)} />
+                <DeleteButton
+                  label={s.remove}
+                  confirmLabel={s.confirmRemove}
+                  onConfirm={() => remove.mutate(c.id)}
+                  busy={remove.isPending && remove.variables === c.id}
+                />
               </>
             }
           >
@@ -456,6 +483,7 @@ function CategoriesSection() {
       <SaveRow
         saveLabel={editing === null ? s.addCategory : s.save}
         cancelLabel={s.cancel}
+        busy={create.isPending || update.isPending}
         onSave={submit}
         onCancel={editing === null ? undefined : reset}
       />
@@ -496,9 +524,8 @@ function BudgetsSection() {
       limit_cents: Math.round(Number(limit) * 100),
       month_jalali: month || null,
     };
-    if (editing === null) create.mutate(body);
-    else update.mutate({ id: editing, ...body });
-    reset();
+    if (editing === null) create.mutate(body, { onSuccess: reset });
+    else update.mutate({ id: editing, ...body }, { onSuccess: reset });
   }
 
   return (
@@ -521,7 +548,12 @@ function BudgetsSection() {
                   >
                     {s.edit}
                   </MiniButton>
-                  <DeleteButton label={s.remove} confirmLabel={s.confirmRemove} onConfirm={() => remove.mutate(b.id)} />
+                  <DeleteButton
+                    label={s.remove}
+                    confirmLabel={s.confirmRemove}
+                    onConfirm={() => remove.mutate(b.id)}
+                    busy={remove.isPending && remove.variables === b.id}
+                  />
                 </>
               }
             >
@@ -554,6 +586,7 @@ function BudgetsSection() {
       <SaveRow
         saveLabel={editing === null ? s.addBudget : s.save}
         cancelLabel={s.cancel}
+        busy={create.isPending || update.isPending}
         onSave={submit}
         onCancel={editing === null ? undefined : reset}
       />
@@ -585,9 +618,8 @@ function PeopleSection() {
   function submit() {
     if (!name.trim()) return;
     const body = { name: name.trim(), contact_note: note || null };
-    if (editing === null) create.mutate(body);
-    else update.mutate({ id: editing, ...body });
-    reset();
+    if (editing === null) create.mutate(body, { onSuccess: reset });
+    else update.mutate({ id: editing, ...body }, { onSuccess: reset });
   }
 
   return (
@@ -607,7 +639,12 @@ function PeopleSection() {
                 >
                   {s.edit}
                 </MiniButton>
-                <DeleteButton label={s.remove} confirmLabel={s.confirmRemove} onConfirm={() => remove.mutate(p.id)} />
+                <DeleteButton
+                  label={s.remove}
+                  confirmLabel={s.confirmRemove}
+                  onConfirm={() => remove.mutate(p.id)}
+                  busy={remove.isPending && remove.variables === p.id}
+                />
               </>
             }
           >
@@ -634,6 +671,7 @@ function PeopleSection() {
       <SaveRow
         saveLabel={editing === null ? s.addPerson : s.save}
         cancelLabel={s.cancel}
+        busy={create.isPending || update.isPending}
         onSave={submit}
         onCancel={editing === null ? undefined : reset}
       />
@@ -652,6 +690,7 @@ function PushSection() {
   const updateNotif = useUpdateNotificationSettingsMutation();
   const subscribe = useSubscribePushMutation();
   const [message, setMessage] = useState<string | null>(null);
+  const [enabling, setEnabling] = useState(false);
   const [threshold, setThreshold] = useState<string>("");
   const [frequency, setFrequency] = useState<string>("");
 
@@ -661,19 +700,24 @@ function PushSection() {
 
   async function onEnable() {
     setMessage(null);
-    const result = await enablePush();
-    if (!result.ok) {
-      const reasons: Record<string, string> = {
-        "not-configured": s.reasonNotConfigured,
-        "permission-denied": s.reasonPermissionDenied,
-        "no-service-worker": s.reasonNoServiceWorker,
-        error: s.reasonError,
-      };
-      setMessage(reasons[result.reason]);
-      return;
+    setEnabling(true);
+    try {
+      const result = await enablePush();
+      if (!result.ok) {
+        const reasons: Record<string, string> = {
+          "not-configured": s.reasonNotConfigured,
+          "permission-denied": s.reasonPermissionDenied,
+          "no-service-worker": s.reasonNoServiceWorker,
+          error: s.reasonError,
+        };
+        setMessage(reasons[result.reason]);
+        return;
+      }
+      await subscribe.mutateAsync(result.token);
+      setMessage(s.pushEnabled);
+    } finally {
+      setEnabling(false);
     }
-    await subscribe.mutateAsync(result.token);
-    setMessage(s.pushEnabled);
   }
 
   return (
@@ -681,7 +725,8 @@ function PushSection() {
       <button
         type="button"
         onClick={onEnable}
-        disabled={!canEnable}
+        disabled={!canEnable || enabling}
+        aria-busy={enabling}
         style={{
           width: "100%",
           textAlign: "center",
@@ -694,7 +739,7 @@ function PushSection() {
           opacity: canEnable ? 1 : 0.4,
         }}
       >
-        {s.enablePush}
+        <BusyLabel busy={enabling}>{s.enablePush}</BusyLabel>
       </button>
       {!isFirebaseConfigured && (
         <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)" }}>{s.firebaseIncomplete}</div>
@@ -722,6 +767,7 @@ function PushSection() {
       <SaveRow
         saveLabel={s.saveSettings}
         cancelLabel={s.cancel}
+        busy={updateNotif.isPending}
         onSave={() =>
           updateNotif.mutate({
             uncategorized_threshold: Number(effectiveThreshold),
@@ -750,6 +796,8 @@ function WebhookSection() {
           const res = await rotate.mutateAsync();
           setToken(res.token);
         }}
+        disabled={rotate.isPending}
+        aria-busy={rotate.isPending}
         style={{
           width: "100%",
           textAlign: "center",
@@ -761,7 +809,7 @@ function WebhookSection() {
           color: "rgba(232,234,236,.8)",
         }}
       >
-        {s.generateToken}
+        <BusyLabel busy={rotate.isPending}>{s.generateToken}</BusyLabel>
       </button>
       {token && (
         <div
@@ -825,6 +873,7 @@ function SmsPatternsSection() {
                   label={s.remove}
                   confirmLabel={s.confirmRemove}
                   onConfirm={() => deletePattern.mutate(p.id)}
+                  busy={deletePattern.isPending && deletePattern.variables === p.id}
                 />
               </div>
             </div>
@@ -855,6 +904,7 @@ function SmsPatternsSection() {
                 />
                 <MiniButton
                   tone="accent"
+                  busy={testPattern.isPending}
                   onClick={async () => {
                     try {
                       const res = await testPattern.mutateAsync({ id: p.id, sampleText });
@@ -902,6 +952,7 @@ function SmsPatternsSection() {
       <SaveRow
         saveLabel={s.addPattern}
         cancelLabel={s.cancel}
+        busy={createPattern.isPending}
         onSave={async () => {
           if (!form.name || !form.body_regex) return;
           await createPattern.mutateAsync({ ...form, amount_unit: "rial", enabled: true });
@@ -935,6 +986,7 @@ function KeywordRulesSection() {
               <>
                 <MiniButton
                   title={s.edit}
+                  busy={updateRule.isPending && updateRule.variables?.id === r.id}
                   onClick={() =>
                     updateRule.mutate({
                       ...r,
@@ -944,7 +996,12 @@ function KeywordRulesSection() {
                 >
                   {r.direction === "withdrawal" ? s.withdrawal : s.deposit}
                 </MiniButton>
-                <DeleteButton label={s.remove} confirmLabel={s.confirmRemove} onConfirm={() => deleteRule.mutate(r.id)} />
+                <DeleteButton
+                  label={s.remove}
+                  confirmLabel={s.confirmRemove}
+                  onConfirm={() => deleteRule.mutate(r.id)}
+                  busy={deleteRule.isPending && deleteRule.variables === r.id}
+                />
               </>
             }
           >
@@ -973,6 +1030,7 @@ function KeywordRulesSection() {
       <SaveRow
         saveLabel={s.addKeyword}
         cancelLabel={s.cancel}
+        busy={createRule.isPending}
         onSave={async () => {
           if (!keyword) return;
           await createRule.mutateAsync({ keyword, direction });

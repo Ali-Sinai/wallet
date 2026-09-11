@@ -108,3 +108,31 @@ textarea {
 .sheet-up {
   animation: sheetUp 0.22s ease;
 }
+
+/* Button busy state: a ring in the button's own text colour. */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  border-radius: 99px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  opacity: 0.85;
+  animation: spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.6s;
+  }
+}
+
+button[aria-busy="true"] {
+  cursor: progress;
+}

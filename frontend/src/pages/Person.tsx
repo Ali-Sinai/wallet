@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Avatar, Card, EmptyNote, Input, MiniButton } from "../components/ui";
+import { Avatar, BusyLabel, Card, EmptyNote, Input, MiniButton } from "../components/ui";
 import { useI18n } from "../lib/i18n";
 import { useIsDesktop } from "../lib/useMediaQuery";
 import {
@@ -69,6 +69,8 @@ export default function Person() {
           <button
             type="button"
             onClick={() => settleAll.mutate(person.person_id)}
+            disabled={settleAll.isPending}
+            aria-busy={settleAll.isPending}
             style={{
               width: "100%",
               textAlign: "center",
@@ -81,7 +83,7 @@ export default function Person() {
               marginTop: 14,
             }}
           >
-            {t.settleUp}
+            <BusyLabel busy={settleAll.isPending}>{t.settleUp}</BusyLabel>
           </button>
         )}
       </div>
@@ -193,6 +195,8 @@ function DebtRow({ debt }: { debt: Debt }) {
                 },
               );
             }}
+            disabled={settle.isPending}
+            aria-busy={settle.isPending}
             style={{
               flex: "none",
               padding: "10px 16px",
@@ -203,7 +207,7 @@ function DebtRow({ debt }: { debt: Debt }) {
               fontWeight: 700,
             }}
           >
-            {t.settle}
+            <BusyLabel busy={settle.isPending}>{t.settle}</BusyLabel>
           </button>
         </div>
       )}

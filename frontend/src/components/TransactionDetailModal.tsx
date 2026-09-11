@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Chip, Field, Input, Overlay, OverlayHeader, Select } from "./ui";
+import { BusyLabel, Chip, Field, Input, Overlay, OverlayHeader, Select } from "./ui";
 import {
   useAccounts,
   useCategories,
@@ -127,6 +127,8 @@ export default function TransactionDetailModal({
             <button
               type="button"
               onClick={save}
+              disabled={update.isPending}
+              aria-busy={update.isPending}
               style={{
                 flex: 1,
                 textAlign: "center",
@@ -138,7 +140,7 @@ export default function TransactionDetailModal({
                 fontWeight: 700,
               }}
             >
-              {t.saveChanges}
+              <BusyLabel busy={update.isPending}>{t.saveChanges}</BusyLabel>
             </button>
             <button
               type="button"
@@ -211,6 +213,8 @@ export default function TransactionDetailModal({
               <button
                 type="button"
                 onClick={() => deleteSplit.mutate(split.id)}
+                disabled={deleteSplit.isPending}
+                aria-busy={deleteSplit.isPending}
                 style={{
                   flex: 1,
                   textAlign: "center",
@@ -222,7 +226,7 @@ export default function TransactionDetailModal({
                   fontWeight: 700,
                 }}
               >
-                {t.unsplit}
+                <BusyLabel busy={deleteSplit.isPending}>{t.unsplit}</BusyLabel>
               </button>
             )}
 
@@ -244,6 +248,8 @@ export default function TransactionDetailModal({
             <button
               type="button"
               onClick={() => remove.mutate(tx.id, { onSuccess: onClose })}
+              disabled={remove.isPending}
+              aria-busy={remove.isPending}
               style={{
                 padding: "12px 16px",
                 borderRadius: 14,
@@ -253,7 +259,7 @@ export default function TransactionDetailModal({
                 fontWeight: 700,
               }}
             >
-              {t.delete}
+              <BusyLabel busy={remove.isPending}>{t.delete}</BusyLabel>
             </button>
           </div>
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Card, EmptyNote, Field, Input, MiniButton, Select } from "../components/ui";
+import { BusyLabel, Card, EmptyNote, Field, Input, MiniButton, Select } from "../components/ui";
 import MobileSmsCard from "../components/MobileSmsCard";
 import { useI18n } from "../lib/i18n";
 import { useIsDesktop } from "../lib/useMediaQuery";
@@ -159,6 +159,8 @@ function PasteBox() {
             setResult(digits(created.length));
             setText("");
           }}
+          disabled={paste.isPending}
+          aria-busy={paste.isPending}
           style={{
             flex: "none",
             padding: "10px 16px",
@@ -169,7 +171,7 @@ function PasteBox() {
             fontWeight: 700,
           }}
         >
-          {t.parse}
+          <BusyLabel busy={paste.isPending}>{t.parse}</BusyLabel>
         </button>
       </div>
       {result !== null && (
@@ -216,7 +218,9 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
         <MiniButton tone="accent" onClick={() => setOpen(!open)}>
           {t.resolve}
         </MiniButton>
-        <MiniButton onClick={() => ignore.mutate(attempt.id)}>{t.ignore}</MiniButton>
+        <MiniButton onClick={() => ignore.mutate(attempt.id)} busy={ignore.isPending}>
+          {t.ignore}
+        </MiniButton>
       </div>
 
       {open && (
@@ -275,6 +279,8 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
                 note: null,
               });
             }}
+            disabled={resolve.isPending}
+            aria-busy={resolve.isPending}
             style={{
               textAlign: "center",
               padding: "11px 0",
@@ -285,7 +291,7 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
               fontWeight: 700,
             }}
           >
-            {t.saveTx}
+            <BusyLabel busy={resolve.isPending}>{t.saveTx}</BusyLabel>
           </button>
         </div>
       )}

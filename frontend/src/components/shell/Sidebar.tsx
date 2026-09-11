@@ -14,7 +14,7 @@ import {
   useUpdateSmsPatternMutation,
 } from "../../lib/queries";
 import { categoryName, initials } from "../../lib/domain";
-import { Avatar, Chip, Toggle } from "../ui";
+import { Avatar, BusyLabel, Chip, Toggle } from "../ui";
 import type { Transaction } from "../../types";
 
 export default function Sidebar() {
@@ -41,12 +41,19 @@ function SmsInboxCard() {
   const items = pending ?? [];
   const unparsedCount = unparsed?.length ?? 0;
 
+  const [splittingId, setSplittingId] = useState<number | null>(null);
+
   async function confirmThenSplit(id: number) {
-    const res = await confirm.mutateAsync({ id, categoryId: picked[id] ?? null });
-    const txId = (res as { transaction_id?: number }).transaction_id;
-    if (!txId) return;
-    const tx = await api.get<Transaction>(`/transactions/${txId}`);
-    openSplit(tx);
+    setSplittingId(id);
+    try {
+      const res = await confirm.mutateAsync({ id, categoryId: picked[id] ?? null });
+      const txId = (res as { transaction_id?: number }).transaction_id;
+      if (!txId) return;
+      const tx = await api.get<Transaction>(`/transactions/${txId}`);
+      openSplit(tx);
+    } finally {
+      setSplittingId(null);
+    }
   }
 
   return (
@@ -95,6 +102,10 @@ function SmsInboxCard() {
         <div className="flex flex-col" style={{ gap: 14, marginTop: 14 }}>
           {items.map((m) => {
             const signed = m.amount_cents === null ? 0 : m.direction === "withdrawal" ? -m.amount_cents : m.amount_cents;
+            const splitting = splittingId === m.id;
+            const confirming = confirm.isPending && confirm.variables?.id === m.id && !splitting;
+            const ignoring = ignore.isPending && ignore.variables === m.id;
+            const busy = confirming || splitting || ignoring;
             return (
               <div key={m.id} style={{ padding: 14, borderRadius: 16, background: "rgba(255,255,255,.035)" }}>
                 <div
@@ -142,6 +153,8 @@ function SmsInboxCard() {
                   <button
                     type="button"
                     onClick={() => confirm.mutate({ id: m.id, categoryId: picked[m.id] ?? null })}
+                    disabled={busy}
+                    aria-busy={confirming}
                     style={{
                       flex: 1,
                       textAlign: "center",
@@ -153,11 +166,13 @@ function SmsInboxCard() {
                       fontWeight: 700,
                     }}
                   >
-                    {t.confirm}
+                    <BusyLabel busy={confirming}>{t.confirm}</BusyLabel>
                   </button>
                   <button
                     type="button"
                     onClick={() => confirmThenSplit(m.id)}
+                    disabled={busy}
+                    aria-busy={splitting}
                     style={{
                       padding: "9px 12px",
                       borderRadius: 11,
@@ -166,11 +181,13 @@ function SmsInboxCard() {
                       color: "rgba(232,234,236,.8)",
                     }}
                   >
-                    {t.split}
+                    <BusyLabel busy={splitting}>{t.split}</BusyLabel>
                   </button>
                   <button
                     type="button"
                     onClick={() => ignore.mutate(m.id)}
+                    disabled={busy}
+                    aria-busy={ignoring}
                     style={{
                       padding: "9px 12px",
                       borderRadius: 11,
@@ -179,7 +196,7 @@ function SmsInboxCard() {
                       color: "rgba(232,234,236,.5)",
                     }}
                   >
-                    {t.ignore}
+                    <BusyLabel busy={ignoring}>{t.ignore}</BusyLabel>
                   </button>
                 </div>
               </div>

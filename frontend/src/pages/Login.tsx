@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useAuth } from "../lib/auth";
 import { useI18n } from "../lib/i18n";
 import { Wordmark } from "../components/shell/TopBar";
+import { BusyLabel } from "../components/ui";
 
 export default function Login() {
   const { login, loginError } = useAuth();
@@ -68,6 +69,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={busy}
+          aria-busy={busy}
           style={{
             borderRadius: 14,
             background: "#0f9b6e",
@@ -76,10 +78,9 @@ export default function Login() {
             padding: "13px 0",
             fontSize: 13.5,
             marginTop: 6,
-            opacity: busy ? 0.5 : 1,
           }}
         >
-          {t.login}
+          <BusyLabel busy={busy}>{t.login}</BusyLabel>
         </button>
 
         <button

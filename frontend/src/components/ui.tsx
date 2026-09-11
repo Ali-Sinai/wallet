@@ -72,16 +72,39 @@ export function Chip({
   );
 }
 
+export function Spinner() {
+  return <span className="spinner" aria-hidden="true" />;
+}
+
+/**
+ * Swaps a button's label for a spinner while `busy`, keeping the label in
+ * the layout (just invisible) so the button doesn't change size mid-request.
+ */
+export function BusyLabel({ busy, children }: { busy: boolean; children: ReactNode }) {
+  return (
+    <span className="inline-grid place-items-center align-middle">
+      <span style={{ gridArea: "1 / 1", visibility: busy ? "hidden" : "visible" }}>{children}</span>
+      {busy && (
+        <span className="flex" style={{ gridArea: "1 / 1" }}>
+          <Spinner />
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function PrimaryButton({
   children,
   onClick,
   disabled,
+  busy = false,
   className = "",
   type = "button",
 }: {
   children: ReactNode;
   onClick?: () => void;
   disabled?: boolean;
+  busy?: boolean;
   className?: string;
   type?: "button" | "submit";
 }) {
@@ -89,10 +112,11 @@ export function PrimaryButton({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || busy}
+      aria-busy={busy}
       className={`bg-accent text-accentInk font-bold disabled:opacity-50 ${className}`}
     >
-      {children}
+      <BusyLabel busy={busy}>{children}</BusyLabel>
     </button>
   );
 }
@@ -100,11 +124,13 @@ export function PrimaryButton({
 export function GhostButton({
   children,
   onClick,
+  busy = false,
   className = "",
   tone = "normal",
 }: {
   children: ReactNode;
   onClick?: () => void;
+  busy?: boolean;
   className?: string;
   tone?: "normal" | "muted" | "danger";
 }) {
@@ -119,10 +145,12 @@ export function GhostButton({
     <button
       type="button"
       onClick={onClick}
+      disabled={busy}
+      aria-busy={busy}
       className={`border font-bold ${className}`}
       style={{ color, borderColor }}
     >
-      {children}
+      <BusyLabel busy={busy}>{children}</BusyLabel>
     </button>
   );
 }
@@ -400,11 +428,13 @@ export function MiniButton({
   onClick,
   tone = "normal",
   title,
+  busy = false,
 }: {
   children: ReactNode;
   onClick: () => void;
   tone?: "normal" | "accent" | "danger";
   title?: string;
+  busy?: boolean;
 }) {
   const color = tone === "danger" ? "#ff7a6b" : tone === "accent" ? "#0f9b6e" : "rgba(232,234,236,.7)";
   const borderColor =
@@ -418,6 +448,8 @@ export function MiniButton({
       type="button"
       title={title}
       onClick={onClick}
+      disabled={busy}
+      aria-busy={busy}
       style={{
         padding: "6px 10px",
         borderRadius: 9,
@@ -428,7 +460,7 @@ export function MiniButton({
         whiteSpace: "nowrap",
       }}
     >
-      {children}
+      <BusyLabel busy={busy}>{children}</BusyLabel>
     </button>
   );
 }
@@ -437,7 +469,17 @@ export function MiniButton({
  * Two-step delete: the first click arms, the second confirms. Destructive
  * actions here remove real records, so they never fire on a single click.
  */
-export function DeleteButton({ onConfirm, label, confirmLabel }: { onConfirm: () => void; label: string; confirmLabel: string }) {
+export function DeleteButton({
+  onConfirm,
+  label,
+  confirmLabel,
+  busy = false,
+}: {
+  onConfirm: () => void;
+  label: string;
+  confirmLabel: string;
+  busy?: boolean;
+}) {
   const [armed, setArmed] = useState(false);
 
   useEffect(() => {
@@ -449,6 +491,7 @@ export function DeleteButton({ onConfirm, label, confirmLabel }: { onConfirm: ()
   return (
     <MiniButton
       tone="danger"
+      busy={busy}
       onClick={() => {
         if (armed) {
           onConfirm();

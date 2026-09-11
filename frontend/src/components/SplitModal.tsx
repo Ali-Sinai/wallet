@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Avatar, Chip, Overlay, OverlayHeader } from "./ui";
+import { Avatar, BusyLabel, Chip, Overlay, OverlayHeader } from "./ui";
 import { usePeople } from "../lib/queries";
 import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
@@ -357,6 +357,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
         type="button"
         onClick={() => splitMutation.mutate()}
         disabled={!canSave || splitMutation.isPending}
+        aria-busy={splitMutation.isPending}
         style={{
           width: "100%",
           textAlign: "center",
@@ -367,10 +368,10 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
           fontSize: 13.5,
           fontWeight: 700,
           marginTop: 20,
-          opacity: !canSave || splitMutation.isPending ? 0.5 : 1,
+          opacity: !canSave ? 0.5 : 1,
         }}
       >
-        {t.save}
+        <BusyLabel busy={splitMutation.isPending}>{t.save}</BusyLabel>
       </button>
 
       {splitMutation.isError && (

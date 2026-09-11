@@ -4,7 +4,7 @@ import { useModals } from "../lib/modals";
 import { api } from "../lib/api";
 import { useCategories, useConfirmSmsMutation, useIgnoreSmsMutation } from "../lib/queries";
 import { categoryName } from "../lib/domain";
-import { Chip } from "./ui";
+import { BusyLabel, Chip } from "./ui";
 import type { SmsAttempt, Transaction } from "../types";
 
 /**
@@ -26,6 +26,7 @@ export default function MobileSmsCard({
   const ignore = useIgnoreSmsMutation();
   const { openSplit } = useModals();
   const [picked, setPicked] = useState<number | null>(null);
+  const [splitting, setSplitting] = useState(false);
 
   const signed =
     attempt.amount_cents === null
@@ -41,20 +42,29 @@ export default function MobileSmsCard({
   const title = attempt.merchant || attempt.sender;
 
   async function confirmThenSplit() {
-    const res = await confirm.mutateAsync({ id: attempt.id, categoryId: picked });
-    const txId = (res as { transaction_id?: number }).transaction_id;
-    if (!txId) return;
-    const tx = await api.get<Transaction>(`/transactions/${txId}`);
-    openSplit(tx);
+    setSplitting(true);
+    try {
+      const res = await confirm.mutateAsync({ id: attempt.id, categoryId: picked });
+      const txId = (res as { transaction_id?: number }).transaction_id;
+      if (!txId) return;
+      const tx = await api.get<Transaction>(`/transactions/${txId}`);
+      openSplit(tx);
+    } finally {
+      setSplitting(false);
+    }
   }
 
   const highlight = variant === "highlight";
+  const confirming = confirm.isPending && !splitting;
+  const busy = confirm.isPending || splitting || ignore.isPending;
 
   const actions = (
     <div className="flex" style={{ gap: highlight ? 8 : 7, marginTop: highlight ? 14 : 12 }}>
       <button
         type="button"
         onClick={() => confirm.mutate({ id: attempt.id, categoryId: picked })}
+        disabled={busy}
+        aria-busy={confirming}
         style={{
           flex: 1,
           textAlign: "center",
@@ -66,11 +76,13 @@ export default function MobileSmsCard({
           fontWeight: 700,
         }}
       >
-        {t.confirm}
+        <BusyLabel busy={confirming}>{t.confirm}</BusyLabel>
       </button>
       <button
         type="button"
         onClick={confirmThenSplit}
+        disabled={busy}
+        aria-busy={splitting}
         style={{
           flex: "none",
           padding: highlight ? "11px 14px" : "10px 13px",
@@ -80,11 +92,13 @@ export default function MobileSmsCard({
           color: "rgba(232,234,236,.8)",
         }}
       >
-        {t.split}
+        <BusyLabel busy={splitting}>{t.split}</BusyLabel>
       </button>
       <button
         type="button"
         onClick={() => ignore.mutate(attempt.id)}
+        disabled={busy}
+        aria-busy={ignore.isPending}
         style={{
           flex: "none",
           padding: highlight ? "11px 14px" : "10px 13px",
@@ -94,7 +108,7 @@ export default function MobileSmsCard({
           color: "rgba(232,234,236,.5)",
         }}
       >
-        {t.ignore}
+        <BusyLabel busy={ignore.isPending}>{t.ignore}</BusyLabel>
       </button>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Card, EmptyNote } from "../components/ui";
+import { BusyLabel, Card, EmptyNote } from "../components/ui";
 import { useCategories, useCategorizeMutation, useUncategorized } from "../lib/queries";
 import { useI18n } from "../lib/i18n";
 import { categoryName, signedCents, txTitle } from "../lib/domain";
@@ -94,9 +94,10 @@ export default function Review() {
               key={c.id}
               type="button"
               onClick={() => pick(c.id)}
+              disabled={categorize.isPending}
+              aria-busy={categorize.isPending && categorize.variables?.categoryId === c.id}
               className="flex items-center justify-center transition active:scale-95"
               style={{
-                gap: 8,
                 padding: "16px 12px",
                 borderRadius: 16,
                 background: c.color,
@@ -105,8 +106,12 @@ export default function Review() {
                 fontWeight: 700,
               }}
             >
-              <span style={{ fontSize: 11, opacity: 0.7 }}>{digits(i + 1)}</span>
-              {categoryName(c, fa, "")}
+              <BusyLabel busy={categorize.isPending && categorize.variables?.categoryId === c.id}>
+                <span className="flex items-center" style={{ gap: 8 }}>
+                  <span style={{ fontSize: 11, opacity: 0.7 }}>{digits(i + 1)}</span>
+                  {categoryName(c, fa, "")}
+                </span>
+              </BusyLabel>
             </button>
           ))}
         </div>

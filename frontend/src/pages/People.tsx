@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Avatar, Card, EmptyNote, SectionTitle } from "../components/ui";
+import { Avatar, BusyLabel, Card, EmptyNote, SectionTitle } from "../components/ui";
 import { useI18n } from "../lib/i18n";
 import { useIsDesktop } from "../lib/useMediaQuery";
 import { usePeopleBalances, useSettleAllMutation } from "../lib/queries";
@@ -63,6 +63,7 @@ function DesktopPeople() {
         <div className="flex flex-col" style={{ marginTop: 8 }}>
           {(balances ?? []).map((p) => {
             const color = balanceColor(p.net_cents);
+            const settling = settleAll.isPending && settleAll.variables === p.person_id;
             return (
               <div
                 key={p.person_id}
@@ -85,6 +86,8 @@ function DesktopPeople() {
                   <button
                     type="button"
                     onClick={() => settleAll.mutate(p.person_id)}
+                    disabled={settling}
+                    aria-busy={settling}
                     style={{
                       padding: "8px 13px",
                       borderRadius: 10,
@@ -94,7 +97,7 @@ function DesktopPeople() {
                       color: "rgba(232,234,236,.8)",
                     }}
                   >
-                    {t.settleUp}
+                    <BusyLabel busy={settling}>{t.settleUp}</BusyLabel>
                   </button>
                 )}
               </div>
