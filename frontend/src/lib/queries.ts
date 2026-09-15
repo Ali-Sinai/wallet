@@ -409,11 +409,20 @@ export function useConfirmSmsMutation() {
       id,
       categoryId,
       note,
+      accountId,
     }: {
       id: number;
       categoryId?: number | null;
       note?: string | null;
-    }) => api.post(`/sms/${id}/confirm`, { category_id: categoryId ?? null, note: note ?? null }),
+      /** Only needed when the message carried no card digits and there is more
+       * than one account — otherwise the server works it out. */
+      accountId?: number | null;
+    }) =>
+      api.post(`/sms/${id}/confirm`, {
+        category_id: categoryId ?? null,
+        note: note ?? null,
+        account_id: accountId ?? null,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sms"] });
       invalidateMoney(qc);

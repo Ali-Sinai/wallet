@@ -3,8 +3,13 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "../lib/i18n";
 import { useModals } from "../lib/modals";
 import { api } from "../lib/api";
-import { useCategories, useConfirmSmsMutation, useIgnoreSmsMutation } from "../lib/queries";
-import { categoryName } from "../lib/domain";
+import {
+  useAccounts,
+  useCategories,
+  useConfirmSmsMutation,
+  useIgnoreSmsMutation,
+} from "../lib/queries";
+import { accountLabel, categoryName } from "../lib/domain";
 import { BusyLabel, Chip } from "@/components/primitives";
 import type { SmsAttempt, Transaction } from "../types";
 
@@ -23,11 +28,19 @@ export default function MobileSmsCard({
 }) {
   const { t, fa, digits, money } = useI18n();
   const { data: categories } = useCategories();
+  const { data: accounts } = useAccounts();
   const confirm = useConfirmSmsMutation();
   const ignore = useIgnoreSmsMutation();
   const { openSplit } = useModals();
   const [picked, setPicked] = useState<number | null>(null);
+  const [accountId, setAccountId] = useState<number | null>(null);
   const [splitting, setSplitting] = useState(false);
+
+  // Messages that name no card (transfers, most of Blu's wording) parse fine
+  // but leave the server nothing to file them under. One account needs no
+  // asking; several do.
+  const needsAccount = !attempt.account_last4 && (accounts?.length ?? 0) > 1;
+  const chosenAccountId = needsAccount ? (accountId ?? accounts?.[0]?.id ?? null) : null;
 
   const signed =
     attempt.amount_cents === null
@@ -45,7 +58,11 @@ export default function MobileSmsCard({
   async function confirmThenSplit() {
     setSplitting(true);
     try {
-      const res = await confirm.mutateAsync({ id: attempt.id, categoryId: picked });
+      const res = await confirm.mutateAsync({
+        id: attempt.id,
+        categoryId: picked,
+        accountId: chosenAccountId,
+      });
       const txId = (res as { transaction_id?: number }).transaction_id;
       if (!txId) return;
       const tx = await api.get<Transaction>(`/transactions/${txId}`);
@@ -59,10 +76,32 @@ export default function MobileSmsCard({
   const confirming = confirm.isPending && !splitting;
   const busy = confirm.isPending || splitting || ignore.isPending;
 
+  const accountPicker = needsAccount ? (
+    <div style={{ marginTop: highlight ? 12 : 10 }}>
+      <div style={{ fontSize: 11, color: "rgba(232,234,236,.42)", marginBottom: 6 }}>
+        {t.account}
+      </div>
+      <div className="flex flex-wrap" style={{ gap: highlight ? 7 : 6 }}>
+        {accounts?.map((a) => (
+          <Chip
+            key={a.id}
+            active={chosenAccountId === a.id}
+            onClick={() => setAccountId(a.id)}
+            className={highlight ? "px-[12px] py-[7px]" : "px-[11px] py-[6px] text-[11.5px]!"}
+          >
+            {accountLabel(a, fa, digits)}
+          </Chip>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
   const actions = (
     <div className="flex" style={{ gap: highlight ? 8 : 7, marginTop: highlight ? 14 : 12 }}>
       <Button variant="plain" size="plain"
-        onClick={() => confirm.mutate({ id: attempt.id, categoryId: picked })}
+        onClick={() =>
+          confirm.mutate({ id: attempt.id, categoryId: picked, accountId: chosenAccountId })
+        }
         disabled={busy}
         aria-busy={confirming}
         style={{
@@ -160,6 +199,7 @@ export default function MobileSmsCard({
             </Chip>
           ))}
         </div>
+        {accountPicker}
         {actions}
       </div>
     );
@@ -198,6 +238,7 @@ export default function MobileSmsCard({
           </Chip>
         ))}
       </div>
+      {accountPicker}
       {actions}
     </div>
   );
