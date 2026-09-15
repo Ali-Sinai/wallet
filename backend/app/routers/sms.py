@@ -46,7 +46,14 @@ def _load_patterns_and_rules(
 def _account_for_last4(session: Session, last4: str | None) -> Account | None:
     if last4 is None:
         return None
-    return session.exec(select(Account).where(Account.last4 == last4)).first()
+    matches = list(session.exec(select(Account).where(Account.last4 == last4)).all())
+    # A replaced card usually keeps the same trailing digits as the old one, so
+    # prefer the account still in use when several rows share a last4.
+    return next((a for a in matches if a.is_active), matches[0] if matches else None)
+
+
+def _active_accounts(session: Session) -> list[Account]:
+    return list(session.exec(select(Account).where(Account.is_active == True)).all())  # noqa: E712
 
 
 def _store_attempt(session: Session, sender: str, result: ParseResult) -> SmsIngestAttempt | None:
@@ -176,6 +183,54 @@ def unparsed(session: Session = Depends(get_session)) -> list[SmsIngestAttempt]:
 class ConfirmBody(BaseModel):
     category_id: int | None = None
     note: str | None = None
+    # Which account the transaction lands in. Normally left out: the account is
+    # recovered from the card digits in the message. Only messages that carry no
+    # digits at all, on a setup with more than one account, need it — see
+    # _resolve_account.
+    account_id: int | None = None
+
+
+def _resolve_account(
+    session: Session, attempt: SmsIngestAttempt, account_id: int | None
+) -> Account:
+    """Which account a confirmed attempt belongs to.
+
+    Plenty of bank messages name no card at all — a transfer confirmation, most
+    of Blu's wording — and the patterns treat the card digits as optional, so
+    those parse fine and show up in the inbox with everything but an account.
+    Confirming them used to 400 outright; now an explicit account_id settles it,
+    and a single-account setup (the common case) needs no choice at all.
+    """
+    if account_id is not None:
+        account = session.get(Account, account_id)
+        if account is None:
+            raise HTTPException(status_code=404, detail="account not found")
+        return account
+
+    account = _account_for_last4(session, attempt.account_last4)
+    if account is not None:
+        return account
+
+    if attempt.account_last4 is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"no account matches card ····{attempt.account_last4}; "
+                "add it under Accounts, or confirm with an explicit account_id"
+            ),
+        )
+
+    active = _active_accounts(session)
+    if len(active) == 1:
+        return active[0]
+    if not active:
+        raise HTTPException(
+            status_code=400, detail="no active account to file this under; add one under Accounts"
+        )
+    raise HTTPException(
+        status_code=400,
+        detail="this message names no card; confirm with an explicit account_id",
+    )
 
 
 @router.post("/sms/{attempt_id}/confirm", dependencies=[Depends(get_current_username)])
@@ -190,11 +245,7 @@ def confirm(
             status_code=400, detail="attempt is missing required fields; resolve manually instead"
         )
 
-    account = _account_for_last4(session, attempt.account_last4)
-    if account is None:
-        raise HTTPException(
-            status_code=400, detail="no matching whitelisted account; resolve manually instead"
-        )
+    account = _resolve_account(session, attempt, body.account_id)
 
     occurred_at = attempt.occurred_at or attempt.received_at
     h = dedup_hash(
