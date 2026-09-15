@@ -20,6 +20,7 @@ Design source: [`Design/iranian-finance-tracking-app`](Design/iranian-finance-tr
 - One SQLite file, WAL mode. Single user — no Postgres daemon for no benefit.
 - Alembic migrations are checked into `backend/alembic/versions/` and applied automatically at startup (see `_run_migrations()` in `backend/app/main.py`) — you never run `alembic upgrade` by hand in normal operation.
 - Raw SMS text is **never stored**, not even temporarily. Only fields extracted by the parser (amount, direction, account, timestamp, merchant) are persisted, and only until you confirm or dismiss them — see `SmsIngestAttempt` in `backend/app/models.py`.
+- Every `/api` error response carries a `request_body` field alongside `detail`, holding the payload the sender sent — parsed JSON when it was valid, raw text when it wasn't, with password/token/secret values redacted. It's what makes a rejected request from a phone or an offline-queue replay reconstructable after the fact; see `backend/app/errors.py`.
 - Firebase Cloud Messaging (push notifications) is fully optional. Without a service-account file configured, the app boots normally with push disabled — nothing else depends on it.
 
 ## Setup — Docker (recommended)
