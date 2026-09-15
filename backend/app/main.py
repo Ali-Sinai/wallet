@@ -9,8 +9,8 @@ from pathlib import Path
 
 from alembic.config import Config as AlembicConfig
 from fastapi import FastAPI, Header, HTTPException, Request, status
-from fastapi.exception_handlers import http_exception_handler
-from fastapi.responses import FileResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -19,6 +19,11 @@ from alembic import command
 from app.bootstrap import ensure_admin_user
 from app.config import get_settings
 from app.db import engine
+from app.errors import (
+    CaptureRequestBodyMiddleware,
+    http_exception_handler_with_body,
+    validation_exception_handler,
+)
 from app.firebase import init_firebase
 from app.routers import (
     accounts,
@@ -101,6 +106,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="Wallet", lifespan=lifespan)
 
+# Error responses echo back the body the sender sent (see app/errors.py); the
+# middleware is what makes that body still available once a handler runs.
+app.add_middleware(CaptureRequestBodyMiddleware)
+# Starlette types the handler argument as taking a bare Exception, so a handler
+# narrowed to the exception it's registered for never matches — the ignores are
+# that known mismatch, not a real type error.
+app.add_exception_handler(StarletteHTTPException, http_exception_handler_with_body)  # type: ignore[arg-type]
+app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
+
 if get_settings().cors_origins_list:
     from fastapi.middleware.cors import CORSMiddleware
 
@@ -157,7 +171,7 @@ if _static_dir.is_dir():
     app.mount("/", StaticFiles(directory=str(_static_dir), html=True), name="static")
 
     @app.exception_handler(StarletteHTTPException)
-    async def spa_fallback(request: Request, exc: StarletteHTTPException) -> FileResponse:
+    async def spa_fallback(request: Request, exc: StarletteHTTPException) -> Response:
         # React Router owns client-side paths like /activity, /people, /review —
         # a direct navigation or refresh there has no matching static file, so
         # StaticFiles 404s. Hand it index.html instead and let the client router
@@ -167,4 +181,4 @@ if _static_dir.is_dir():
         index_path = _static_dir / "index.html"
         if is_missing_page and index_path.is_file():
             return FileResponse(index_path)
-        return await http_exception_handler(request, exc)  # type: ignore[return-value]
+        return await http_exception_handler_with_body(request, exc)
