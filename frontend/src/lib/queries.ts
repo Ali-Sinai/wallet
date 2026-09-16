@@ -21,6 +21,7 @@ import type {
   PersonIn,
   Point,
   CategorySlice,
+  SellerHint,
   SmsAttempt,
   SmsPattern,
   SplitOut,
@@ -399,6 +400,23 @@ export function useSmsUnparsed() {
     queryKey: ["sms", "unparsed"],
     queryFn: () => api.get<SmsAttempt[]>("/sms/unparsed"),
     refetchInterval: 60_000,
+  });
+}
+
+/** Stores named by an OTP message whose purchase hasn't arrived yet. */
+export function useSellerHints() {
+  return useQuery({
+    queryKey: ["sms", "seller-hints"],
+    queryFn: () => api.get<SellerHint[]>("/sms/seller-hints"),
+    refetchInterval: 60_000,
+  });
+}
+
+export function useDeleteSellerHintMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/sms/seller-hints/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sms"] }),
   });
 }
 

@@ -32,6 +32,12 @@ class Settings(BaseSettings):
 
     ingest_attempt_retention_days: int = 14
 
+    # How long the seller named by an OTP message stays available to the
+    # withdrawal that follows it (see app/seller_hints.py). Long enough for a
+    # slow checkout, short enough that an abandoned payment page never labels
+    # the next purchase.
+    otp_hint_ttl_minutes: int = 30
+
     # Comma-separated list of allowed frontend origins, e.g.
     # "https://wallet.vercel.app". Only needed when the frontend is deployed
     # separately from the backend (same-origin deployments need nothing

@@ -12,14 +12,16 @@ import { accountLabel, categoryName } from "../lib/domain";
 import {
   useAccounts,
   useCategories,
+  useDeleteSellerHintMutation,
   useIgnoreSmsMutation,
   usePasteSmsMutation,
   useResolveSmsManuallyMutation,
+  useSellerHints,
   useSmsPatterns,
   useSmsPending,
   useSmsUnparsed,
 } from "../lib/queries";
-import type { Direction, SmsAttempt } from "../types";
+import type { Direction, SellerHint, SmsAttempt } from "../types";
 
 /**
  * The SMS queues. The design bundle drew only the parsed inbox; the API also
@@ -30,6 +32,7 @@ export default function Inbox() {
   const isDesktop = useIsDesktop();
   const { data: pending } = useSmsPending();
   const { data: unparsed } = useSmsUnparsed();
+  const { data: hints } = useSellerHints();
   const { data: patterns } = useSmsPatterns();
   const items = pending ?? [];
 
@@ -51,6 +54,20 @@ export default function Inbox() {
           <MobileSmsCard key={m.id} attempt={m} variant="list" />
         ))}
       </div>
+
+      {(hints?.length ?? 0) > 0 && (
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+          <div className="flex items-baseline justify-between">
+            <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.sellerHints}</div>
+            <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>{t.sellerHintsHint}</div>
+          </div>
+          <div className="flex flex-col" style={{ gap: 8, marginTop: 12 }}>
+            {(hints ?? []).map((h) => (
+              <SellerHintRow key={h.id} hint={h} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {(unparsed?.length ?? 0) > 0 && (
         <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
@@ -205,16 +222,23 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
 
   return (
     <div style={{ padding: 14, borderRadius: 16, background: "#101318", border: "1px solid rgba(255,255,255,.07)" }}>
+      <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>{attempt.sender}</div>
       <div
         style={{
           fontSize: 12,
           color: "rgba(232,234,236,.55)",
           lineHeight: 1.5,
+          marginTop: 6,
           borderInlineStart: "2px solid rgba(255,122,107,.4)",
           paddingInlineStart: 10,
+          // The message no pattern could read, exactly as it arrived — line
+          // breaks and all, since that shape is half of what a new regex
+          // has to match.
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
         }}
       >
-        {attempt.merchant || attempt.sender}
+        {attempt.raw_body || attempt.merchant || attempt.sender}
       </div>
 
       <div className="flex" style={{ gap: 7, marginTop: 11 }}>
@@ -297,6 +321,36 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * A store an OTP message named, still waiting for its purchase. Withdrawals
+ * claim these on their own; the row is here so a merchant that shows up on a
+ * transaction is explainable, and droppable when the purchase never happened.
+ */
+function SellerHintRow({ hint }: { hint: SellerHint }) {
+  const { t, digits, money } = useI18n();
+  const drop = useDeleteSellerHintMutation();
+
+  return (
+    <div
+      className="flex items-center"
+      style={{ gap: 11, padding: "11px 13px", borderRadius: 14, background: "#101318" }}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="truncate" style={{ fontSize: 12.5, fontWeight: 700 }}>
+          {hint.seller}
+        </div>
+        <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+          {hint.amount_cents !== null ? money(hint.amount_cents, true) : hint.sender}
+          {hint.account_last4 ? ` · ····${digits(hint.account_last4)}` : ""}
+        </div>
+      </div>
+      <MiniButton onClick={() => drop.mutate(hint.id)} busy={drop.isPending}>
+        {t.ignore}
+      </MiniButton>
     </div>
   );
 }

@@ -29,6 +29,19 @@ class ParseStatus(StrEnum):
     UNPARSED = "unparsed"
 
 
+class PatternKind(StrEnum):
+    """What a pattern's match means.
+
+    TRANSACTION — the money moved; a match becomes a pending ingest attempt.
+    OTP — the one-time password a bank sends *before* an online purchase. It
+    names the store but moves no money, so a match records a seller hint the
+    following withdrawal picks up (see `OtpSellerHint`), never a transaction.
+    """
+
+    TRANSACTION = "transaction"
+    OTP = "otp"
+
+
 class DebtStatus(StrEnum):
     OPEN = "open"
     PARTIAL = "partial"
@@ -92,6 +105,10 @@ class SmsPattern(SQLModel, table=True):
     sender_match: str
     body_regex: str
     amount_unit: AmountUnit = AmountUnit.RIAL
+    # OTP patterns are tried before transaction ones: a "رمز پویا" message
+    # often also matches a loose transaction regex ("خرید … ریال"), and it must
+    # not be read as money leaving the account.
+    kind: PatternKind = PatternKind.TRANSACTION
     enabled: bool = True
     created_at: datetime = Field(default_factory=utc_now)
 
@@ -105,6 +122,13 @@ class SmsIngestAttempt(SQLModel, table=True):
     a background sweep once `expires_at` passes, regardless of resolution.
     Messages whose account isn't on the whitelist are dropped before this
     table is ever touched — there is no "ignored" row for them.
+
+    The one exception to "never the raw text" is `raw_body`, kept only for
+    UNPARSED rows: with no pattern matched there is nothing else to show, and
+    deciding what rule to write means reading the message. It lives and dies
+    with the row — gone the moment the message is resolved or ignored, and
+    swept with everything else once `expires_at` passes. A row that parsed
+    carries no body, so nothing that becomes a Transaction ever stored one.
     """
 
     id: int | None = Field(default=None, primary_key=True)
@@ -116,6 +140,28 @@ class SmsIngestAttempt(SQLModel, table=True):
     account_last4: str | None = None
     occurred_at: datetime | None = None
     merchant: str | None = None
+    raw_body: str | None = None  # UNPARSED rows only — see the docstring
+    received_at: datetime = Field(default_factory=utc_now)
+    expires_at: datetime
+
+
+class OtpSellerHint(SQLModel, table=True):
+    """The store named by an OTP message, waiting for the withdrawal it belongs to.
+
+    Banks send the one-time password for an online purchase just before the
+    withdrawal SMS, and that first message is the only one naming the seller.
+    A match on an OTP pattern parks the name here; the next matching
+    withdrawal claims it as its merchant and deletes the row. Unclaimed rows
+    expire on their own (`expires_at`) and are swept alongside ingest
+    attempts — a purchase abandoned at the payment page leaves nothing behind.
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    sender: str
+    matched_pattern_id: int | None = Field(default=None, foreign_key="smspattern.id")
+    seller: str
+    amount_cents: int | None = None
+    account_last4: str | None = None
     received_at: datetime = Field(default_factory=utc_now)
     expires_at: datetime
 
