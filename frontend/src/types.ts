@@ -1,6 +1,7 @@
 export type Direction = "deposit" | "withdrawal";
 export type TxSource = "sms" | "manual" | "split_settlement";
 export type ParseStatus = "parsed" | "unparsed";
+export type PatternKind = "transaction" | "otp";
 export type DebtStatus = "open" | "partial" | "settled";
 export type DebtDirection = "owed_to_me" | "i_owe";
 export type SplitMode = "i_paid" | "they_paid";
@@ -79,7 +80,20 @@ export interface SmsAttempt {
   account_last4: string | null;
   occurred_at: string | null;
   merchant: string | null;
+  /** The message as it arrived. Only unparsed attempts carry it, and only
+   * until they are resolved — nothing persists it. */
+  raw_body: string | null;
   received_at: string;
+}
+
+/** A store named by an OTP message, waiting for the purchase it belongs to. */
+export interface SellerHint {
+  id: number;
+  sender: string;
+  seller: string;
+  amount_cents: number | null;
+  received_at: string;
+  expires_at: string;
 }
 
 export interface SmsPattern {
@@ -88,6 +102,9 @@ export interface SmsPattern {
   sender_match: string;
   body_regex: string;
   amount_unit: "rial" | "toman";
+  /** "otp" reads the one-time-password message a bank sends before an online
+   * purchase, for the seller name it carries — it never books a transaction. */
+  kind: PatternKind;
   enabled: boolean;
 }
 

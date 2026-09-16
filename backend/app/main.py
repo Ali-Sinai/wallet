@@ -44,6 +44,7 @@ from app.routers import (
 )
 from app.routers.sms import purge_expired_attempts
 from app.seed_data import ensure_base_data
+from app.seller_hints import purge_expired_hints
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -74,6 +75,9 @@ async def _purge_loop() -> None:
                 count = purge_expired_attempts(session)
                 if count:
                     logger.info("Purged %d expired SMS ingest attempts", count)
+                hints = purge_expired_hints(session)
+                if hints:
+                    logger.info("Purged %d unclaimed OTP seller hints", hints)
         except Exception:
             logger.exception("Ingest-attempt purge sweep failed")
 
@@ -88,6 +92,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             ensure_base_data(session)
             if not _IS_SERVERLESS:
                 purge_expired_attempts(session)
+                purge_expired_hints(session)
     except Exception:
         # A failure here (unreachable DB, schema not migrated yet) must not
         # take the whole app down: on serverless the app *is* the only way to

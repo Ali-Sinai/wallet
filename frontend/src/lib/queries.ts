@@ -21,6 +21,7 @@ import type {
   PersonIn,
   Point,
   CategorySlice,
+  SellerHint,
   SmsAttempt,
   SmsPattern,
   SplitOut,
@@ -399,6 +400,25 @@ export function useSmsUnparsed() {
     queryKey: ["sms", "unparsed"],
     queryFn: () => api.get<SmsAttempt[]>("/sms/unparsed"),
     refetchInterval: 60_000,
+  });
+}
+
+/** Stores named by an OTP message whose purchase hasn't arrived yet. A hint
+ * only lives a couple of minutes, so this polls faster than the other queues
+ * — otherwise the list is stale for most of a hint's life. */
+export function useSellerHints() {
+  return useQuery({
+    queryKey: ["sms", "seller-hints"],
+    queryFn: () => api.get<SellerHint[]>("/sms/seller-hints"),
+    refetchInterval: 20_000,
+  });
+}
+
+export function useDeleteSellerHintMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/sms/seller-hints/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sms"] }),
   });
 }
 

@@ -8,7 +8,7 @@ from sqlmodel import Session, select
 
 from app.db import get_session
 from app.deps import get_current_username
-from app.models import AmountUnit, Direction, KeywordRule, SmsPattern
+from app.models import AmountUnit, Direction, KeywordRule, PatternKind, SmsPattern
 from app.sms_parser import parse_amount
 
 router = APIRouter(
@@ -21,6 +21,9 @@ class SmsPatternIn(BaseModel):
     sender_match: str
     body_regex: str
     amount_unit: AmountUnit = AmountUnit.RIAL
+    # "otp" patterns read the one-time-password message a bank sends before an
+    # online purchase, for the seller name it carries — see PatternKind.
+    kind: PatternKind = PatternKind.TRANSACTION
     enabled: bool = True
 
 
@@ -110,7 +113,18 @@ def test_pattern(
         except ValueError:
             amount_cents = None
 
-    return {"matched": True, "groups": groups, "amount_cents": amount_cents}
+    result: dict[str, object] = {
+        "matched": True,
+        "kind": pattern.kind,
+        "groups": groups,
+        "amount_cents": amount_cents,
+    }
+    if pattern.kind == PatternKind.OTP and not (groups.get("merchant") or groups.get("seller")):
+        # It matched, but an OTP pattern with no seller group is ingested as if
+        # it hadn't — say so here rather than at 2am when a purchase goes
+        # through unlabelled.
+        result["warning"] = "OTP pattern matched but captured no (?P<merchant>...) seller group"
+    return result
 
 
 class KeywordRuleIn(BaseModel):

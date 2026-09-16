@@ -44,7 +44,7 @@ import {
   useUpdatePersonMutation,
   useUpdateSmsPatternMutation,
 } from "../lib/queries";
-import type { Direction } from "../types";
+import type { Direction, PatternKind } from "../types";
 
 function useS() {
   const { lang } = useI18n();
@@ -867,7 +867,12 @@ function SmsPatternsSection() {
   const deletePattern = useDeleteSmsPatternMutation();
   const testPattern = useTestSmsPatternMutation();
 
-  const [form, setForm] = useState({ name: "", sender_match: "", body_regex: "" });
+  const [form, setForm] = useState<{
+    name: string;
+    sender_match: string;
+    body_regex: string;
+    kind: PatternKind;
+  }>({ name: "", sender_match: "", body_regex: "", kind: "transaction" });
   const [testFor, setTestFor] = useState<number | null>(null);
   const [sampleText, setSampleText] = useState("");
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -895,8 +900,24 @@ function SmsPatternsSection() {
                 />
               </div>
             </div>
-            <div dir="ltr" style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
-              sender: {p.sender_match}
+            <div className="flex items-center" style={{ gap: 6 }}>
+              <div dir="ltr" className="min-w-0 truncate" style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+                sender: {p.sender_match}
+              </div>
+              {p.kind === "otp" && (
+                <span
+                  className="flex-none"
+                  style={{
+                    fontSize: 10,
+                    padding: "2px 7px",
+                    borderRadius: 99,
+                    background: "rgba(224,150,40,.15)",
+                    color: "#e0a628",
+                  }}
+                >
+                  {s.otpKind}
+                </span>
+              )}
             </div>
             <Textarea
               defaultValue={p.body_regex}
@@ -952,6 +973,17 @@ function SmsPatternsSection() {
 
       <div style={{ height: 1, background: "rgba(255,255,255,.07)" }} />
       <div style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>{s.addPatternLabel}</div>
+      <Select
+        value={form.kind}
+        onChange={(v) => setForm({ ...form, kind: v as PatternKind })}
+        options={[
+          { value: "transaction", label: s.transactionKind },
+          { value: "otp", label: s.otpKind },
+        ]}
+      />
+      <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)" }}>
+        {form.kind === "otp" ? s.otpKindHint : s.transactionKindHint}
+      </div>
       <Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder={s.namePlaceholder} />
       <Input
         value={form.sender_match}
@@ -960,7 +992,7 @@ function SmsPatternsSection() {
         dir="ltr"
       />
       <Textarea
-        placeholder={s.regexPlaceholder}
+        placeholder={form.kind === "otp" ? s.otpRegexPlaceholder : s.regexPlaceholder}
         dir="ltr"
         rows={2}
         value={form.body_regex}
@@ -975,7 +1007,7 @@ function SmsPatternsSection() {
         onSave={async () => {
           if (!form.name || !form.body_regex) return;
           await createPattern.mutateAsync({ ...form, amount_unit: "rial", enabled: true });
-          setForm({ name: "", sender_match: "", body_regex: "" });
+          setForm({ name: "", sender_match: "", body_regex: "", kind: "transaction" });
         }}
       />
     </Section>

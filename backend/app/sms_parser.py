@@ -12,13 +12,14 @@ from __future__ import annotations
 
 import hashlib
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
 
 import jdatetime
 
 from app.jalali import TEHRAN_OFFSET
-from app.models import AmountUnit, Direction, KeywordRule, SmsPattern
+from app.models import AmountUnit, Direction, KeywordRule, PatternKind, SmsPattern
 
 PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹"
 ARABIC_INDIC_DIGITS = "٠١٢٣٤٥٦٧٨٩"
@@ -58,11 +59,25 @@ class ParsedFields:
 
 
 @dataclass(frozen=True)
+class SellerHintFields:
+    """What an OTP message tells us about the purchase it precedes."""
+
+    seller: str
+    amount_cents: int | None
+
+
+@dataclass(frozen=True)
 class ParseResult:
-    status: str  # "parsed" | "unparsed" | "ignored_account"
+    status: str  # "parsed" | "unparsed" | "ignored_account" | "otp"
     matched_pattern_id: int | None
     fields: ParsedFields
     sender: str
+    # Set only when status == "otp": no money moved, just the store's name.
+    seller_hint: SellerHintFields | None = None
+
+
+def _to_cents(amount_value: int, unit: AmountUnit) -> int:
+    return amount_value * 10 if unit == AmountUnit.RIAL else amount_value * 100
 
 
 def _direction_from_text(text: str, keyword_rules: list[KeywordRule]) -> Direction | None:
@@ -136,6 +151,54 @@ def generic_extract(body: str, keyword_rules: list[KeywordRule]) -> ParsedFields
     )
 
 
+def _matching_patterns(
+    patterns: list[SmsPattern], kind: PatternKind, sender: str, body: str
+) -> Iterator[tuple[SmsPattern, dict[str, str | None]]]:
+    """Yield (pattern, groups) for every enabled pattern of `kind` that matches."""
+    for pattern in patterns:
+        if not pattern.enabled or pattern.kind != kind:
+            continue
+        if pattern.sender_match and pattern.sender_match not in sender:
+            continue
+        try:
+            match = re.search(pattern.body_regex, body, re.UNICODE)
+        except re.error:
+            # A pattern saved before validation existed shouldn't break ingest.
+            continue
+        if match:
+            yield pattern, match.groupdict()
+
+
+def _match_otp(*, sender: str, body: str, patterns: list[SmsPattern]) -> ParseResult | None:
+    """An OTP message names the store but moves no money — see `PatternKind`.
+
+    The seller group is what makes the match worth anything, so a pattern that
+    matches without one is passed over rather than parking an empty hint.
+    """
+    for pattern, groups in _matching_patterns(patterns, PatternKind.OTP, sender, body):
+        seller = groups.get("merchant") or groups.get("seller")
+        seller = seller.strip(" \t:،,-") if seller else None
+        if not seller:
+            continue
+
+        amount_cents: int | None = None
+        amount_raw = groups.get("amount")
+        if amount_raw:
+            try:
+                amount_cents = _to_cents(parse_amount(amount_raw), pattern.amount_unit)
+            except ValueError:
+                amount_cents = None
+
+        return ParseResult(
+            status="otp",
+            matched_pattern_id=pattern.id,
+            fields=ParsedFields(None, None, None, None, None),
+            sender=sender,
+            seller_hint=SellerHintFields(seller=seller, amount_cents=amount_cents),
+        )
+    return None
+
+
 def parse_sms(
     *,
     sender: str,
@@ -145,20 +208,11 @@ def parse_sms(
     keyword_rules: list[KeywordRule],
     whitelisted_last4: set[str],
 ) -> ParseResult:
-    for pattern in patterns:
-        if not pattern.enabled:
-            continue
-        if pattern.sender_match and pattern.sender_match not in sender:
-            continue
-        try:
-            match = re.search(pattern.body_regex, body, re.UNICODE)
-        except re.error:
-            # A pattern saved before validation existed shouldn't break ingest.
-            continue
-        if not match:
-            continue
+    otp = _match_otp(sender=sender, body=body, patterns=patterns)
+    if otp is not None:
+        return otp
 
-        groups = match.groupdict()
+    for pattern, groups in _matching_patterns(patterns, PatternKind.TRANSACTION, sender, body):
         amount_raw = groups.get("amount")
         if not amount_raw:
             continue
@@ -167,9 +221,7 @@ def parse_sms(
         except ValueError:
             continue
 
-        amount_cents = (
-            amount_value * 10 if pattern.amount_unit == AmountUnit.RIAL else amount_value * 100
-        )
+        amount_cents = _to_cents(amount_value, pattern.amount_unit)
 
         direction = _direction_from_text(groups.get("type") or "", keyword_rules)
         if direction is None:
