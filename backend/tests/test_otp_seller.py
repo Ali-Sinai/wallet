@@ -104,7 +104,6 @@ def test_an_otp_message_is_read_as_a_seller_hint_not_a_transaction(session: Sess
     assert result.seller_hint is not None
     assert result.seller_hint.seller == "دیجی کالا"
     assert result.seller_hint.amount_cents == 24_500_000  # 2,450,000 Rial
-    assert result.seller_hint.account_last4 == "4417"
     # It says "خرید"-shaped things, but no money moved with it.
     assert result.fields.amount_cents is None
 
@@ -191,16 +190,12 @@ def test_an_expired_hint_is_not_claimed(session: Session) -> None:
         session,
         sender="melli",
         matched_pattern_id=None,
-        hint=SellerHintFields(seller="دیجی کالا", amount_cents=24_500_000, account_last4="4417"),
-        received_at=utc_now() - timedelta(days=1),  # well past otp_hint_ttl_minutes
+        hint=SellerHintFields(seller="دیجی کالا", amount_cents=24_500_000),
+        received_at=utc_now() - timedelta(minutes=5),  # past otp_hint_ttl_minutes (2)
     )
 
     seller = claim_seller(
-        session,
-        direction=Direction.WITHDRAWAL,
-        amount_cents=24_500_000,
-        account_last4="4417",
-        now=utc_now(),
+        session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000, now=utc_now()
     )
 
     assert seller is None
@@ -208,19 +203,32 @@ def test_an_expired_hint_is_not_claimed(session: Session) -> None:
     assert session.exec(select(OtpSellerHint)).all() == []
 
 
-def test_a_hint_for_another_card_is_not_claimed(session: Session) -> None:
+def test_a_hint_for_a_different_amount_is_not_claimed(session: Session) -> None:
     record_hint(
         session,
         sender="melli",
         matched_pattern_id=None,
-        hint=SellerHintFields(seller="دیجی کالا", amount_cents=None, account_last4="9999"),
+        hint=SellerHintFields(seller="دیجی کالا", amount_cents=990_000),
     )
 
-    seller = claim_seller(
-        session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000, account_last4="4417"
-    )
+    seller = claim_seller(session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000)
 
     assert seller is None
+
+
+def test_a_hint_that_named_no_amount_is_still_claimed(session: Session) -> None:
+    # The common case once the card is out of the picture: the window is the
+    # only thing tying the two messages together.
+    record_hint(
+        session,
+        sender="melli",
+        matched_pattern_id=None,
+        hint=SellerHintFields(seller="دیجی کالا", amount_cents=None),
+    )
+
+    seller = claim_seller(session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000)
+
+    assert seller == "دیجی کالا"
 
 
 def test_the_hint_whose_amount_matches_wins_over_the_newer_one(session: Session) -> None:
@@ -228,18 +236,16 @@ def test_the_hint_whose_amount_matches_wins_over_the_newer_one(session: Session)
         session,
         sender="melli",
         matched_pattern_id=None,
-        hint=SellerHintFields(seller="دیجی کالا", amount_cents=24_500_000, account_last4=None),
+        hint=SellerHintFields(seller="دیجی کالا", amount_cents=24_500_000),
     )
     record_hint(
         session,
         sender="melli",
         matched_pattern_id=None,
-        hint=SellerHintFields(seller="اسنپ", amount_cents=990_000, account_last4=None),
+        hint=SellerHintFields(seller="اسنپ", amount_cents=990_000),
     )
 
-    seller = claim_seller(
-        session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000, account_last4="4417"
-    )
+    seller = claim_seller(session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000)
 
     assert seller == "دیجی کالا"
 

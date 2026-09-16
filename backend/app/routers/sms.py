@@ -84,7 +84,6 @@ def _store_attempt(
             session,
             direction=result.fields.direction,
             amount_cents=result.fields.amount_cents,
-            account_last4=result.fields.account_last4,
         )
 
     attempt = SmsIngestAttempt(
@@ -226,7 +225,6 @@ class SellerHintOut(BaseModel):
     sender: str
     seller: str
     amount_cents: int | None
-    account_last4: str | None
     received_at: datetime
     expires_at: datetime
 

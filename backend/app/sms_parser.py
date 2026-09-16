@@ -64,7 +64,6 @@ class SellerHintFields:
 
     seller: str
     amount_cents: int | None
-    account_last4: str | None
 
 
 @dataclass(frozen=True)
@@ -190,17 +189,12 @@ def _match_otp(*, sender: str, body: str, patterns: list[SmsPattern]) -> ParseRe
             except ValueError:
                 amount_cents = None
 
-        account_raw = groups.get("account")
         return ParseResult(
             status="otp",
             matched_pattern_id=pattern.id,
             fields=ParsedFields(None, None, None, None, None),
             sender=sender,
-            seller_hint=SellerHintFields(
-                seller=seller,
-                amount_cents=amount_cents,
-                account_last4=last4_from_account_text(account_raw) if account_raw else None,
-            ),
+            seller_hint=SellerHintFields(seller=seller, amount_cents=amount_cents),
         )
     return None
 

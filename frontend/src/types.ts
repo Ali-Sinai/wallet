@@ -92,7 +92,6 @@ export interface SellerHint {
   sender: string;
   seller: string;
   amount_cents: number | null;
-  account_last4: string | null;
   received_at: string;
   expires_at: string;
 }

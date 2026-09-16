@@ -20,7 +20,7 @@ Design source: [`Design/iranian-finance-tracking-app`](Design/iranian-finance-tr
 - One SQLite file, WAL mode. Single user — no Postgres daemon for no benefit.
 - Alembic migrations are checked into `backend/alembic/versions/` and applied automatically at startup (see `_run_migrations()` in `backend/app/main.py`) — you never run `alembic upgrade` by hand in normal operation.
 - Raw SMS text is **never stored for a message that parsed** — only the fields the parser extracted (amount, direction, account, timestamp, merchant), and only until you confirm or dismiss them. The single exception is a message that matched **no** pattern: it keeps its text on the unparsed row, because otherwise there is nothing to show you and no way to tell what rule to write. That text dies with the row — the moment you resolve or ignore it, and in the purge sweep regardless. See `SmsIngestAttempt` in `backend/app/models.py`.
-- A purchase OTP ("رمز پویا") names the store; the withdrawal SMS that follows it a moment later does not. So an OTP pattern parks the seller name in `OtpSellerHint` and the next matching withdrawal claims it as its merchant — see `backend/app/seller_hints.py`. Hints expire after `WALLET_OTP_HINT_TTL_MINUTES` (default 30) so an abandoned checkout never labels your next purchase.
+- A purchase OTP ("رمز پویا") names the store; the withdrawal SMS that follows it a moment later does not. So an OTP pattern parks the seller name in `OtpSellerHint` and the next withdrawal claims it as its merchant — see `backend/app/seller_hints.py`. The pairing is the time window, not the card: hints expire after `WALLET_OTP_HINT_TTL_MINUTES` (default 2), so an abandoned checkout never labels your next purchase.
 - Every `/api` error response carries a `request_body` field alongside `detail`, holding the payload the sender sent — parsed JSON when it was valid, raw text when it wasn't, with password/token/secret values redacted. It's what makes a rejected request from a phone or an offline-queue replay reconstructable after the fact; see `backend/app/errors.py`.
 - Firebase Cloud Messaging (push notifications) is fully optional. Without a service-account file configured, the app boots normally with push disabled — nothing else depends on it.
 
@@ -214,20 +214,27 @@ An `otp`-kind pattern reads that first message:
 
 - Its regex needs a **`merchant`** named group (the seller). A match with no
   seller captured is passed over, and the pattern test endpoint says so.
-- **`amount`** and **`account`** are optional but worth capturing: they decide
-  *which* withdrawal the name attaches to. An amount that matches exactly wins
-  over a merely more recent hint, and a card that disagrees rules a hint out.
+- **`amount`** is optional. Capture it if your bank includes it: when two
+  purchases are in flight at once it decides which withdrawal the name
+  attaches to — an amount that matches exactly wins over a merely more recent
+  hint, and one that disagrees rules a hint out. Without it, the most recent
+  unexpired hint wins, which is the right answer nearly always.
+- No card is read from either message, and none is needed. What pairs the two
+  is that they arrive seconds apart: a seller stays claimable for
+  `WALLET_OTP_HINT_TTL_MINUTES` (default 2, about as long as the code itself
+  is good for) and is then swept.
 - An OTP match never creates a transaction, and OTP patterns are tried before
   transaction ones — so a "رمز پویا" message that also looks like a purchase
   to a loose transaction regex can't be booked as one.
 
 The waiting hints are listed in the Inbox ("Sellers waiting") and at
-`GET /api/sms/seller-hints`; delete one there if a checkout never went through.
-A withdrawal whose own pattern captured a `merchant` keeps that name — hints
-only fill a blank.
+`GET /api/sms/seller-hints`; there's rarely anything there to see, given the
+window. A withdrawal whose own pattern captured a `merchant` keeps that name —
+hints only fill a blank, which in practice is every purchase, since the
+withdrawal SMS almost never names the store.
 
 The seeded OTP patterns (one per bank, named "… — رمز پویا") match the common
-`رمز پویا` / `پذیرنده` / `مبلغ` / `کارت` shape in any line order. As with the
+`رمز پویا` / `پذیرنده` / `مبلغ` shape in any line order. As with the
 transaction patterns, tune them against a real message from your bank.
 
 ## Tests

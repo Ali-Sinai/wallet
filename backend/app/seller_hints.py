@@ -6,11 +6,13 @@ only one that names the store; the withdrawal itself says nothing but an
 amount and a card. So an OTP match parks what it knows here (`record_hint`)
 and the next matching withdrawal claims it (`claim_seller`).
 
-Hints are short-lived by design: a purchase abandoned at the payment page
-never produces a withdrawal, and its hint must not attach itself to whatever
-the user buys next. `expires_at` — `Settings.otp_hint_ttl_minutes` from the
-time the OTP arrived — caps that window, and unclaimed rows are swept
-alongside expired ingest attempts.
+Hints are short-lived by design, and that window is the whole of the matching:
+the withdrawal SMS almost never names the store, neither message reliably
+names a card, and a purchase abandoned at the payment page must not attach
+its seller to whatever gets bought next. `expires_at` —
+`Settings.otp_hint_ttl_minutes` (2) from the time the OTP arrived — is how
+long a seller stays claimable, roughly how long a bank gives you to type the
+code in. Unclaimed rows are swept alongside expired ingest attempts.
 """
 
 from __future__ import annotations
@@ -39,7 +41,6 @@ def record_hint(
         matched_pattern_id=matched_pattern_id,
         seller=hint.seller,
         amount_cents=hint.amount_cents,
-        account_last4=hint.account_last4,
         received_at=now,
         expires_at=now + timedelta(minutes=get_settings().otp_hint_ttl_minutes),
     )
@@ -49,15 +50,12 @@ def record_hint(
     return row
 
 
-def _is_candidate(hint: OtpSellerHint, amount_cents: int | None, last4: str | None) -> bool:
+def _is_candidate(hint: OtpSellerHint, amount_cents: int | None) -> bool:
     """A hint can only belong to a purchase it doesn't contradict.
 
-    Both comparisons are skipped when either side doesn't know: plenty of OTP
-    messages name no card, and plenty of withdrawal messages name no amount
-    the OTP also carried.
+    The comparison is skipped unless both sides know the amount — plenty of
+    withdrawal messages name no amount the OTP also carried.
     """
-    if hint.account_last4 and last4 and hint.account_last4 != last4:
-        return False
     if hint.amount_cents is not None and amount_cents is not None:
         return hint.amount_cents == amount_cents
     return True
@@ -68,7 +66,6 @@ def claim_seller(
     *,
     direction: Direction | None,
     amount_cents: int | None,
-    account_last4: str | None,
     now: datetime | None = None,
 ) -> str | None:
     """The store behind a withdrawal, if an OTP message announced it.
@@ -85,9 +82,7 @@ def claim_seller(
         .where(OtpSellerHint.expires_at > moment)
         .order_by(OtpSellerHint.received_at.desc())  # type: ignore[attr-defined]
     )
-    candidates = [
-        h for h in session.exec(stmt).all() if _is_candidate(h, amount_cents, account_last4)
-    ]
+    candidates = [h for h in session.exec(stmt).all() if _is_candidate(h, amount_cents)]
     if not candidates:
         return None
 

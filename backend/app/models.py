@@ -150,10 +150,14 @@ class OtpSellerHint(SQLModel, table=True):
 
     Banks send the one-time password for an online purchase just before the
     withdrawal SMS, and that first message is the only one naming the seller.
-    A match on an OTP pattern parks the name here; the next matching
-    withdrawal claims it as its merchant and deletes the row. Unclaimed rows
-    expire on their own (`expires_at`) and are swept alongside ingest
-    attempts — a purchase abandoned at the payment page leaves nothing behind.
+    A match on an OTP pattern parks the name here; the next withdrawal claims
+    it as its merchant and deletes the row. Unclaimed rows expire on their own
+    (`expires_at`, minutes) and are swept alongside ingest attempts — a
+    purchase abandoned at the payment page leaves nothing behind.
+
+    No card or account is recorded: the OTP and the withdrawal it precedes
+    rarely name one, and a single-card setup has nothing to disambiguate
+    anyway. The window is what keeps a hint attached to the right purchase.
     """
 
     id: int | None = Field(default=None, primary_key=True)
@@ -161,7 +165,6 @@ class OtpSellerHint(SQLModel, table=True):
     matched_pattern_id: int | None = Field(default=None, foreign_key="smspattern.id")
     seller: str
     amount_cents: int | None = None
-    account_last4: str | None = None
     received_at: datetime = Field(default_factory=utc_now)
     expires_at: datetime
 

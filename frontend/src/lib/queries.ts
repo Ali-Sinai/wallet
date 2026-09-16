@@ -403,12 +403,14 @@ export function useSmsUnparsed() {
   });
 }
 
-/** Stores named by an OTP message whose purchase hasn't arrived yet. */
+/** Stores named by an OTP message whose purchase hasn't arrived yet. A hint
+ * only lives a couple of minutes, so this polls faster than the other queues
+ * — otherwise the list is stale for most of a hint's life. */
 export function useSellerHints() {
   return useQuery({
     queryKey: ["sms", "seller-hints"],
     queryFn: () => api.get<SellerHint[]>("/sms/seller-hints"),
-    refetchInterval: 60_000,
+    refetchInterval: 20_000,
   });
 }
 

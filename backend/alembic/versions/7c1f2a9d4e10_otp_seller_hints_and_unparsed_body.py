@@ -30,7 +30,6 @@ def upgrade() -> None:
         sa.Column("matched_pattern_id", sa.Integer(), nullable=True),
         sa.Column("seller", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("amount_cents", sa.Integer(), nullable=True),
-        sa.Column("account_last4", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("received_at", sa.DateTime(), nullable=False),
         sa.Column("expires_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["matched_pattern_id"], ["smspattern.id"]),

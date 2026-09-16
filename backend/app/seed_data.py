@@ -57,14 +57,14 @@ _GENERIC_BODY_REGEX = (
 #
 # Written as lookaheads rather than one left-to-right match because banks order
 # these lines differently: each clause finds its own label anywhere in the
-# message. Only the OTP wording and the seller are required; amount and card
-# are optional, and both narrow which withdrawal the hint attaches to.
+# message. Only the OTP wording and the seller are required; the amount is
+# optional and narrows which withdrawal the hint attaches to when two are in
+# flight. No card is read: neither message reliably names one.
 _GENERIC_OTP_REGEX = (
     r"(?=[\s\S]*(?:رمز\s*(?:پویا|دوم|یک\s*بار\s*مصرف|یکبار\s*مصرف)|کد\s*یک\s*?بار\s*مصرف))"
     r"(?=[\s\S]*(?:پذیرنده|پذيرنده|فروشگاه|فروشنده|نام\s*فروشگاه)\s*[:：]?\s*"
     r"(?P<merchant>[^\n\r]{2,40}?)\s*(?=\n|\r|$|کارت|مبلغ|رمز|کد|تاریخ|زمان|ساعت|شماره))"
     r"(?:(?=[\s\S]*(?:مبلغ|بابت)\s*[:：]?\s*(?P<amount>[\d۰-۹٠-٩,٬]{4,})))?"
-    r"(?:(?=[\s\S]*(?:کارت|حساب)\s*[:：]?\s*[^\n\r]{0,28}?(?P<account>[\d۰-۹٠-٩]{4})\s*(?:\n|\r|$)))?"
 )
 
 _BANKS: list[tuple[str, str]] = [

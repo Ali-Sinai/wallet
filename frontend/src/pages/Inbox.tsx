@@ -331,7 +331,7 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
  * transaction is explainable, and droppable when the purchase never happened.
  */
 function SellerHintRow({ hint }: { hint: SellerHint }) {
-  const { t, digits, money } = useI18n();
+  const { t, money } = useI18n();
   const drop = useDeleteSellerHintMutation();
 
   return (
@@ -345,7 +345,6 @@ function SellerHintRow({ hint }: { hint: SellerHint }) {
         </div>
         <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
           {hint.amount_cents !== null ? money(hint.amount_cents, true) : hint.sender}
-          {hint.account_last4 ? ` · ····${digits(hint.account_last4)}` : ""}
         </div>
       </div>
       <MiniButton onClick={() => drop.mutate(hint.id)} busy={drop.isPending}>
