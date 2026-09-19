@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><style>html,body{margin:0;min-height:100%;background:#d9d9de;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Vazirmatn,sans-serif;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}a{color:#007aff;text-decoration:none}a:hover{color:#0a84ff}::-webkit-scrollbar{width:0;height:0}@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes pushIn{from{opacity:0;transform:translateX(0) scale(.99)}to{opacity:1;transform:none}}</style></helmet>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 12px;background:radial-gradient(110% 80% at 50% 0%,#f2f2f7 0%,#c9c9d0 100%)">
+<div style="flex:none;padding:11px;border-radius:66px;background:linear-gradient(160deg,#3a3a3c,#101012 55%,#2c2c2e);box-shadow:0 40px 90px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.08) inset">
+<div dir="{{ dir }}" style="position:relative;width:393px;height:852px;border-radius:55px;overflow:hidden;background:#f2f2f7;color:#000;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',Vazirmatn,sans-serif;display:flex;flex-direction:column">
+
+<div style="position:absolute;top:0;left:0;right:0;height:54px;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:14px 32px 0;font-size:15px;font-weight:600;letter-spacing:-.2px;pointer-events:none">
+<span>{{ t.clock }}</span>
+<div style="display:flex;align-items:center;gap:6px">
+<svg width="18" height="12" viewBox="0 0 18 12" fill="#000"><rect x="0" y="8" width="3" height="4" rx="1"></rect><rect x="5" y="6" width="3" height="6" rx="1"></rect><rect x="10" y="3.5" width="3" height="8.5" rx="1"></rect><rect x="15" y="1" width="3" height="11" rx="1"></rect></svg>
+<svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="#000" stroke-width="1.7" stroke-linecap="round"><path d="M1.5 4.2C3.4 2.5 5.6 1.6 8 1.6s4.6.9 6.5 2.6"></path><path d="M4 7.1C5.1 6.1 6.5 5.5 8 5.5s2.9.6 4 1.6"></path><path d="M6.6 9.9c.4-.4.9-.6 1.4-.6s1 .2 1.4.6"></path></svg>
+<svg width="26" height="13" viewBox="0 0 26 13"><rect x=".5" y=".5" width="22" height="12" rx="3.6" fill="none" stroke="rgba(0,0,0,.35)"></rect><rect x="2.2" y="2.2" width="15" height="8.6" rx="2.2" fill="#000"></rect><path d="M24 4.4v4.2c1.1-.4 1.6-1 1.6-2.1s-.5-1.7-1.6-2.1z" fill="rgba(0,0,0,.4)"></path></svg>
+</div>
+</div>
+
+<div style="flex:1;min-height:0;overflow-y:auto;padding-top:54px;padding-bottom:26px;-webkit-overflow-scrolling:touch">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 16px 0;min-height:44px">
+<div style="display:flex;align-items:center;gap:2px;padding:2px;border-radius:9px;background:rgba(120,120,128,.12)">
+<div style="padding:4px 11px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:{{ enSeg.bg }};color:{{ enSeg.fg }};box-shadow:{{ enSeg.sh }}" onClick="{{ setEn }}">EN</div>
+<div style="padding:4px 11px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;background:{{ faSeg.bg }};color:{{ faSeg.fg }};box-shadow:{{ faSeg.sh }}" onClick="{{ setFa }}">فارسی</div>
+</div>
+<div style="display:flex;align-items:center;gap:16px">
+<div style="font-size:15px;color:#007aff;cursor:pointer;font-weight:500" onClick="{{ goInbox }}">{{ L.inbox }} {{ inboxBadge }}</div>
+<div style="width:30px;height:30px;border-radius:99px;background:#007aff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:300;line-height:1;padding-bottom:2px;cursor:pointer" onClick="{{ openAdd }}">+</div>
+</div>
+</div>
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="animation:pushIn .24s ease">
+<div style="padding:2px 16px 0"><div style="font-size:34px;font-weight:700;letter-spacing:-.9px;line-height:1.1">{{ appName }}</div><div style="font-size:15px;color:rgba(60,60,67,.6);margin-top:1px">{{ t.monthLabel }}</div></div>
+
+<div style="position:relative;margin:16px;padding:20px;border-radius:20px;background:linear-gradient(160deg,#232427 0%,#1a1b1e 48%,#0f1012 100%);color:#fff;box-shadow:0 16px 32px rgba(0,0,0,.28);border:.5px solid rgba(255,255,255,.08)">
+<div style="position:absolute;inset:0;border-radius:20px;background:linear-gradient(155deg,rgba(10,132,255,.16) 0%,rgba(10,132,255,0) 40%);pointer-events:none"></div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative">
+<div><div style="font-size:13px;color:rgba(255,255,255,.6);letter-spacing:.02em">{{ t.balance }}</div>
+<div style="display:flex;align-items:baseline;gap:7px;margin-top:5px"><span style="font-size:38px;font-weight:700;letter-spacing:-1.2px;line-height:1.05">{{ balanceText }}</span></div></div>
+<div style="padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.12);font-size:12px;font-weight:600;color:rgba(255,255,255,.85);letter-spacing:.01em">{{ t.currency }}</div>
+</div>
+<div style="display:flex;gap:10px;margin-top:18px">
+<div style="flex:1;background:rgba(255,255,255,.1);border-radius:14px;padding:11px 13px"><div style="font-size:13px;color:rgba(255,255,255,.62)">{{ t.in }}</div><div style="font-size:17px;font-weight:600;color:#30d158;margin-top:2px">{{ inText }}</div></div>
+<div style="flex:1;background:rgba(255,255,255,.1);border-radius:14px;padding:11px 13px"><div style="font-size:13px;color:rgba(255,255,255,.62)">{{ t.out }}</div><div style="font-size:17px;font-weight:600;color:#ff453a;margin-top:2px">{{ outText }}</div></div>
+</div>
+</div>
+
+<sc-if value="{{ hasSms }}" hint-placeholder-val="{{ true }}">
+<div style="margin:0 16px">
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:0 4px 7px;letter-spacing:.04em;text-transform:uppercase">{{ t.detected }}</div>
+<div style="background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<div style="padding:14px 16px 0;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:6px;background:#34c759;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M4 5.5h16c.6 0 1 .4 1 1v11c0 .6-.4 1-1 1H4c-.6 0-1-.4-1-1v-11c0-.6.4-1 1-1zm1.6 1.5 6.4 4.6 6.4-4.6z"></path></svg></div><div style="font-size:15px;font-weight:600">{{ topSms.bank }}</div></div><div style="font-size:13px;color:rgba(60,60,67,.5)">{{ smsCounter }}</div></div>
+<div style="padding:9px 16px 0;font-size:15px;color:rgba(60,60,67,.72);line-height:1.42">{{ topSms.raw }}</div>
+<div style="display:flex;align-items:baseline;gap:7px;padding:12px 16px 0"><span style="font-size:28px;font-weight:700;letter-spacing:-.6px;color:{{ topSms.color }}">{{ topSms.amountText }}</span><span style="font-size:13px;color:rgba(60,60,67,.5)">{{ topSms.meta }}</span></div>
+<div style="display:flex;gap:7px;flex-wrap:wrap;padding:13px 16px 0">
+<sc-for list="{{ topSmsCats }}" as="c" hint-placeholder-count="4">
+<div style="padding:6px 12px;border-radius:99px;font-size:14px;font-weight:500;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px;padding:14px 16px 16px">
+<div style="flex:1;text-align:center;padding:12px 0;border-radius:13px;background:#007aff;color:#fff;font-size:16px;font-weight:600;cursor:pointer" onClick="{{ confirmSms }}">{{ t.confirm }}</div>
+<div style="flex:none;padding:12px 15px;border-radius:13px;background:rgba(120,120,128,.12);color:#007aff;font-size:16px;font-weight:500;cursor:pointer" onClick="{{ splitSms }}">{{ t.split }}</div>
+<div style="flex:none;padding:12px 15px;border-radius:13px;background:rgba(120,120,128,.12);color:rgba(60,60,67,.6);font-size:16px;font-weight:500;cursor:pointer" onClick="{{ ignoreSms }}">{{ t.ignore }}</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<div style="margin:22px 16px 0">
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:0 4px 7px;letter-spacing:.04em;text-transform:uppercase">{{ t.dailySpend }}</div>
+<div style="background:#fff;border-radius:18px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:22px;font-weight:700;letter-spacing:-.4px">{{ outText }}</div><div style="font-size:13px;color:rgba(60,60,67,.6)">{{ avgText }}</div></div>
+<div style="display:flex;align-items:flex-end;gap:5px;height:70px;margin-top:14px">
+<sc-for list="{{ bars }}" as="b" hint-placeholder-count="14">
+<div style="flex:1;border-radius:99px;min-height:4px;height:{{ b.h }};background:{{ b.bg }}"></div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="margin:22px 16px 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:0 4px 7px"><div style="font-size:13px;color:rgba(60,60,67,.6);letter-spacing:.04em;text-transform:uppercase">{{ t.categories }}</div><div style="font-size:15px;color:#007aff;cursor:pointer" onClick="{{ goReports }}">{{ t.reportsLink }}</div></div>
+<div style="background:#fff;border-radius:18px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<div style="display:flex;height:10px;border-radius:99px;overflow:hidden;gap:2px">
+<sc-for list="{{ catShares }}" as="c" hint-placeholder-count="5">
+<div style="width:{{ c.w }};border-radius:99px;background:{{ c.color }}"></div>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:13px;font-size:14px;color:rgba(60,60,67,.75)">
+<sc-for list="{{ catShares }}" as="c" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:99px;background:{{ c.color }}"></span>{{ c.label }}</span></sc-for>
+</div>
+</div>
+</div>
+
+<div style="margin:22px 0 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:0 20px 7px"><div style="font-size:13px;color:rgba(60,60,67,.6);letter-spacing:.04em;text-transform:uppercase">{{ t.recent }}</div><div style="font-size:15px;color:#007aff;cursor:pointer" onClick="{{ goActivity }}">{{ t.all }}</div></div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<sc-for list="{{ recent }}" as="r" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:60px;cursor:pointer;border-top:{{ r.sep }}" onClick="{{ r.onTap }}">
+<div style="width:38px;height:38px;border-radius:10px;flex:none;background:{{ r.color2 }};display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:600">{{ r.glyph }}</div>
+<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:500;letter-spacing:-.2px">{{ r.title }}</div><div style="font-size:13px;color:rgba(60,60,67,.6);margin-top:1px">{{ r.meta }}</div></div>
+<div style="text-align:end;flex:none"><div style="font-size:16px;font-weight:600;color:{{ r.color }}">{{ r.amountText }}</div><div style="font-size:13px;color:rgba(60,60,67,.5)">{{ r.dateText }}</div></div>
+<span style="font-size:15px;color:rgba(60,60,67,.3);flex:none">{{ chevron }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isActivity }}" hint-placeholder-val="{{ false }}">
+<div style="animation:pushIn .24s ease">
+<div style="padding:2px 16px 0;font-size:34px;font-weight:700;letter-spacing:-.9px">{{ L.activity }}</div>
+<div style="display:flex;gap:2px;margin:16px;padding:2px;border-radius:10px;background:rgba(120,120,128,.12)">
+<sc-for list="{{ typeChips }}" as="c" hint-placeholder-count="3">
+<div style="flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};box-shadow:{{ c.sh }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px;padding:0 16px;overflow-x:auto">
+<sc-for list="{{ catChips }}" as="c" hint-placeholder-count="6">
+<div style="flex:none;padding:6px 13px;border-radius:99px;font-size:14px;font-weight:500;cursor:pointer;background:{{ c.pillBg }};color:{{ c.pillFg }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="font-size:13px;color:rgba(60,60,67,.5);padding:14px 20px 7px">{{ rowsCount }} {{ L.records }}</div>
+<sc-if value="{{ noRows }}" hint-placeholder-val="{{ false }}">
+<div style="padding:60px 0;text-align:center;font-size:17px;color:rgba(60,60,67,.4)">{{ L.empty }}</div>
+</sc-if>
+<div style="margin:0 16px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:60px;cursor:pointer;border-top:{{ r.sep }}" onClick="{{ r.onTap }}">
+<div style="width:38px;height:38px;border-radius:10px;flex:none;background:{{ r.color2 }};display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:600">{{ r.glyph }}</div>
+<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:500;letter-spacing:-.2px">{{ r.title }}</div><div style="font-size:13px;color:rgba(60,60,67,.6);margin-top:1px">{{ r.meta }}</div></div>
+<div style="text-align:end;flex:none"><div style="font-size:16px;font-weight:600;color:{{ r.color }}">{{ r.amountText }}</div><div style="font-size:13px;color:rgba(60,60,67,.5)">{{ r.dateText }}</div></div>
+<span style="font-size:15px;color:rgba(60,60,67,.3);flex:none">{{ chevron }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isInbox }}" hint-placeholder-val="{{ false }}">
+<div style="animation:pushIn .24s ease">
+<div style="padding:0 16px"><div style="font-size:15px;color:#007aff;cursor:pointer" onClick="{{ goActivity }}">{{ backLabel }}</div><div style="font-size:34px;font-weight:700;letter-spacing:-.9px;margin-top:2px">{{ L.inbox }}</div></div>
+<sc-if value="{{ inboxEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="padding:64px 0;text-align:center;font-size:17px;color:rgba(60,60,67,.4)">{{ L.inboxEmpty }}</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:12px;margin:16px">
+<sc-for list="{{ smsRows }}" as="m" hint-placeholder-count="3">
+<div style="background:#fff;border-radius:18px;padding:15px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:22px;height:22px;border-radius:6px;background:#34c759;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M4 5.5h16c.6 0 1 .4 1 1v11c0 .6-.4 1-1 1H4c-.6 0-1-.4-1-1v-11c0-.6.4-1 1-1zm1.6 1.5 6.4 4.6 6.4-4.6z"></path></svg></div><div style="font-size:15px;font-weight:600">{{ m.bank }}</div></div>
+<div style="margin-top:8px;font-size:15px;color:rgba(60,60,67,.72);line-height:1.42">{{ m.raw }}</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:11px">
+<div><div style="font-size:16px;font-weight:600">{{ m.title }}</div><div style="font-size:13px;color:rgba(60,60,67,.6);margin-top:1px">{{ m.guessLabel }} · {{ m.meta }}</div></div>
+<div style="font-size:22px;font-weight:700;letter-spacing:-.4px;color:{{ m.color }}">{{ m.amountText }}</div>
+</div>
+<div style="display:flex;gap:8px;margin-top:13px">
+<div style="flex:1;text-align:center;padding:11px 0;border-radius:12px;background:#007aff;color:#fff;font-size:16px;font-weight:600;cursor:pointer" onClick="{{ m.onConfirm }}">{{ t.confirm }}</div>
+<div style="flex:none;padding:11px 14px;border-radius:12px;background:rgba(120,120,128,.12);color:#007aff;font-size:16px;font-weight:500;cursor:pointer" onClick="{{ m.onSplit }}">{{ t.split }}</div>
+<div style="flex:none;padding:11px 14px;border-radius:12px;background:rgba(120,120,128,.12);color:rgba(60,60,67,.6);font-size:16px;font-weight:500;cursor:pointer" onClick="{{ m.onIgnore }}">{{ t.ignore }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="margin:24px 0 0">
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:0 20px 7px;letter-spacing:.04em;text-transform:uppercase">{{ L.rules }}</div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<sc-for list="{{ rules }}" as="r" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:12px;padding:11px 16px;min-height:56px;border-top:{{ r.sep }}">
+<div style="flex:1"><div style="font-size:16px;font-weight:500">{{ r.bank }}</div><div style="font-size:13px;color:rgba(60,60,67,.6);margin-top:1px">{{ r.hint }}</div></div>
+<div style="width:51px;height:31px;border-radius:99px;flex:none;padding:2px;cursor:pointer;background:{{ r.trackBg }};display:flex;justify-content:{{ r.knobPos }};transition:background .2s" onClick="{{ r.onToggle }}"><div style="width:27px;height:27px;border-radius:99px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2)"></div></div>
+</div>
+</sc-for>
+</div>
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:8px 20px 0">{{ L.rulesHint }}</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPeople }}" hint-placeholder-val="{{ false }}">
+<div style="animation:pushIn .24s ease">
+<div style="padding:2px 16px 0;font-size:34px;font-weight:700;letter-spacing:-.9px">{{ L.people }}</div>
+<div style="display:flex;gap:12px;margin:16px">
+<div style="flex:1;background:#fff;border-radius:18px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)"><div style="font-size:13px;color:rgba(60,60,67,.6)">{{ L.owedToMe }}</div><div style="font-size:22px;font-weight:700;letter-spacing:-.4px;color:#34c759;margin-top:2px">{{ owedText }}</div></div>
+<div style="flex:1;background:#fff;border-radius:18px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)"><div style="font-size:13px;color:rgba(60,60,67,.6)">{{ L.iOwe }}</div><div style="font-size:22px;font-weight:700;letter-spacing:-.4px;color:#ff3b30;margin-top:2px">{{ oweText }}</div></div>
+</div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<sc-for list="{{ peopleRows }}" as="p" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:60px;cursor:pointer;border-top:{{ p.sep }}" onClick="{{ p.onTap }}">
+<div style="width:40px;height:40px;border-radius:99px;background:{{ p.avatarBg }};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#fff;flex:none">{{ p.ini }}</div>
+<div style="flex:1"><div style="font-size:16px;font-weight:500">{{ p.name }}</div><div style="font-size:13px;color:rgba(60,60,67,.6);margin-top:1px">{{ p.sub }}</div></div>
+<div style="font-size:16px;font-weight:600;color:{{ p.color }}">{{ p.amountText }}</div>
+<span style="font-size:15px;color:rgba(60,60,67,.3);flex:none">{{ chevron }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPerson }}" hint-placeholder-val="{{ false }}">
+<div style="animation:pushIn .24s ease;padding:0 0 8px">
+<div style="padding:0 16px;font-size:15px;color:#007aff;cursor:pointer" onClick="{{ goPeople }}">{{ backPeople }}</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 16px 0">
+<div style="width:74px;height:74px;border-radius:99px;background:{{ person.avatarBg }};display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:#fff">{{ person.ini }}</div>
+<div style="text-align:center"><div style="font-size:28px;font-weight:700;letter-spacing:-.7px">{{ person.name }}</div><div style="font-size:15px;color:rgba(60,60,67,.6);margin-top:1px">{{ person.sub }}</div></div>
+</div>
+<div style="margin:18px 16px 0;background:#fff;border-radius:18px;padding:18px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<div style="font-size:40px;font-weight:700;letter-spacing:-1.2px;color:{{ person.color }}">{{ person.amountText }}</div>
+<div style="text-align:center;padding:13px 0;border-radius:14px;background:#007aff;color:#fff;font-size:17px;font-weight:600;cursor:pointer;margin-top:16px" onClick="{{ settleUp }}">{{ L.settleUp }}</div>
+</div>
+<div style="margin:24px 0 0">
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:0 20px 7px;letter-spacing:.04em;text-transform:uppercase">{{ L.ledger }}</div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<sc-for list="{{ personLedger }}" as="e" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:56px;border-top:{{ e.sep }}">
+<div style="flex:1"><div style="font-size:16px;font-weight:500">{{ e.title }}</div><div style="font-size:13px;color:rgba(60,60,67,.55);margin-top:1px">{{ e.date }}</div></div>
+<div style="font-size:16px;font-weight:600;color:{{ e.color }}">{{ e.amountText }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReports }}" hint-placeholder-val="{{ false }}">
+<div style="animation:pushIn .24s ease">
+<div style="padding:2px 16px 0;font-size:34px;font-weight:700;letter-spacing:-.9px">{{ L.reports }}</div>
+<div style="display:flex;gap:2px;margin:16px;padding:2px;border-radius:10px;background:rgba(120,120,128,.12)">
+<sc-for list="{{ periodChips }}" as="c" hint-placeholder-count="3">
+<div style="flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};box-shadow:{{ c.sh }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:28px;font-weight:700;letter-spacing:-.7px">{{ periodTotal }}</div><div style="font-size:13px;color:rgba(60,60,67,.6);white-space:nowrap">{{ periodAvg }}</div></div>
+<div style="display:flex;align-items:flex-end;gap:5px;height:88px;margin-top:16px">
+<sc-for list="{{ periodBars }}" as="b" hint-placeholder-count="14">
+<div style="flex:1;border-radius:99px;min-height:4px;height:{{ b.h }};background:{{ b.bg }}"></div>
+</sc-for>
+</div>
+</div>
+<div style="margin:24px 0 0">
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:0 20px 7px;letter-spacing:.04em;text-transform:uppercase">{{ L.breakdown }}</div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;overflow:hidden;padding:2px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<sc-for list="{{ catTable }}" as="c" hint-placeholder-count="5">
+<div style="padding:12px 16px;border-top:{{ c.sep }}">
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:16px"><span style="display:flex;align-items:center;gap:9px"><span style="width:10px;height:10px;border-radius:99px;background:{{ c.color }}"></span>{{ c.label }}</span><span style="font-weight:600">{{ c.amountText }}</span></div>
+<div style="height:6px;border-radius:99px;background:rgba(120,120,128,.16);margin-top:9px;overflow:hidden"><div style="height:100%;border-radius:99px;width:{{ c.w }};background:{{ c.color }}"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="margin:24px 0 0">
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:0 20px 7px;letter-spacing:.04em;text-transform:uppercase">{{ L.budgets }}</div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;overflow:hidden;padding:2px 0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+<sc-for list="{{ budgets }}" as="b" hint-placeholder-count="4">
+<div style="padding:12px 16px;border-top:{{ b.sep }}">
+<div style="display:flex;justify-content:space-between;font-size:16px"><span>{{ b.label }}</span><span style="color:rgba(60,60,67,.6);font-size:14px">{{ b.text }}</span></div>
+<div style="height:6px;border-radius:99px;background:rgba(120,120,128,.16);margin-top:9px;overflow:hidden"><div style="height:100%;border-radius:99px;width:{{ b.w }};background:{{ b.color }}"></div></div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+
+<div style="flex:none;padding:8px 6px 0;background:rgba(249,249,249,.82);backdrop-filter:saturate(180%) blur(22px);-webkit-backdrop-filter:saturate(180%) blur(22px);border-top:.5px solid rgba(60,60,67,.2)">
+<div style="display:flex;justify-content:space-around;align-items:flex-start">
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ nav.home.fg }};width:70px" onClick="{{ goHome }}"><svg width="27" height="27" viewBox="0 0 24 24" fill="{{ nav.home.fg }}"><path d="M12 3.3 2.7 11.1c-.3.3-.1.8.3.8h1.6v8.2c0 .5.4.9.9.9h3.8c.5 0 .9-.4.9-.9v-4.4h3.6v4.4c0 .5.4.9.9.9h3.8c.5 0 .9-.4.9-.9v-8.2H21c.4 0 .6-.5.3-.8z"></path></svg><span style="font-size:10px;font-weight:500">{{ t.navHome }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ nav.activity.fg }};width:70px" onClick="{{ goActivity }}"><svg width="27" height="27" viewBox="0 0 24 24" fill="{{ nav.activity.fg }}"><circle cx="4.2" cy="6.2" r="1.7"></circle><rect x="8.4" y="5.1" width="12" height="2.2" rx="1.1"></rect><circle cx="4.2" cy="12" r="1.7"></circle><rect x="8.4" y="10.9" width="12" height="2.2" rx="1.1"></rect><circle cx="4.2" cy="17.8" r="1.7"></circle><rect x="8.4" y="16.7" width="12" height="2.2" rx="1.1"></rect></svg><span style="font-size:10px;font-weight:500">{{ t.navActivity }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ nav.people.fg }};width:70px" onClick="{{ goPeople }}"><svg width="27" height="27" viewBox="0 0 24 24" fill="{{ nav.people.fg }}"><circle cx="9" cy="8" r="3.6"></circle><path d="M9 13c-3.4 0-6.2 1.9-6.2 4.2 0 1.3 1 2 2.6 2h7.2c1.6 0 2.6-.7 2.6-2C15.2 14.9 12.4 13 9 13z"></path><circle cx="17.6" cy="9.1" r="2.7"></circle><path d="M17.6 13.1c-1 0-1.9.2-2.6.5 1.2 1 2 2.3 2.2 3.8h2.9c1.2 0 1.9-.5 1.9-1.5 0-1.6-1.9-2.8-4.4-2.8z"></path></svg><span style="font-size:10px;font-weight:500">{{ t.navPeople }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ nav.reports.fg }};width:70px" onClick="{{ goReports }}"><svg width="27" height="27" viewBox="0 0 24 24" fill="{{ nav.reports.fg }}"><rect x="3" y="12" width="4" height="8" rx="1.6"></rect><rect x="10" y="7" width="4" height="13" rx="1.6"></rect><rect x="17" y="3.6" width="4" height="16.4" rx="1.6"></rect></svg><span style="font-size:10px;font-weight:500">{{ t.navReports }}</span></div>
+</div>
+<div style="display:flex;justify-content:center;padding:7px 0 9px"><div style="width:139px;height:5px;border-radius:99px;background:#000"></div></div>
+</div>
+
+<sc-if value="{{ sheetDetail }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(0,0,0,.34);display:flex;align-items:flex-end;animation:fadeIn .2s ease;z-index:10" onClick="{{ closeSheet }}">
+<div style="width:100%;max-height:82%;overflow-y:auto;border-radius:14px 14px 0 0;background:#f2f2f7;animation:sheetUp .34s cubic-bezier(.32,.72,0,1)" onClick="{{ stop }}">
+<div style="display:flex;justify-content:center;padding:6px 0 0"><div style="width:36px;height:5px;border-radius:99px;background:rgba(60,60,67,.3)"></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px 12px"><div style="font-size:17px;font-weight:600">{{ L.detail }}</div><div style="font-size:17px;color:#007aff;cursor:pointer" onClick="{{ closeSheet }}">{{ L.done }}</div></div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;padding:18px;text-align:center">
+<div style="font-size:17px;font-weight:500">{{ detail.title }}</div>
+<div style="font-size:40px;font-weight:700;letter-spacing:-1.2px;margin-top:4px;color:{{ detail.color }}">{{ detail.amountText }}</div>
+</div>
+<div style="margin:16px;background:#fff;border-radius:18px;overflow:hidden">
+<div style="display:flex;justify-content:space-between;padding:12px 16px;min-height:44px;font-size:16px"><span style="color:rgba(60,60,67,.6)">{{ L.account }}</span><span style="font-weight:500">{{ detail.account }}</span></div>
+<div style="display:flex;justify-content:space-between;padding:12px 16px;min-height:44px;font-size:16px;border-top:.5px solid rgba(60,60,67,.14)"><span style="color:rgba(60,60,67,.6)">{{ L.date }}</span><span style="font-weight:500">{{ detail.date }}</span></div>
+<div style="display:flex;justify-content:space-between;padding:12px 16px;min-height:44px;font-size:16px;border-top:.5px solid rgba(60,60,67,.14)"><span style="color:rgba(60,60,67,.6)">{{ L.type }}</span><span style="font-weight:500">{{ detail.typeLabel }}</span></div>
+</div>
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:0 20px 7px;letter-spacing:.04em;text-transform:uppercase">{{ L.category }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 16px">
+<sc-for list="{{ detailCats }}" as="c" hint-placeholder-count="8">
+<div style="padding:8px 14px;border-radius:99px;font-size:15px;font-weight:500;cursor:pointer;background:{{ c.pillBg }};color:{{ c.pillFg }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;padding:24px 16px 34px">
+<div style="text-align:center;padding:14px 0;border-radius:14px;background:#007aff;color:#fff;font-size:17px;font-weight:600;cursor:pointer" onClick="{{ openSplitFromDetail }}">{{ L.splitBtn }}</div>
+<div style="text-align:center;padding:14px 0;border-radius:14px;background:#fff;color:#ff3b30;font-size:17px;font-weight:500;cursor:pointer" onClick="{{ deleteTx }}">{{ L.delete }}</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheetSplit }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(0,0,0,.34);display:flex;align-items:flex-end;animation:fadeIn .2s ease;z-index:10" onClick="{{ closeSheet }}">
+<div style="width:100%;max-height:92%;overflow-y:auto;border-radius:14px 14px 0 0;background:#f2f2f7;animation:sheetUp .34s cubic-bezier(.32,.72,0,1)" onClick="{{ stop }}">
+<div style="display:flex;justify-content:center;padding:6px 0 0"><div style="width:36px;height:5px;border-radius:99px;background:rgba(60,60,67,.3)"></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px 12px"><div style="font-size:17px;color:#007aff;cursor:pointer" onClick="{{ closeSheet }}">{{ L.cancel }}</div><div style="font-size:17px;font-weight:600">{{ L.splitTitle }}</div><div style="font-size:17px;font-weight:600;color:#007aff;cursor:pointer" onClick="{{ saveSplit }}">{{ L.save }}</div></div>
+<div style="margin:0 16px;background:#fff;border-radius:18px;padding:18px;text-align:center">
+<div style="font-size:15px;color:rgba(60,60,67,.6)">{{ splitTitleText }}</div>
+<div style="display:flex;align-items:baseline;gap:6px;justify-content:center;margin-top:4px"><span style="font-size:36px;font-weight:700;letter-spacing:-1px">{{ splitAmountText }}</span><span style="font-size:15px;color:rgba(60,60,67,.5)">{{ t.tomanShort }}</span></div>
+</div>
+<div style="margin:16px;background:#fff;border-radius:18px;overflow:hidden">
+<sc-for list="{{ splitModeChips }}" as="c" hint-placeholder-count="2">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;min-height:48px;font-size:16px;cursor:pointer;border-top:{{ c.sep }}" onClick="{{ c.onPick }}"><span>{{ c.label }}</span><span style="color:#007aff;font-size:17px;font-weight:600">{{ c.check }}</span></div>
+</sc-for>
+</div>
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:0 20px 7px;letter-spacing:.04em;text-transform:uppercase">{{ L.quick }}</div>
+<div style="display:flex;gap:10px;margin:0 16px">
+<sc-for list="{{ quickSplits }}" as="q" hint-placeholder-count="3">
+<div style="flex:1;padding:13px 0;text-align:center;border-radius:16px;cursor:pointer;background:{{ q.bg }};color:{{ q.fg }}" onClick="{{ q.onPick }}"><div style="font-size:20px;font-weight:600">{{ q.label }}</div><div style="font-size:12px;opacity:.65;margin-top:2px">{{ q.amountText }}</div></div>
+</sc-for>
+</div>
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:22px 20px 7px;letter-spacing:.04em;text-transform:uppercase">{{ L.who }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 16px">
+<sc-for list="{{ splitPeopleChips }}" as="p" hint-placeholder-count="4">
+<div style="padding:8px 14px;border-radius:99px;font-size:15px;font-weight:500;cursor:pointer;background:{{ p.pillBg }};color:{{ p.pillFg }}" onClick="{{ p.onPick }}">{{ p.label }}</div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:22px 20px 7px"><div style="font-size:13px;color:rgba(60,60,67,.6);letter-spacing:.04em;text-transform:uppercase">{{ L.perPerson }}</div><div style="font-size:13px;color:rgba(60,60,67,.6)">÷ {{ splitWays }} · {{ splitPerText }}</div></div>
+<div style="margin:0 16px 34px;background:#fff;border-radius:18px;overflow:hidden">
+<sc-for list="{{ splitRows }}" as="r" hint-placeholder-count="2">
+<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:56px;border-top:{{ r.sep }}">
+<div style="width:36px;height:36px;border-radius:99px;background:{{ r.avatarBg }};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex:none">{{ r.ini }}</div>
+<div style="flex:1"><div style="font-size:16px;font-weight:500">{{ r.name }}</div><div style="font-size:13px;color:rgba(60,60,67,.6);margin-top:1px">{{ r.sub }}</div></div>
+<div style="font-size:16px;font-weight:600;color:{{ r.color }}">{{ r.amountText }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheetAdd }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(0,0,0,.34);display:flex;align-items:flex-end;animation:fadeIn .2s ease;z-index:10" onClick="{{ closeSheet }}">
+<div style="width:100%;max-height:94%;overflow-y:auto;border-radius:14px 14px 0 0;background:#f2f2f7;animation:sheetUp .34s cubic-bezier(.32,.72,0,1)" onClick="{{ stop }}">
+<div style="display:flex;justify-content:center;padding:6px 0 0"><div style="width:36px;height:5px;border-radius:99px;background:rgba(60,60,67,.3)"></div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px 12px"><div style="font-size:17px;color:#007aff;cursor:pointer" onClick="{{ closeSheet }}">{{ L.cancel }}</div><div style="font-size:17px;font-weight:600">{{ L.add }}</div><div style="font-size:17px;font-weight:600;color:#007aff;cursor:pointer" onClick="{{ saveAdd }}">{{ L.saveShort }}</div></div>
+<div style="display:flex;align-items:baseline;gap:7px;justify-content:center;padding:6px 0 14px"><span style="font-size:52px;font-weight:700;letter-spacing:-1.8px;line-height:1">{{ addAmountText }}</span><span style="font-size:17px;color:rgba(60,60,67,.5)">{{ t.tomanShort }}</span></div>
+<div style="display:flex;gap:2px;margin:0 16px;padding:2px;border-radius:10px;background:rgba(120,120,128,.12)">
+<sc-for list="{{ addTypeChips }}" as="c" hint-placeholder-count="2">
+<div style="flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};box-shadow:{{ c.sh }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px">
+<sc-for list="{{ keys }}" as="k" hint-placeholder-count="12">
+<div style="text-align:center;padding:14px 0;border-radius:11px;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.14);font-size:24px;font-weight:400;cursor:pointer;user-select:none" onClick="{{ k.onPress }}">{{ k.label }}</div>
+</sc-for>
+</div>
+<div style="font-size:13px;color:rgba(60,60,67,.6);padding:6px 20px 7px;letter-spacing:.04em;text-transform:uppercase">{{ L.category }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 16px 34px">
+<sc-for list="{{ addCats }}" as="c" hint-placeholder-count="8">
+<div style="padding:8px 14px;border-radius:99px;font-size:15px;font-weight:500;cursor:pointer;background:{{ c.pillBg }};color:{{ c.pillFg }}" onClick="{{ c.onPick }}">{{ c.label }}</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:940},&quot;defaultLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;fa&quot;,&quot;en&quot;],&quot;default&quot;:&quot;fa&quot;,&quot;tsType&quot;:&quot;\&quot;fa\&quot;|\&quot;en\&quot;&quot;}}">
+const FAD = "۰۱۲۳۴۵۶۷۸۹";
+const TINT = "#007aff";
+const GREEN = "#34c759";
+const RED = "#ff3b30";
+const SEP = ".5px solid rgba(60,60,67,.14)";
+const CATS = [
+  { key: "grocery", en: "Groceries", fa: "خرید خانه", color: "#34c759" },
+  { key: "transport", en: "Transport", fa: "حمل‌ونقل", color: "#0a84ff" },
+  { key: "dining", en: "Eating out", fa: "رستوران", color: "#ff9f0a" },
+  { key: "rent", en: "Rent", fa: "اجاره", color: "#bf5af2" },
+  { key: "health", en: "Health", fa: "سلامت", color: "#5e5ce6" },
+  { key: "fun", en: "Fun", fa: "تفریح", color: "#ff2d55" },
+  { key: "income", en: "Income", fa: "درآمد", color: "#30d158" },
+  { key: "other", en: "Other", fa: "دیگر", color: "#8e8e93" }
+];
+const h = React.createElement;
+const CAT_PATHS = {
+  grocery: '<path d="M4.2 5.3h2l.7 3M6.9 8.3l1.5 8.1c.14.78.82 1.35 1.62 1.35h6.36c.8 0 1.48-.57 1.62-1.35l1.5-8.1H6.9Z"/><circle cx="10.2" cy="19.8" r="1.05" fill="currentColor" stroke="none"/><circle cx="15.9" cy="19.8" r="1.05" fill="currentColor" stroke="none"/>',
+  transport: '<path d="M5.2 16.1V11l1.6-4.1c.2-.5.7-.9 1.3-.9h7.8c.6 0 1.1.4 1.3.9l1.6 4.1v5.1"/><rect x="4.7" y="15.7" width="14.6" height="3" rx="1"/><path d="M5.5 18.7v.9a.9.9 0 0 0 .9.9h.9a.9.9 0 0 0 .9-.9v-.9M15.8 18.7v.9a.9.9 0 0 0 .9.9h.9a.9.9 0 0 0 .9-.9v-.9"/><circle cx="7.6" cy="12.9" r=".2" fill="currentColor"/><circle cx="16.4" cy="12.9" r=".2" fill="currentColor"/>',
+  dining: '<path d="M7.3 3.3v6.3a1.55 1.55 0 0 0 3.1 0V3.3M8.85 3.3v16.9"/><path d="M16.3 3.3c-1.4 0-2.3 1.75-2.3 4.5s.9 4.1 1.85 4.4v8"/>',
+  rent: '<path d="m4.3 11 7.7-6.7L19.7 11M6.4 9.9v8.2c0 .6.5 1.1 1.1 1.1h9c.6 0 1.1-.5 1.1-1.1V9.9M9.9 19.2v-5.4h4.2v5.4"/>',
+  health: '<path d="M12 19.6s-7.3-4.2-7.3-9.3a3.75 3.75 0 0 1 7.3-1.75A3.75 3.75 0 0 1 19.3 10.3c0 5.1-7.3 9.3-7.3 9.3Z"/>',
+  fun: '<rect x="3.6" y="7.8" width="16.8" height="8.4" rx="4.2"/><path d="M7.4 12h2.6M8.7 10.7v2.6"/><circle cx="15.1" cy="10.5" r=".85" fill="currentColor" stroke="none"/><circle cx="16.9" cy="13.1" r=".85" fill="currentColor" stroke="none"/>',
+  income: '<path d="M12 4.4v12.3M7.4 12.3 12 17l4.6-4.7"/><path d="M5.3 19.6h13.4"/>',
+  other: '<circle cx="6.3" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="17.7" cy="12" r="1.15" fill="currentColor" stroke="none"/>'
+};
+const STR = {
+  en: { clock: "9:41", currency: "IRT", monthLabel: "Shahrivar 1405", balance: "Available balance", tomanShort: "T", in: "In", out: "Out", detected: "Detected from SMS", confirm: "Confirm", split: "Split", ignore: "Ignore", dailySpend: "Daily spend · last 14 days", categories: "Categories", reportsLink: "See all", recent: "Recent", all: "See all", navHome: "Summary", navActivity: "Activity", navPeople: "People", navReports: "Reports", avgPrefix: "avg " },
+  fa: { clock: "۹:۴۱", currency: "تومان", monthLabel: "شهریور ۱۴۰۵", balance: "موجودی قابل برداشت", tomanShort: "ت", in: "واریز", out: "برداشت", detected: "شناسایی از پیامک", confirm: "تأیید", split: "تقسیم", ignore: "نادیده", dailySpend: "هزینه روزانه · ۱۴ روز", categories: "دسته‌بندی‌ها", reportsLink: "همه", recent: "آخرین تراکنش‌ها", all: "همه", navHome: "خلاصه", navActivity: "تراکنش‌ها", navPeople: "افراد", navReports: "گزارش", avgPrefix: "میانگین " }
+};
+const TXS = [
+  { id: 1, en: "Hyperstar Ekbatan", fa: "هایپراستار اکباتان", cat: "grocery", amt: -2450000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "Today", dFa: "امروز", day: 0 },
+  { id: 2, en: "Snapp ride", fa: "اسنپ", cat: "transport", amt: -185000, acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲", dEn: "Today", dFa: "امروز", day: 0 },
+  { id: 3, en: "Villa Chalus", fa: "ویلا چالوس", cat: "fun", amt: -12000000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "3 Sha", dFa: "۳ شهریور", day: 2, splitOf: 4 },
+  { id: 4, en: "Salary — Parsian Co", fa: "حقوق — شرکت پارسیان", cat: "income", amt: 42000000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "3 Sha", dFa: "۳ شهریور", day: 2 },
+  { id: 5, en: "Digikala order", fa: "سفارش دیجی‌کالا", cat: "other", amt: -1890000, acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲", dEn: "5 Sha", dFa: "۵ شهریور", day: 4 },
+  { id: 6, en: "Pharmacy 13 Aban", fa: "داروخانه ۱۳ آبان", cat: "health", amt: -640000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "6 Sha", dFa: "۶ شهریور", day: 5 },
+  { id: 7, en: "Cafe Lamiz", fa: "کافه لمیز", cat: "dining", amt: -420000, acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲", dEn: "7 Sha", dFa: "۷ شهریور", day: 6 },
+  { id: 8, en: "Rent — Sadeghieh", fa: "اجاره — صادقیه", cat: "rent", amt: -9000000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "8 Sha", dFa: "۸ شهریور", day: 7 },
+  { id: 9, en: "Refah market", fa: "فروشگاه رفاه", cat: "grocery", amt: -1320000, acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷", dEn: "9 Sha", dFa: "۹ شهریور", day: 8 },
+  { id: 10, en: "Freelance invoice", fa: "فاکتور آزاد", cat: "income", amt: 8500000, acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲", dEn: "10 Sha", dFa: "۱۰ شهریور", day: 9 }
+];
+const SMS = [
+  { id: "s1", amt: -2450000, guess: "grocery", bankEn: "Bank Saman", bankFa: "بانک سامان", en: "bardasht 2,450,000 T — Hyperstar, mande 128,940,000 T", fa: "برداشت ۲٬۴۵۰٬۰۰۰ ت — هایپراستار، مانده ۱۲۸٬۹۴۰٬۰۰۰ ت", titleEn: "Hyperstar Ekbatan", titleFa: "هایپراستار اکباتان", acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷" },
+  { id: "s2", amt: -680000, guess: "dining", bankEn: "Blu Bank", bankFa: "بلوبانک", en: "purchase 680,000 T — Bistro Zafar", fa: "خرید ۶۸۰٬۰۰۰ ت — بیسترو ظفر", titleEn: "Bistro Zafar", titleFa: "بیسترو ظفر", acEn: "Blu ····9902", acFa: "بلو ····۹۹۰۲" },
+  { id: "s3", amt: 3200000, guess: "income", bankEn: "Bank Saman", bankFa: "بانک سامان", en: "variz 3,200,000 T from R. Moradi", fa: "واریز ۳٬۲۰۰٬۰۰۰ ت از ر. مرادی", titleEn: "From R. Moradi", titleFa: "از ر. مرادی", acEn: "Saman ····4417", acFa: "سامان ····۴۴۱۷" }
+];
+const PEOPLE = [
+  { id: "p1", en: "Reza M.", fa: "رضا م.", ini: "RM", iniFa: "ر", bal: 4500000, tint: "#0a84ff" },
+  { id: "p2", en: "Nazanin A.", fa: "نازنین ا.", ini: "NA", iniFa: "ن", bal: -1250000, tint: "#ff9f0a" },
+  { id: "p3", en: "Kaveh T.", fa: "کاوه ت.", ini: "KT", iniFa: "ک", bal: 3000000, tint: "#bf5af2" },
+  { id: "p4", en: "Sara P.", fa: "سارا پ.", ini: "SP", iniFa: "س", bal: 0, tint: "#8e8e93" }
+];
+const BARS = [32, 54, 18, 71, 44, 26, 88, 38, 61, 12, 47, 100, 29, 56];
+
+class Component extends DCLogic {
+  state = { lang: null, screen: "home", sheet: null, txId: null, sms: SMS.slice(), txs: TXS.slice(), people: PEOPLE.slice(), typeFilter: "all", catFilter: "all", period: "monthly", personId: null, splitFrom: null, splitPeople: ["p1"], splitMode: "owed", rulesOn: { r1: true, r2: true, r3: false } };
+
+  lang() { return this.state.lang || this.props.defaultLang || "fa"; }
+  fa() { return this.lang() === "fa"; }
+  digits(s) { return this.fa() ? String(s).replace(/[0-9]/g, d => FAD[+d]) : String(s); }
+  group(n) { return this.digits(Math.round(Math.abs(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, this.fa() ? "٬" : ",")); }
+  money(n, signed) { return (n < 0 ? "−" : (signed ? "+" : "")) + this.group(n); }
+  short(n) {
+    const a = Math.abs(n);
+    if (a >= 1e6) return this.digits((a / 1e6).toFixed(1)) + (this.fa() ? " م" : "M");
+    if (a >= 1e3) return this.digits(Math.round(a / 1e3)) + (this.fa() ? " ه" : "K");
+    return this.group(a);
+  }
+  cat(key) { return CATS.find(c => c.key === key) || CATS[7]; }
+  catName(key) { const c = this.cat(key); return this.fa() ? c.fa : c.en; }
+  txName(tx) { return this.fa() ? tx.fa : tx.en; }
+  acName(tx) { return this.fa() ? tx.acFa : tx.acEn; }
+  dateName(tx) { return this.fa() ? tx.dFa : tx.dEn; }
+  txColor(tx) { return tx.amt < 0 ? RED : GREEN; }
+  catIcon(key) {
+    return h("svg", { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "#fff", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", dangerouslySetInnerHTML: { __html: CAT_PATHS[key] || CAT_PATHS.other } });
+  }
+
+  go(screen) { return () => this.setState({ screen, sheet: null }); }
+  openSheet(sheet, extra) { return () => this.setState(Object.assign({ sheet }, extra || {})); }
+
+  seg(on) { return { bg: on ? "#fff" : "transparent", fg: "#000", sh: on ? "0 1px 3px rgba(0,0,0,.14)" : "none" }; }
+  pill(on) { return { pillBg: on ? TINT : "rgba(120,120,128,.12)", pillFg: on ? "#fff" : "#000" }; }
+
+  txRow(tx) {
+    return {
+      title: this.txName(tx), meta: this.catName(tx.cat) + " · " + this.acName(tx),
+      amountText: this.money(tx.amt, true), dateText: this.dateName(tx), color: this.txColor(tx),
+      color2: this.cat(tx.cat).color, glyph: this.catIcon(tx.cat), sep: SEP,
+      onTap: () => this.setState({ sheet: "detail", txId: tx.id })
+    };
+  }
+  firstFlat(list) { return list.map((r, i) => i === 0 ? Object.assign({}, r, { sep: "none" }) : r); }
+
+  resolveSms(id, catKey, asTx) {
+    this.setState(s => {
+      const m = s.sms.find(x => x.id === id);
+      const rest = s.sms.filter(x => x.id !== id);
+      if (!m || !asTx) return { sms: rest };
+      const tx = { id: Date.now(), en: m.titleEn, fa: m.titleFa, cat: catKey || m.guess, amt: m.amt, acEn: m.acEn, acFa: m.acFa, dEn: "Today", dFa: "امروز", day: 0 };
+      return { sms: rest, txs: [tx].concat(s.txs) };
+    });
+  }
+
+  navItem(key) {
+    const on = this.state.screen === key || (key === "people" && this.state.screen === "person") || (key === "activity" && this.state.screen === "inbox");
+    return { fg: on ? TINT : "rgba(60,60,67,.5)" };
+  }
+
+  screenVals(fa, t, txs, shares, spend) {
+    const s = this.state;
+    const L = fa ? {
+      activity: "تراکنش‌ها", inbox: "پیامک‌ها", all: "همه", inn: "واریز", out: "برداشت", allCats: "همه",
+      people: "افراد", owedToMe: "طلب من", iOwe: "بدهی من", settled: "تسویه", settleUp: "تسویه حساب", ledger: "ریز حساب",
+      reports: "گزارش", daily: "روزانه", weekly: "هفتگی", monthly: "ماهانه", breakdown: "تفکیک دسته‌ها", budgets: "بودجه‌ها",
+      detail: "تراکنش", category: "دسته‌بندی", account: "حساب", date: "تاریخ", type: "نوع",
+      splitTitle: "تقسیم هزینه", who: "با چه کسی", quick: "تقسیم سریع",
+      iPaid: "من پرداخت کردم، آن‌ها بدهکارند", weSplit: "آن‌ها پرداخت کردند، من بدهکارم", perPerson: "سهم هر نفر",
+      save: "ثبت", saveShort: "ثبت", cancel: "انصراف", done: "تمام",
+      add: "ثبت دستی", withdraw: "برداشت", deposit: "واریز",
+      empty: "چیزی پیدا نشد", inboxEmpty: "پیامک تازه‌ای نیست", rules: "قوانین بانک‌ها", rulesHint: "انتخاب کنید کدام پیامک‌ها خوانده شوند.",
+      splitBtn: "تقسیم این هزینه", delete: "حذف تراکنش", records: "تراکنش", you: "شما", back: "تراکنش‌ها"
+    } : {
+      activity: "Activity", inbox: "Inbox", all: "All", inn: "In", out: "Out", allCats: "All",
+      people: "People", owedToMe: "Owed to me", iOwe: "I owe", settled: "Settled", settleUp: "Settle Up", ledger: "Ledger",
+      reports: "Reports", daily: "Daily", weekly: "Weekly", monthly: "Monthly", breakdown: "Category breakdown", budgets: "Budgets",
+      detail: "Transaction", category: "Category", account: "Account", date: "Date", type: "Type",
+      splitTitle: "Split", who: "With whom", quick: "Quick split",
+      iPaid: "I paid — they owe me", weSplit: "They paid — I owe", perPerson: "Per person",
+      save: "Save", saveShort: "Add", cancel: "Cancel", done: "Done",
+      add: "New Record", withdraw: "Withdraw", deposit: "Deposit",
+      empty: "Nothing here", inboxEmpty: "No new messages", rules: "Bank rules", rulesHint: "Choose which messages Wallet reads.",
+      splitBtn: "Split This Expense", delete: "Delete Transaction", records: "records", you: "You", back: "Activity"
+    };
+
+    let list = txs;
+    if (s.typeFilter === "in") list = list.filter(x => x.amt > 0);
+    if (s.typeFilter === "out") list = list.filter(x => x.amt < 0);
+    if (s.catFilter !== "all") list = list.filter(x => x.cat === s.catFilter);
+    const rows = this.firstFlat(list.map(tx => this.txRow(tx)));
+
+    const owedTotal = s.people.filter(p => p.bal > 0).reduce((a, b) => a + b.bal, 0);
+    const oweTotal = s.people.filter(p => p.bal < 0).reduce((a, b) => a + Math.abs(b.bal), 0);
+    const person = s.people.find(p => p.id === s.personId);
+
+    const budgets = this.firstFlat([
+      { cat: "grocery", limit: 14000000 }, { cat: "dining", limit: 5000000 },
+      { cat: "transport", limit: 3000000 }, { cat: "fun", limit: 12000000 }
+    ].map(b => {
+      const used = txs.filter(x => x.cat === b.cat && x.amt < 0).reduce((a, c) => a + Math.abs(c.amt), 0);
+      const pct = Math.min(100, Math.round(used / b.limit * 100));
+      return { label: this.catName(b.cat), text: this.group(used) + " / " + this.group(b.limit), w: pct + "%", color: used > b.limit ? RED : this.cat(b.cat).color, sep: SEP };
+    }));
+
+    const periodBars = s.period === "daily" ? BARS.slice(-7) : (s.period === "weekly" ? [62, 88, 47, 71] : BARS);
+    const maxP = Math.max.apply(null, periodBars);
+
+    const tx = s.txs.find(x => x.id === s.txId);
+    const sf = s.splitFrom;
+    const chosen = s.splitPeople;
+    const nWay = chosen.length + 1;
+    const per = sf ? Math.round(sf.amt / nWay) : 0;
+
+    return {
+      L, chevron: fa ? "‹" : "›", backLabel: (fa ? "‹ " : "‹ ") + L.back, backPeople: "‹ " + L.people,
+      isActivity: s.screen === "activity", isInbox: s.screen === "inbox", isPeople: s.screen === "people",
+      isPerson: s.screen === "person", isReports: s.screen === "reports",
+      goInbox: this.go("inbox"),
+      inboxBadge: this.digits(s.sms.length),
+      inboxEmpty: s.sms.length === 0,
+      typeChips: [["all", L.all], ["in", L.inn], ["out", L.out]].map(([k, label]) => Object.assign({ label, onPick: () => this.setState({ typeFilter: k }) }, this.seg(s.typeFilter === k))),
+      catChips: [{ key: "all", label: L.allCats }].concat(CATS.map(c => ({ key: c.key, label: this.catName(c.key) }))).map(c => Object.assign({ label: c.label, onPick: () => this.setState({ catFilter: c.key }) }, this.pill(s.catFilter === c.key))),
+      rows, noRows: rows.length === 0, rowsCount: this.digits(rows.length),
+
+      smsRows: s.sms.map(m => ({
+        raw: fa ? m.fa : m.en, bank: fa ? m.bankFa : m.bankEn,
+        amountText: this.money(m.amt, true), color: m.amt < 0 ? RED : GREEN,
+        title: fa ? m.titleFa : m.titleEn, guessLabel: this.catName(m.guess), meta: fa ? m.acFa : m.acEn,
+        onConfirm: () => this.resolveSms(m.id, m.guess, true),
+        onIgnore: () => this.resolveSms(m.id, null, false),
+        onSplit: () => this.setState({ sheet: "split", splitFrom: { amt: Math.abs(m.amt), title: fa ? m.titleFa : m.titleEn }, splitPeople: ["p1"], splitMode: "owed" })
+      })),
+      rules: this.firstFlat([
+        { id: "r1", bank: fa ? "بانک سامان ····۴۴۱۷" : "Saman ····4417", hint: fa ? "برداشت، واریز، مانده" : "Withdraw, deposit, balance" },
+        { id: "r2", bank: fa ? "بلوبانک ····۹۹۰۲" : "Blu ····9902", hint: fa ? "خرید، انتقال" : "Purchase, transfer" },
+        { id: "r3", bank: fa ? "تبلیغات و کد تأیید" : "Ads & OTP codes", hint: fa ? "نادیده گرفته می‌شود" : "Always ignored" }
+      ].map(r => {
+        const on = !!s.rulesOn[r.id];
+        return { bank: r.bank, hint: r.hint, sep: SEP, trackBg: on ? GREEN : "rgba(120,120,128,.16)", knobPos: on ? "flex-end" : "flex-start", onToggle: () => this.setState(st => ({ rulesOn: Object.assign({}, st.rulesOn, { [r.id]: !st.rulesOn[r.id] }) })) };
+      })),
+
+      owedText: this.group(owedTotal), oweText: this.group(oweTotal),
+      peopleRows: this.firstFlat(s.people.map(p => ({
+        name: fa ? p.fa : p.en, ini: fa ? p.iniFa : p.ini, avatarBg: p.tint, sep: SEP,
+        amountText: p.bal === 0 ? L.settled : this.money(p.bal, true),
+        color: p.bal > 0 ? GREEN : (p.bal < 0 ? RED : "rgba(60,60,67,.5)"),
+        sub: p.bal > 0 ? L.owedToMe : (p.bal < 0 ? L.iOwe : L.settled),
+        onTap: () => this.setState({ screen: "person", personId: p.id })
+      }))),
+      person: person ? {
+        name: fa ? person.fa : person.en, ini: fa ? person.iniFa : person.ini, avatarBg: person.tint,
+        amountText: person.bal === 0 ? L.settled : this.money(person.bal, true),
+        color: person.bal > 0 ? GREEN : (person.bal < 0 ? RED : "rgba(60,60,67,.5)"),
+        sub: person.bal > 0 ? L.owedToMe : (person.bal < 0 ? L.iOwe : L.settled)
+      } : {},
+      personLedger: person ? this.firstFlat([
+        { title: fa ? "ویلا چالوس — تقسیم ۴ نفره" : "Villa Chalus — split 4", amountText: this.money(3000000, true), date: fa ? "۳ شهریور" : "3 Sha", color: GREEN, sep: SEP },
+        { title: fa ? "شام بیسترو ظفر" : "Bistro Zafar dinner", amountText: this.money(1500000, true), date: fa ? "۷ شهریور" : "7 Sha", color: GREEN, sep: SEP },
+        { title: fa ? "تسویه نقدی" : "Cash settle", amountText: this.group(0), date: fa ? "۱ شهریور" : "1 Sha", color: "rgba(60,60,67,.5)", sep: SEP }
+      ]) : [],
+      settleUp: () => this.setState(st => ({ people: st.people.map(p => p.id === st.personId ? Object.assign({}, p, { bal: 0 }) : p) })),
+
+      periodChips: [["daily", L.daily], ["weekly", L.weekly], ["monthly", L.monthly]].map(([k, label]) => Object.assign({ label, onPick: () => this.setState({ period: k }) }, this.seg(s.period === k))),
+      periodBars: periodBars.map(v => ({ h: Math.round(v / maxP * 100) + "%", bg: v >= maxP ? TINT : "rgba(10,132,255,.28)" })),
+      periodTotal: this.group(spend), periodAvg: t.avgPrefix + this.short(spend / periodBars.length),
+      catTable: this.firstFlat(shares.map(c => ({ label: this.catName(c.key), amountText: this.group(c.amt), color: c.color, w: c.pct + "%", sep: SEP }))),
+      budgets,
+
+      sheetDetail: s.sheet === "detail", sheetAdd: s.sheet === "add", sheetSplit: s.sheet === "split",
+      closeSheet: () => this.setState({ sheet: null }),
+      detail: tx ? {
+        title: this.txName(tx), amountText: this.money(tx.amt, true), color: this.txColor(tx),
+        account: this.acName(tx), date: this.dateName(tx), typeLabel: tx.amt < 0 ? L.withdraw : L.deposit
+      } : {},
+      detailCats: tx ? CATS.map(c => Object.assign({ label: this.catName(c.key), onPick: () => this.setState(st => ({ txs: st.txs.map(x => x.id === tx.id ? Object.assign({}, x, { cat: c.key }) : x) })) }, this.pill(c.key === tx.cat))) : [],
+      openSplitFromDetail: () => tx && this.setState({ sheet: "split", splitFrom: { amt: Math.abs(tx.amt), title: this.txName(tx) }, splitPeople: ["p1"], splitMode: "owed" }),
+      deleteTx: () => tx && this.setState(st => ({ txs: st.txs.filter(x => x.id !== tx.id), sheet: null })),
+
+      splitTitleText: sf ? sf.title : "", splitAmountText: sf ? this.group(sf.amt) : "",
+      splitModeChips: [["owed", L.iPaid], ["owe", L.weSplit]].map(([k, label]) => ({ label, sep: SEP, check: s.splitMode === k ? "✓" : "", onPick: () => this.setState({ splitMode: k }) })),
+      splitPeopleChips: s.people.map(p => Object.assign({
+        label: fa ? p.fa : p.en,
+        onPick: () => this.setState(st => ({ splitPeople: st.splitPeople.indexOf(p.id) > -1 ? st.splitPeople.filter(x => x !== p.id) : st.splitPeople.concat([p.id]) }))
+      }, this.pill(chosen.indexOf(p.id) > -1))),
+      quickSplits: [2, 3, 4].map(n => ({
+        label: "÷" + this.digits(n), amountText: sf ? this.group(sf.amt / n) : "",
+        onPick: () => this.setState(st => ({ splitPeople: st.people.slice(0, n - 1).map(p => p.id) })),
+        bg: nWay === n ? TINT : "#fff", fg: nWay === n ? "#fff" : "#000"
+      })),
+      splitWays: this.digits(nWay), splitPerText: this.group(per),
+      splitRows: this.firstFlat([{ name: L.you, ini: fa ? "من" : "Me", me: true, tint: "#8e8e93" }].concat(chosen.map(id => {
+        const p = s.people.find(x => x.id === id);
+        return { name: fa ? p.fa : p.en, ini: fa ? p.iniFa : p.ini, me: false, tint: p.tint };
+      })).map(r => ({
+        name: r.name, ini: r.ini, amountText: this.group(per), avatarBg: r.tint, sep: SEP,
+        sub: r.me ? (fa ? "سهم خودم" : "My share") : (s.splitMode === "owed" ? L.owedToMe : L.iOwe),
+        color: r.me ? "rgba(60,60,67,.7)" : (s.splitMode === "owed" ? GREEN : RED)
+      }))),
+      stop: (e) => e.stopPropagation(),
+      appName: fa ? "کیف پول" : "Wallet",
+      addAmountText: s.addAmt ? this.group(+s.addAmt) : this.digits(0),
+      addTypeChips: [["out", L.withdraw], ["in", L.deposit]].map(([k, label]) => Object.assign({ label, onPick: () => this.setState({ addType: k }) }, this.seg((s.addType || "out") === k))),
+      addCats: CATS.map(c => Object.assign({ label: this.catName(c.key), onPick: () => this.setState({ addCat: c.key }) }, this.pill((s.addCat || "grocery") === c.key))),
+      keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "000", "0", "⌫"].map(k => ({
+        label: k === "⌫" ? "⌫" : this.digits(k),
+        onPress: () => this.setState(st => ({ addAmt: k === "⌫" ? String(st.addAmt || "").slice(0, -1) : String(st.addAmt || "") + k }))
+      })),
+      saveAdd: () => this.setState(st => {
+        if (!st.addAmt) return {};
+        const v = +st.addAmt * ((st.addType || "out") === "out" ? -1 : 1);
+        const tx = { id: Date.now(), en: "Manual entry", fa: "ثبت دستی", cat: st.addCat || "grocery", amt: v, acEn: "Cash", acFa: "نقدی", dEn: "Today", dFa: "امروز", day: 0 };
+        return { txs: [tx].concat(st.txs), sheet: null, addAmt: "", screen: "home" };
+      }),
+      saveSplit: () => this.setState(st => ({
+        people: st.people.map(p => st.splitPeople.indexOf(p.id) > -1 ? Object.assign({}, p, { bal: p.bal + (st.splitMode === "owed" ? per : -per) }) : p),
+        sheet: null, screen: "people"
+      }))
+    };
+  }
+
+  renderVals() {
+    const fa = this.fa(), t = STR[fa ? "fa" : "en"];
+    const txs = this.state.txs;
+    const income = txs.filter(x => x.amt > 0).reduce((a, b) => a + b.amt, 0);
+    const spend = txs.filter(x => x.amt < 0).reduce((a, b) => a + Math.abs(b.amt), 0);
+    const byCat = {};
+    txs.filter(x => x.amt < 0).forEach(x => { byCat[x.cat] = (byCat[x.cat] || 0) + Math.abs(x.amt); });
+    const shares = Object.keys(byCat).sort((a, b) => byCat[b] - byCat[a]).slice(0, 5).map(k => {
+      const pct = Math.round(byCat[k] / spend * 100);
+      return { w: pct + "%", color: this.cat(k).color, label: this.catName(k) + " " + this.digits(pct) + (fa ? "٪" : "%"), key: k, amt: byCat[k], pct };
+    });
+    const top = this.state.sms[0];
+    const maxBar = Math.max.apply(null, BARS);
+
+    return {
+      t, dir: fa ? "rtl" : "ltr",
+      setEn: () => this.setState({ lang: "en" }), setFa: () => this.setState({ lang: "fa" }),
+      enSeg: this.seg(!fa), faSeg: this.seg(fa),
+      isHome: this.state.screen === "home",
+      goHome: this.go("home"), goActivity: this.go("activity"), goPeople: this.go("people"), goReports: this.go("reports"),
+      openAdd: this.openSheet("add"),
+      nav: { home: this.navItem("home"), activity: this.navItem("activity"), people: this.navItem("people"), reports: this.navItem("reports") },
+      balanceText: this.group(128940000), inText: this.group(income), outText: this.group(spend),
+      avgText: t.avgPrefix + this.short(spend / 14),
+      bars: BARS.map(v => ({ h: Math.round(v / maxBar * 100) + "%", bg: v > 70 ? TINT : "rgba(10,132,255,.28)" })),
+      catShares: shares,
+      recent: this.firstFlat(txs.slice(0, 4).map(tx => this.txRow(tx))),
+      hasSms: !!top,
+      smsCounter: this.digits(1) + (fa ? " از " : " of ") + this.digits(this.state.sms.length),
+      topSms: top ? { raw: fa ? top.fa : top.en, bank: fa ? top.bankFa : top.bankEn, amountText: this.money(top.amt, true), color: top.amt < 0 ? RED : GREEN, meta: (top.amt < 0 ? t.out : t.in) + " · " + (fa ? top.acFa : top.acEn) } : {},
+      topSmsCats: top ? CATS.filter(c => c.key === top.guess || ["grocery", "dining", "transport", "other"].indexOf(c.key) > -1).slice(0, 4).map(c => {
+        const on = c.key === top.guess;
+        return { label: this.catName(c.key), bg: on ? TINT : "rgba(120,120,128,.12)", fg: on ? "#fff" : "#000", onPick: () => this.setState(st => ({ sms: st.sms.map(m => m.id === top.id ? Object.assign({}, m, { guess: c.key }) : m) })) };
+      }) : [],
+      confirmSms: () => top && this.resolveSms(top.id, top.guess, true),
+      ignoreSms: () => top && this.resolveSms(top.id, null, false),
+      splitSms: () => top && this.setState({ sheet: "split", splitFrom: { amt: Math.abs(top.amt), title: fa ? top.titleFa : top.titleEn }, splitPeople: ["p1"], splitMode: "owed" }),
+      ...this.screenVals(fa, t, txs, shares, spend)
+    };
+  }
+}
+</script>
+</body>
+</html>

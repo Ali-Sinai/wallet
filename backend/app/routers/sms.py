@@ -86,6 +86,9 @@ def ingest_webhook(
     x_api_token: str | None = Header(default=None),
 ) -> dict[str, object]:
     token_hash = get_setting(session, KEY_WEBHOOK_TOKEN_HASH)
+    # Forwarder apps' header fields happily keep a stray space or newline from
+    # a paste; the token itself is URL-safe base64 and never contains either.
+    x_api_token = x_api_token.strip() if x_api_token else None
     if not token_hash or not x_api_token or not verify_secret(x_api_token, token_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid API token")
 
