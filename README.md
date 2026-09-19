@@ -101,16 +101,24 @@ everything else is the static frontend build — see `vercel.json`).
    - `TURSO_DATABASE_URL` — the `libsql://...` URL
    - `TURSO_AUTH_TOKEN` — the token
    - `WALLET_SESSION_SECRET`, `WALLET_ADMIN_USERNAME`, `WALLET_ADMIN_PASSWORD`
-   - `CRON_SECRET` — protects the two endpoints below; Vercel automatically
-     sends `Authorization: Bearer $CRON_SECRET` on Cron-triggered requests
-     when this is set, which is what secures the purge job in step 4.
+   - `CRON_SECRET` — secures the Cron purge job in step 4; Vercel
+     automatically sends `Authorization: Bearer $CRON_SECRET` on
+     Cron-triggered requests when this is set.
 3. **Run migrations once after each deploy that adds one** — there's no
    persistent process to run `alembic upgrade head` at startup on a
-   serverless function, so this is a manual step instead:
+   serverless function, so this is a manual step instead. Open
+   `https://your-project.vercel.app/api/internal/migrate` in a browser, or:
    ```bash
-   curl -X POST https://your-project.vercel.app/api/internal/migrate \
-     -H "Authorization: Bearer $CRON_SECRET"
+   curl -X POST https://your-project.vercel.app/api/internal/migrate
    ```
+   No token, no body, no headers. The credential that matters —
+   `TURSO_AUTH_TOKEN` — is already in the deployment's env and the app reads it
+   from there to connect at all, so making the caller hand back a secret the app
+   already holds protects nothing. The endpoint takes no parameters, so a caller
+   has no say in what runs, and `upgrade head` is idempotent: once the schema is
+   current, calling it again does nothing. Reading or writing actual rows still
+   needs the login session every other route requires.
+
    **Routing note**: `vercel.json` deliberately has *no* rewrite for `/api/*`.
    A rewrite's `destination` replaces the path the function actually receives,
    so `{"source": "/api/(.*)", "destination": "/api/index"}` makes every API
