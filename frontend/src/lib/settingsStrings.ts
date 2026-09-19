@@ -40,6 +40,12 @@ export const S = {
     senderPlaceholder: "sender match",
     regexPlaceholder: "regex با named groups: amount, type, account, datetime, merchant",
     addPattern: "افزودن الگو",
+    transactionKind: "تراکنش",
+    otpKind: "رمز پویا",
+    transactionKindHint: "پیامکی که پول در آن جابه‌جا شده — به صندوق ورودی می‌رود",
+    otpKindHint:
+      "پیامک رمز پویا که درست پیش از خرید اینترنتی می‌آید؛ فقط نام فروشنده از آن برداشته می‌شود و به برداشت بعدی می‌چسبد",
+    otpRegexPlaceholder: "regex با named group الزامی merchant — و اختیاری amount و account",
 
     keywordsTitle: "کلیدواژه‌های واریز/برداشت",
     keywordsHint: "کدام کلمات یعنی واریز و کدام یعنی برداشت",
@@ -138,6 +144,12 @@ export const S = {
     senderPlaceholder: "sender match",
     regexPlaceholder: "regex with named groups: amount, type, account, datetime, merchant",
     addPattern: "Add pattern",
+    transactionKind: "Transaction",
+    otpKind: "Purchase OTP",
+    transactionKindHint: "A message where money moved — it lands in the inbox",
+    otpKindHint:
+      "The one-time-password message sent just before an online purchase. Only the seller name is taken from it, and it attaches to the withdrawal that follows.",
+    otpRegexPlaceholder: "regex with a required merchant named group — amount and account optional",
 
     keywordsTitle: "Deposit / withdrawal keywords",
     keywordsHint: "Which words mean money in, and which mean money out",

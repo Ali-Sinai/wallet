@@ -21,6 +21,7 @@ import type {
   PersonIn,
   Point,
   CategorySlice,
+  SellerHint,
   SmsAttempt,
   SmsPattern,
   SplitOut,
@@ -402,6 +403,25 @@ export function useSmsUnparsed() {
   });
 }
 
+/** Stores named by an OTP message whose purchase hasn't arrived yet. A hint
+ * only lives a couple of minutes, so this polls faster than the other queues
+ * — otherwise the list is stale for most of a hint's life. */
+export function useSellerHints() {
+  return useQuery({
+    queryKey: ["sms", "seller-hints"],
+    queryFn: () => api.get<SellerHint[]>("/sms/seller-hints"),
+    refetchInterval: 20_000,
+  });
+}
+
+export function useDeleteSellerHintMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/sms/seller-hints/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["sms"] }),
+  });
+}
+
 export function useConfirmSmsMutation() {
   const qc = useQueryClient();
   return useMutation({
@@ -409,11 +429,20 @@ export function useConfirmSmsMutation() {
       id,
       categoryId,
       note,
+      accountId,
     }: {
       id: number;
       categoryId?: number | null;
       note?: string | null;
-    }) => api.post(`/sms/${id}/confirm`, { category_id: categoryId ?? null, note: note ?? null }),
+      /** Only needed when the message carried no card digits and there is more
+       * than one account — otherwise the server works it out. */
+      accountId?: number | null;
+    }) =>
+      api.post(`/sms/${id}/confirm`, {
+        category_id: categoryId ?? null,
+        note: note ?? null,
+        account_id: accountId ?? null,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sms"] });
       invalidateMoney(qc);

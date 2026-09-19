@@ -16,6 +16,7 @@ from app.models import (
     Account,
     Direction,
     KeywordRule,
+    OtpSellerHint,
     ParseStatus,
     SmsIngestAttempt,
     SmsPattern,
@@ -23,6 +24,7 @@ from app.models import (
     TxSource,
 )
 from app.security import verify_secret
+from app.seller_hints import claim_seller, purge_expired_hints, record_hint
 from app.settings_store import KEY_WEBHOOK_TOKEN_HASH, get_setting
 from app.sms_parser import ParseResult, dedup_hash, parse_sms
 
@@ -46,22 +48,57 @@ def _load_patterns_and_rules(
 def _account_for_last4(session: Session, last4: str | None) -> Account | None:
     if last4 is None:
         return None
-    return session.exec(select(Account).where(Account.last4 == last4)).first()
+    matches = list(session.exec(select(Account).where(Account.last4 == last4)).all())
+    # A replaced card usually keeps the same trailing digits as the old one, so
+    # prefer the account still in use when several rows share a last4.
+    return next((a for a in matches if a.is_active), matches[0] if matches else None)
 
 
-def _store_attempt(session: Session, sender: str, result: ParseResult) -> SmsIngestAttempt | None:
+def _active_accounts(session: Session) -> list[Account]:
+    return list(session.exec(select(Account).where(Account.is_active == True)).all())  # noqa: E712
+
+
+def _store_attempt(
+    session: Session, sender: str, body: str, result: ParseResult
+) -> SmsIngestAttempt | None:
     if result.status == "ignored_account":
         return None  # zero DB footprint, by design — see SmsIngestAttempt docstring
+
+    if result.status == "otp":
+        # No money moved: park the store's name for the withdrawal that follows.
+        if result.seller_hint is not None:
+            record_hint(
+                session,
+                sender=sender,
+                matched_pattern_id=result.matched_pattern_id,
+                hint=result.seller_hint,
+            )
+        return None
+
+    unparsed = result.status != "parsed"
+    merchant = result.fields.merchant
+    if merchant is None:
+        # An online purchase names its store only in the OTP message sent just
+        # before this one — see app/seller_hints.py.
+        merchant = claim_seller(
+            session,
+            direction=result.fields.direction,
+            amount_cents=result.fields.amount_cents,
+        )
 
     attempt = SmsIngestAttempt(
         sender=sender,
         matched_pattern_id=result.matched_pattern_id,
-        parse_status=ParseStatus.PARSED if result.status == "parsed" else ParseStatus.UNPARSED,
+        parse_status=ParseStatus.UNPARSED if unparsed else ParseStatus.PARSED,
         amount_cents=result.fields.amount_cents,
         direction=result.fields.direction,
         account_last4=result.fields.account_last4,
         occurred_at=result.fields.occurred_at,
-        merchant=result.fields.merchant,
+        merchant=merchant,
+        # Only a message no pattern could read keeps its text, and only until
+        # it's resolved: without it there's nothing to show and no way to tell
+        # what rule to write. See the SmsIngestAttempt docstring.
+        raw_body=body if unparsed else None,
         expires_at=utc_now() + timedelta(days=settings.ingest_attempt_retention_days),
     )
     session.add(attempt)
@@ -101,8 +138,12 @@ def ingest_webhook(
         keyword_rules=rules,
         whitelisted_last4=whitelisted,
     )
-    attempt = _store_attempt(session, body.sender, result)
-    return {"status": result.status, "attempt_id": attempt.id if attempt else None}
+    attempt = _store_attempt(session, body.sender, body.body, result)
+    return {
+        "status": result.status,
+        "attempt_id": attempt.id if attempt else None,
+        "seller": result.seller_hint.seller if result.seller_hint else None,
+    }
 
 
 # ---- Paste box (authenticated) -----------------------------------------------
@@ -125,6 +166,9 @@ class AttemptOut(BaseModel):
     account_last4: str | None
     occurred_at: datetime | None
     merchant: str | None
+    # The message itself, carried only by unparsed attempts — null everywhere
+    # else. Nothing persists it past the attempt row.
+    raw_body: str | None
     received_at: datetime
 
 
@@ -151,7 +195,7 @@ def ingest_paste(
             keyword_rules=rules,
             whitelisted_last4=whitelisted,
         )
-        attempt = _store_attempt(session, body.sender_hint, result)
+        attempt = _store_attempt(session, body.sender_hint, message, result)
         if attempt is not None:
             created.append(attempt)
     return created
@@ -176,9 +220,98 @@ def unparsed(session: Session = Depends(get_session)) -> list[SmsIngestAttempt]:
     return list(session.exec(stmt).all())
 
 
+# ---- Seller hints from OTP messages -------------------------------------------
+
+
+class SellerHintOut(BaseModel):
+    id: int
+    sender: str
+    seller: str
+    amount_cents: int | None
+    received_at: datetime
+    expires_at: datetime
+
+
+@router.get(
+    "/sms/seller-hints",
+    response_model=list[SellerHintOut],
+    dependencies=[Depends(get_current_username)],
+)
+def seller_hints(session: Session = Depends(get_session)) -> list[OtpSellerHint]:
+    """Stores named by an OTP message whose purchase hasn't arrived yet.
+
+    Read-only, and mostly there so an unexpected merchant on a transaction is
+    explainable: this is the queue it came from.
+    """
+    stmt = (
+        select(OtpSellerHint)
+        .where(OtpSellerHint.expires_at > utc_now())
+        .order_by(OtpSellerHint.received_at.desc())  # type: ignore[attr-defined]
+    )
+    return list(session.exec(stmt).all())
+
+
+@router.delete("/sms/seller-hints/{hint_id}", dependencies=[Depends(get_current_username)])
+def delete_seller_hint(hint_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
+    hint = session.get(OtpSellerHint, hint_id)
+    if hint is None:
+        raise HTTPException(status_code=404, detail="hint not found")
+    session.delete(hint)
+    session.commit()
+    return {"ok": True}
+
+
 class ConfirmBody(BaseModel):
     category_id: int | None = None
     note: str | None = None
+    # Which account the transaction lands in. Normally left out: the account is
+    # recovered from the card digits in the message. Only messages that carry no
+    # digits at all, on a setup with more than one account, need it — see
+    # _resolve_account.
+    account_id: int | None = None
+
+
+def _resolve_account(
+    session: Session, attempt: SmsIngestAttempt, account_id: int | None
+) -> Account:
+    """Which account a confirmed attempt belongs to.
+
+    Plenty of bank messages name no card at all — a transfer confirmation, most
+    of Blu's wording — and the patterns treat the card digits as optional, so
+    those parse fine and show up in the inbox with everything but an account.
+    Confirming them used to 400 outright; now an explicit account_id settles it,
+    and a single-account setup (the common case) needs no choice at all.
+    """
+    if account_id is not None:
+        account = session.get(Account, account_id)
+        if account is None:
+            raise HTTPException(status_code=404, detail="account not found")
+        return account
+
+    account = _account_for_last4(session, attempt.account_last4)
+    if account is not None:
+        return account
+
+    if attempt.account_last4 is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"no account matches card ····{attempt.account_last4}; "
+                "add it under Accounts, or confirm with an explicit account_id"
+            ),
+        )
+
+    active = _active_accounts(session)
+    if len(active) == 1:
+        return active[0]
+    if not active:
+        raise HTTPException(
+            status_code=400, detail="no active account to file this under; add one under Accounts"
+        )
+    raise HTTPException(
+        status_code=400,
+        detail="this message names no card; confirm with an explicit account_id",
+    )
 
 
 @router.post("/sms/{attempt_id}/confirm", dependencies=[Depends(get_current_username)])
@@ -193,11 +326,7 @@ def confirm(
             status_code=400, detail="attempt is missing required fields; resolve manually instead"
         )
 
-    account = _account_for_last4(session, attempt.account_last4)
-    if account is None:
-        raise HTTPException(
-            status_code=400, detail="no matching whitelisted account; resolve manually instead"
-        )
+    account = _resolve_account(session, attempt, body.account_id)
 
     occurred_at = attempt.occurred_at or attempt.received_at
     h = dedup_hash(
@@ -297,4 +426,7 @@ def purge_sms_attempts_endpoint(
     expected = os.environ.get("CRON_SECRET")
     if expected and authorization != f"Bearer {expected}":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid cron secret")
-    return {"purged": purge_expired_attempts(session)}
+    return {
+        "purged": purge_expired_attempts(session),
+        "purged_seller_hints": purge_expired_hints(session),
+    }

@@ -10,7 +10,10 @@ import logging
 
 from sqlmodel import Session, select
 
-from app.models import AmountUnit, Category, Direction, KeywordRule, SmsPattern
+from app.models import AmountUnit, Category, Direction, KeywordRule, PatternKind, SmsPattern
+from app.settings_store import get_setting, set_setting
+
+KEY_OTP_PATTERNS_SEEDED = "otp_patterns_seeded"
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +51,49 @@ _GENERIC_BODY_REGEX = (
     r"(?:[^\d]{0,20}(?:مانده|موجودی)[^\d]{0,10}(?P<balance>[\d۰-۹٠-٩,٬]+))?"
 )
 
-DEFAULT_SMS_PATTERNS: list[dict[str, str]] = [
-    {"name": "بانک ملی", "sender_match": "melli", "body_regex": _GENERIC_BODY_REGEX},
-    {"name": "بانک ملت", "sender_match": "mellat", "body_regex": _GENERIC_BODY_REGEX},
-    {"name": "بانک صادرات", "sender_match": "saderat", "body_regex": _GENERIC_BODY_REGEX},
-    {"name": "بلوبانک", "sender_match": "blu", "body_regex": _GENERIC_BODY_REGEX},
-    {"name": "بانک سامان", "sender_match": "saman", "body_regex": _GENERIC_BODY_REGEX},
-    {"name": "بانک تجارت", "sender_match": "tejarat", "body_regex": _GENERIC_BODY_REGEX},
+# The one-time-password message a bank sends *before* an online purchase. It's
+# the only message that names the store, so it's read for that name alone and
+# never as money moving — see PatternKind and app/seller_hints.py.
+#
+# Written as lookaheads rather than one left-to-right match because banks order
+# these lines differently: each clause finds its own label anywhere in the
+# message. Only the OTP wording and the seller are required; the amount is
+# optional and narrows which withdrawal the hint attaches to when two are in
+# flight. No card is read: neither message reliably names one.
+_GENERIC_OTP_REGEX = (
+    r"(?=[\s\S]*(?:رمز\s*(?:پویا|دوم|یک\s*بار\s*مصرف|یکبار\s*مصرف)|کد\s*یک\s*?بار\s*مصرف))"
+    r"(?=[\s\S]*(?:پذیرنده|پذيرنده|فروشگاه|فروشنده|نام\s*فروشگاه)\s*[:：]?\s*"
+    r"(?P<merchant>[^\n\r]{2,40}?)\s*(?=\n|\r|$|کارت|مبلغ|رمز|کد|تاریخ|زمان|ساعت|شماره))"
+    r"(?:(?=[\s\S]*(?:مبلغ|بابت)\s*[:：]?\s*(?P<amount>[\d۰-۹٠-٩,٬]{4,})))?"
+)
+
+_BANKS: list[tuple[str, str]] = [
+    ("بانک ملی", "melli"),
+    ("بانک ملت", "mellat"),
+    ("بانک صادرات", "saderat"),
+    ("بلوبانک", "blu"),
+    ("بانک سامان", "saman"),
+    ("بانک تجارت", "tejarat"),
+]
+
+DEFAULT_SMS_PATTERNS: list[dict[str, object]] = [
+    {
+        "name": name,
+        "sender_match": sender,
+        "body_regex": _GENERIC_BODY_REGEX,
+        "kind": PatternKind.TRANSACTION,
+    }
+    for name, sender in _BANKS
+]
+
+DEFAULT_OTP_PATTERNS: list[dict[str, object]] = [
+    {
+        "name": f"{name} — رمز پویا",
+        "sender_match": sender,
+        "body_regex": _GENERIC_OTP_REGEX,
+        "kind": PatternKind.OTP,
+    }
+    for name, sender in _BANKS
 ]
 
 
@@ -85,7 +124,33 @@ def ensure_sms_patterns(session: Session) -> None:
     logger.info("Seeded %d default SMS patterns", len(DEFAULT_SMS_PATTERNS))
 
 
+def ensure_otp_patterns(session: Session) -> None:
+    """Seed the OTP patterns once, including on a database that predates them.
+
+    The table-is-empty check the other seeds use would skip an instance that
+    already has bank patterns, which is every existing install — so this one
+    remembers it has run in AppSetting instead, and stays quiet afterwards
+    even if you delete the patterns it added.
+    """
+    if get_setting(session, KEY_OTP_PATTERNS_SEEDED) == "1":
+        return
+    existing = {
+        (p.sender_match, p.body_regex)
+        for p in session.exec(select(SmsPattern).where(SmsPattern.kind == PatternKind.OTP)).all()
+    }
+    added = 0
+    for p in DEFAULT_OTP_PATTERNS:
+        if (p["sender_match"], p["body_regex"]) in existing:
+            continue
+        session.add(SmsPattern(amount_unit=AmountUnit.RIAL, enabled=True, **p))
+        added += 1
+    set_setting(session, KEY_OTP_PATTERNS_SEEDED, "1")  # commits
+    if added:
+        logger.info("Seeded %d default OTP patterns", added)
+
+
 def ensure_base_data(session: Session) -> None:
     ensure_categories(session)
     ensure_keyword_rules(session)
     ensure_sms_patterns(session)
+    ensure_otp_patterns(session)
