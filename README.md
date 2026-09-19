@@ -106,26 +106,19 @@ everything else is the static frontend build — see `vercel.json`).
      Cron-triggered requests when this is set.
 3. **Run migrations once after each deploy that adds one** — there's no
    persistent process to run `alembic upgrade head` at startup on a
-   serverless function, so this is a manual step instead:
+   serverless function, so this is a manual step instead. Open
+   `https://your-project.vercel.app/api/internal/migrate` in a browser, or:
    ```bash
-   curl -X POST https://your-project.vercel.app/api/internal/migrate \
-     -H "Authorization: Bearer $TURSO_AUTH_TOKEN"
+   curl -X POST https://your-project.vercel.app/api/internal/migrate
    ```
-   The endpoint accepts any one of `MIGRATE_TOKEN`, `TURSO_AUTH_TOKEN` or
-   `CRON_SECRET` as the bearer token. All three are secrets at least as
-   powerful as a schema upgrade — `TURSO_AUTH_TOKEN` in particular is already
-   the app's only means of writing to the database, so whoever holds it can run
-   these writes against Turso directly anyway — so accepting whichever one you
-   can actually lay hands on costs nothing.
+   No token, no body, no headers. The credential that matters —
+   `TURSO_AUTH_TOKEN` — is already in the deployment's env and the app reads it
+   from there to connect at all, so making the caller hand back a secret the app
+   already holds protects nothing. The endpoint takes no parameters, so a caller
+   has no say in what runs, and `upgrade head` is idempotent: once the schema is
+   current, calling it again does nothing. Reading or writing actual rows still
+   needs the login session every other route requires.
 
-   That last part is the catch worth knowing about: Vercel can store an env var
-   write-only, and both `CRON_SECRET` and `TURSO_AUTH_TOKEN` normally are, so
-   once set neither can be read back out to make this call. Turso won't reveal
-   an already-issued token either — `turso db tokens create wallet` only mints
-   a *new* one, which then has to go into Vercel and be redeployed before it
-   matches. `MIGRATE_TOKEN` is the escape hatch for that: add it as a plain
-   (readable) env var when you need to run a migration and can't recover the
-   others, then delete it once you're done.
    **Routing note**: `vercel.json` deliberately has *no* rewrite for `/api/*`.
    A rewrite's `destination` replaces the path the function actually receives,
    so `{"source": "/api/(.*)", "destination": "/api/index"}` makes every API

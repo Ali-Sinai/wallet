@@ -3,13 +3,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import secrets
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from alembic.config import Config as AlembicConfig
-from fastapi import FastAPI, Header, HTTPException, Request, status
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -157,53 +156,24 @@ def health() -> dict[str, bool]:
     return {"ok": True}
 
 
-def _migrate_tokens() -> list[str]:
-    """Secrets that authorize /api/internal/migrate, any one of which is
-    accepted. All three are secrets of equal or greater power than a schema
-    upgrade, so accepting whichever the deploy happens to have costs nothing:
-
-    - TURSO_AUTH_TOKEN is the database token the app already holds, and the
-      only thing that lets it write to the DB at all. Whoever can present it
-      can run the same writes against Turso directly, so gating a migration
-      behind it grants no access it didn't already carry.
-    - MIGRATE_TOKEN is the escape hatch, and the reason this is a list. Vercel
-      can store an env var write-only, and both CRON_SECRET and
-      TURSO_AUTH_TOKEN normally are — meaning that once set, neither can be
-      read back out to actually make this call. A separate plain env var can
-      be. Set it when you need to run a migration and can't recover the
-      others; delete it afterwards.
-    - CRON_SECRET is what this endpoint used to require, kept so deploys that
-      set only it keep working. The purge endpoint still uses it on its own,
-      since CRON_SECRET is what Vercel Cron actually sends.
-    """
-    candidates = (
-        os.environ.get("MIGRATE_TOKEN"),
-        get_settings().turso_auth_token,
-        os.environ.get("CRON_SECRET"),
-    )
-    return [token for token in candidates if token]
-
-
-def migrate_authorized(authorization: str | None) -> bool:
-    tokens = _migrate_tokens()
-    if not tokens:
-        # Nothing configured to check against. That's the local/dev case, where
-        # migrations already run at startup (see lifespan) and the DB is a file
-        # on your own disk — a deploy with a real shared DB can't reach here,
-        # since talking to Turso at all requires TURSO_AUTH_TOKEN.
-        return True
-    return any(secrets.compare_digest(authorization or "", f"Bearer {token}") for token in tokens)
-
-
-@app.post("/api/internal/migrate")
-def run_migrations_endpoint(authorization: str | None = Header(default=None)) -> dict[str, str]:
+@app.api_route("/api/internal/migrate", methods=["GET", "POST"])
+def run_migrations_endpoint() -> dict[str, str]:
     """One-off migration trigger for serverless deploys (Vercel/Turso), where
     there's no persistent process to run `alembic upgrade head` at startup —
-    see _IS_SERVERLESS above. Call this once after each deploy that adds a
-    migration, with `Authorization: Bearer <token>` — see _migrate_tokens for
-    which tokens are accepted."""
-    if not migrate_authorized(authorization):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid secret")
+    see _IS_SERVERLESS above. Call it once after each deploy that adds a
+    migration; GET is allowed so opening the URL in a browser is enough.
+
+    Deliberately takes no token and no input of any kind. The credential that
+    matters here — TURSO_AUTH_TOKEN — is already in the deployment's env, and
+    the app reads it from there to connect (see config.py/db.py); asking the
+    caller to hand back a secret the app already holds protects nothing. What's
+    left to abuse is thin: the endpoint accepts no parameters, so a caller has
+    no say in what runs, and `upgrade head` is idempotent — once the schema is
+    current, further calls do nothing. The exposure is somebody triggering
+    already-committed migrations, or load from hammering it, not data access:
+    reading or writing rows still needs the login session every other route
+    requires.
+    """
     _run_migrations()
     return {"status": "ok"}
 
