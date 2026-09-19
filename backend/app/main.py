@@ -157,25 +157,52 @@ def health() -> dict[str, bool]:
     return {"ok": True}
 
 
+def _migrate_tokens() -> list[str]:
+    """Secrets that authorize /api/internal/migrate, any one of which is
+    accepted. All three are secrets of equal or greater power than a schema
+    upgrade, so accepting whichever the deploy happens to have costs nothing:
+
+    - TURSO_AUTH_TOKEN is the database token the app already holds, and the
+      only thing that lets it write to the DB at all. Whoever can present it
+      can run the same writes against Turso directly, so gating a migration
+      behind it grants no access it didn't already carry.
+    - MIGRATE_TOKEN is the escape hatch, and the reason this is a list. Vercel
+      can store an env var write-only, and both CRON_SECRET and
+      TURSO_AUTH_TOKEN normally are — meaning that once set, neither can be
+      read back out to actually make this call. A separate plain env var can
+      be. Set it when you need to run a migration and can't recover the
+      others; delete it afterwards.
+    - CRON_SECRET is what this endpoint used to require, kept so deploys that
+      set only it keep working. The purge endpoint still uses it on its own,
+      since CRON_SECRET is what Vercel Cron actually sends.
+    """
+    candidates = (
+        os.environ.get("MIGRATE_TOKEN"),
+        get_settings().turso_auth_token,
+        os.environ.get("CRON_SECRET"),
+    )
+    return [token for token in candidates if token]
+
+
+def migrate_authorized(authorization: str | None) -> bool:
+    tokens = _migrate_tokens()
+    if not tokens:
+        # Nothing configured to check against. That's the local/dev case, where
+        # migrations already run at startup (see lifespan) and the DB is a file
+        # on your own disk — a deploy with a real shared DB can't reach here,
+        # since talking to Turso at all requires TURSO_AUTH_TOKEN.
+        return True
+    return any(secrets.compare_digest(authorization or "", f"Bearer {token}") for token in tokens)
+
+
 @app.post("/api/internal/migrate")
 def run_migrations_endpoint(authorization: str | None = Header(default=None)) -> dict[str, str]:
     """One-off migration trigger for serverless deploys (Vercel/Turso), where
     there's no persistent process to run `alembic upgrade head` at startup —
     see _IS_SERVERLESS above. Call this once after each deploy that adds a
-    migration.
-
-    Authenticated with TURSO_AUTH_TOKEN — the database token the app already
-    holds, and the only thing that lets it write to the DB at all. Anyone who
-    can present it can already run arbitrary writes against Turso directly, so
-    gating a schema upgrade behind it grants no access the token didn't already
-    carry, and it keeps this endpoint working without a second secret to store
-    and lose track of. CRON_SECRET stays as a fallback for deploys that set it
-    and no Turso token (the purge endpoint still uses CRON_SECRET, since that's
-    what Vercel Cron sends). With neither set there's nothing to check, which
-    is the local/dev case where migrations already run at startup anyway.
-    """
-    expected = get_settings().turso_auth_token or os.environ.get("CRON_SECRET")
-    if expected and not secrets.compare_digest(authorization or "", f"Bearer {expected}"):
+    migration, with `Authorization: Bearer <token>` — see _migrate_tokens for
+    which tokens are accepted."""
+    if not migrate_authorized(authorization):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid secret")
     _run_migrations()
     return {"status": "ok"}
