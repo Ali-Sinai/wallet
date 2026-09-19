@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import secrets
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -161,10 +162,20 @@ def run_migrations_endpoint(authorization: str | None = Header(default=None)) ->
     """One-off migration trigger for serverless deploys (Vercel/Turso), where
     there's no persistent process to run `alembic upgrade head` at startup —
     see _IS_SERVERLESS above. Call this once after each deploy that adds a
-    migration. Protected by the same CRON_SECRET as the purge endpoint; only
-    meaningful when that env var is actually set."""
-    expected = os.environ.get("CRON_SECRET")
-    if expected and authorization != f"Bearer {expected}":
+    migration.
+
+    Authenticated with TURSO_AUTH_TOKEN — the database token the app already
+    holds, and the only thing that lets it write to the DB at all. Anyone who
+    can present it can already run arbitrary writes against Turso directly, so
+    gating a schema upgrade behind it grants no access the token didn't already
+    carry, and it keeps this endpoint working without a second secret to store
+    and lose track of. CRON_SECRET stays as a fallback for deploys that set it
+    and no Turso token (the purge endpoint still uses CRON_SECRET, since that's
+    what Vercel Cron sends). With neither set there's nothing to check, which
+    is the local/dev case where migrations already run at startup anyway.
+    """
+    expected = get_settings().turso_auth_token or os.environ.get("CRON_SECRET")
+    if expected and not secrets.compare_digest(authorization or "", f"Bearer {expected}"):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid secret")
     _run_migrations()
     return {"status": "ok"}
