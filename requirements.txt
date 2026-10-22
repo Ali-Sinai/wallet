@@ -1,18 +1,207 @@
 # Vercel's Python builder installs from this file (repo root) for the
-# api/index.py serverless function. Kept separate from backend/pyproject.toml
-# (the source of truth for local/Docker installs via uv) because Vercel's
-# builder expects requirements.txt, not a pyproject/uv project — the two
-# lists must be kept in sync by hand when backend dependencies change.
-# uvicorn is intentionally omitted: Vercel provides its own ASGI entrypoint,
-# api/index.py never calls uvicorn.run().
-fastapi>=0.115
-sqlmodel>=0.0.22
-pydantic>=2.9
-pydantic-settings>=2.6
-alembic>=1.14
-jdatetime>=5.0
-bcrypt>=4.2
-itsdangerous>=2.2
-firebase-admin>=6.5
-python-multipart>=0.0.17
-sqlalchemy-libsql>=0.2
+# api/index.py serverless function. It expects requirements.txt, not a
+# pyproject/uv project, so this is generated from backend/uv.lock — the exact
+# versions local, Docker and the test suite run on. Don't edit the pins by
+# hand; after changing backend dependencies, replace everything below this
+# comment with the output of (run from backend/):
+#
+#   uv export --frozen --no-hashes --no-dev --extra turso --no-emit-project --no-header
+#
+# It used to list only `>=` lower bounds, so every Vercel build silently took
+# the newest releases. sqlmodel 0.0.48 started rejecting naive datetimes and
+# 500'd the dashboard and reports while every local run, on the locked
+# versions, passed.
+
+alembic==1.19.2
+    # via wallet
+annotated-doc==0.0.5
+    # via fastapi
+annotated-types==0.8.0
+    # via pydantic
+anyio==4.15.1
+    # via
+    #   httpx
+    #   starlette
+    #   watchfiles
+bcrypt==5.0.0
+    # via wallet
+cachecontrol==0.14.4
+    # via firebase-admin
+certifi==2026.7.22
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
+cffi==2.1.1 ; platform_python_implementation != 'PyPy'
+    # via cryptography
+charset-normalizer==3.5.1
+    # via requests
+click==8.5.0
+    # via uvicorn
+cryptography==50.0.1
+    # via
+    #   google-auth
+    #   pyjwt
+fastapi==0.141.1
+    # via wallet
+firebase-admin==7.5.0
+    # via wallet
+google-api-core==2.36.0
+    # via
+    #   firebase-admin
+    #   google-cloud-core
+    #   google-cloud-firestore
+    #   google-cloud-storage
+google-auth==2.57.1
+    # via
+    #   google-api-core
+    #   google-cloud-core
+    #   google-cloud-firestore
+    #   google-cloud-storage
+google-cloud-core==2.7.0
+    # via
+    #   google-cloud-firestore
+    #   google-cloud-storage
+google-cloud-firestore==2.30.0 ; platform_python_implementation != 'PyPy'
+    # via firebase-admin
+google-cloud-storage==3.13.1
+    # via firebase-admin
+google-crc32c==1.8.0
+    # via
+    #   google-cloud-storage
+    #   google-resumable-media
+google-resumable-media==2.10.2
+    # via google-cloud-storage
+googleapis-common-protos==1.75.3
+    # via
+    #   google-api-core
+    #   grpcio-status
+greenlet==3.5.5
+    # via
+    #   sqlalchemy
+    #   sqlalchemy-libsql
+grpcio==1.83.1 ; platform_python_implementation != 'PyPy'
+    # via
+    #   google-api-core
+    #   google-cloud-firestore
+    #   grpcio-status
+grpcio-status==1.83.1 ; platform_python_implementation != 'PyPy'
+    # via google-api-core
+h11==0.16.0
+    # via
+    #   httpcore
+    #   uvicorn
+h2==4.4.1
+    # via httpx
+hpack==4.2.0
+    # via h2
+httpcore==1.0.9
+    # via httpx
+httptools==0.8.0
+    # via uvicorn
+httpx==0.28.1
+    # via firebase-admin
+hyperframe==6.1.0
+    # via h2
+idna==3.19
+    # via
+    #   anyio
+    #   httpx
+    #   requests
+itsdangerous==2.2.0
+    # via wallet
+jalali-core==1.0.0
+    # via jdatetime
+jdatetime==6.1.0
+    # via wallet
+libsql-experimental==0.0.55
+    # via sqlalchemy-libsql
+mako==1.4.1
+    # via alembic
+markupsafe==3.0.3
+    # via mako
+msgpack==1.2.2
+    # via cachecontrol
+opentelemetry-api==1.44.0
+    # via google-api-core
+proto-plus==1.28.4
+    # via
+    #   google-api-core
+    #   google-cloud-firestore
+protobuf==7.36.1
+    # via
+    #   google-api-core
+    #   google-cloud-firestore
+    #   googleapis-common-protos
+    #   grpcio-status
+    #   proto-plus
+pyasn1==0.6.4
+    # via pyasn1-modules
+pyasn1-modules==0.4.2
+    # via google-auth
+pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
+    # via cffi
+pydantic==2.13.5
+    # via
+    #   fastapi
+    #   pydantic-settings
+    #   sqlmodel
+    #   wallet
+pydantic-core==2.46.5
+    # via pydantic
+pydantic-settings==2.15.0
+    # via wallet
+pyjwt==2.13.0
+    # via firebase-admin
+python-dotenv==1.2.3
+    # via
+    #   pydantic-settings
+    #   uvicorn
+python-multipart==0.0.32
+    # via wallet
+pyyaml==6.0.3
+    # via uvicorn
+requests==2.34.2
+    # via
+    #   cachecontrol
+    #   google-api-core
+    #   google-cloud-storage
+sqlalchemy==2.0.52
+    # via
+    #   alembic
+    #   sqlalchemy-libsql
+    #   sqlmodel
+sqlalchemy-libsql==0.2.0
+    # via wallet
+sqlmodel==0.0.42
+    # via wallet
+starlette==1.6.0
+    # via fastapi
+typing-extensions==4.16.0
+    # via
+    #   alembic
+    #   anyio
+    #   fastapi
+    #   grpcio
+    #   opentelemetry-api
+    #   pydantic
+    #   pydantic-core
+    #   sqlalchemy
+    #   sqlmodel
+    #   starlette
+    #   typing-inspection
+typing-inspection==0.4.4
+    # via
+    #   fastapi
+    #   pydantic
+    #   pydantic-settings
+urllib3==2.7.0
+    # via requests
+uvicorn==0.52.4
+    # via wallet
+uvloop==0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'
+    # via uvicorn
+watchfiles==1.2.0
+    # via uvicorn
+websockets==17.1
+    # via uvicorn
