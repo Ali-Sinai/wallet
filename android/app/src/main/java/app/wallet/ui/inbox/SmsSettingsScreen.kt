@@ -51,7 +51,7 @@ fun SmsSettingsScreen(vm: SmsSettingsViewModel, onClose: () -> Unit) {
     var confirmRotate by remember { mutableStateOf(false) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         permissionDenied = !granted
-        if (granted) vm.turnOn(true)
+        if (granted) vm.updateEnabled(true)
     }
     val hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS) ==
         PackageManager.PERMISSION_GRANTED
@@ -77,8 +77,8 @@ fun SmsSettingsScreen(vm: SmsSettingsViewModel, onClose: () -> Unit) {
                     checked = vm.enabled && hasPermission,
                     onCheckedChange = { on ->
                         when {
-                            !on -> vm.turnOn(false)
-                            hasPermission -> vm.turnOn(true)
+                            !on -> vm.updateEnabled(false)
+                            hasPermission -> vm.updateEnabled(true)
                             else -> permission.launch(Manifest.permission.RECEIVE_SMS)
                         }
                     },

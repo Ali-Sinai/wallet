@@ -31,7 +31,7 @@ class SmsSettingsViewModel(private val repo: WalletRepository, private val sms: 
         refreshSenders()
     }
 
-    fun turnOn(value: Boolean) {
+    fun updateEnabled(value: Boolean) {
         sms.enabled = value
         enabled = value
         if (value) refreshSenders()
