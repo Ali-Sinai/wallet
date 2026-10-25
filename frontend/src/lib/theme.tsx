@@ -81,6 +81,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
+/** Which design the screens render: the classic layout, Wallet Dark or Wallet Soft. */
+export function useFamily(): ThemeFamily {
+  return useTheme().option.family;
+}
+
 export function useTheme(): ThemeCtx {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error("useTheme must be used within ThemeProvider");

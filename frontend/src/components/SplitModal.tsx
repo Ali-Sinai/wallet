@@ -10,6 +10,8 @@ import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
 import { initials, txTitle } from "../lib/domain";
 import type { SplitMode, Transaction } from "../types";
+import { useFamily, type ThemeFamily } from "../lib/theme";
+import { PillButton, TotalBar } from "../designs/buttons";
 
 type Method = "equal" | "amounts" | "percentages" | "items";
 
@@ -24,6 +26,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
   const { t, fa, digits, group, money, short } = useI18n();
   const { data: people } = usePeople();
   const qc = useQueryClient();
+  const family = useFamily();
 
   const [mode, setMode] = useState<SplitMode>("i_paid");
   const [method, setMethod] = useState<Method>("equal");
@@ -234,6 +237,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
                 sub={key === "me" ? t.settled : shareSub}
                 amount={money(amount)}
                 color={key === "me" ? "rgb(var(--fg-rgb) / .6)" : shareColor}
+                family={family}
               />
             ))}
           </div>
@@ -319,7 +323,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
                     prev.map((i) => (i.id === item.id ? { ...i, participant: e.target.value } : i)),
                   )
                 }
-                className="h-auto rounded-lg border-0 py-[4px] ps-[6px] pe-6 text-[11px] shadow-none dark:bg-black/30 dark:hover:bg-black/30"
+                className="h-auto rounded-lg border-0 py-[4px] ps-[6px] pe-6 text-[11px] shadow-none dark:bg-[var(--c-well)] dark:hover:bg-[var(--c-well)]"
               >
                 {participants.map((key) => (
                   <NativeSelectOption key={key} value={key} className="bg-cardAlt text-foreground">
@@ -355,25 +359,48 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
         </EditorList>
       )}
 
-      <Button variant="plain" size="plain"
-        onClick={() => splitMutation.mutate()}
-        disabled={!canSave || splitMutation.isPending}
-        aria-busy={splitMutation.isPending}
-        style={{
-          width: "100%",
-          textAlign: "center",
-          padding: "13px 0",
-          borderRadius: 14,
-          background: "var(--c-primary)",
-          color: "var(--c-on-primary)",
-          fontSize: 13.5,
-          fontWeight: 700,
-          marginTop: 20,
-          opacity: !canSave ? 0.5 : 1,
-        }}
-      >
-        <BusyLabel busy={splitMutation.isPending}>{t.save}</BusyLabel>
-      </Button>
+      {family === "soft" ? (
+        <div style={{ marginTop: 20 }}>
+          <TotalBar
+            label={t.total}
+            value={money(total)}
+            action={t.save}
+            onAction={() => splitMutation.mutate()}
+            busy={splitMutation.isPending}
+            disabled={!canSave}
+          />
+        </div>
+      ) : family === "dark" ? (
+        <div style={{ marginTop: 24 }}>
+          <PillButton
+            onClick={() => splitMutation.mutate()}
+            disabled={!canSave || splitMutation.isPending}
+            busy={splitMutation.isPending}
+          >
+            {t.save}
+          </PillButton>
+        </div>
+      ) : (
+        <Button variant="plain" size="plain"
+          onClick={() => splitMutation.mutate()}
+          disabled={!canSave || splitMutation.isPending}
+          aria-busy={splitMutation.isPending}
+          style={{
+            width: "100%",
+            textAlign: "center",
+            padding: "13px 0",
+            borderRadius: 14,
+            background: "var(--c-primary)",
+            color: "var(--c-on-primary)",
+            fontSize: 13.5,
+            fontWeight: 700,
+            marginTop: 20,
+            opacity: !canSave ? 0.5 : 1,
+          }}
+        >
+          <BusyLabel busy={splitMutation.isPending}>{t.save}</BusyLabel>
+        </Button>
+      )}
 
       {splitMutation.isError && (
         <div className="text-center" style={{ color: "var(--c-expense)", fontSize: 12, marginTop: 8 }}>
@@ -389,12 +416,51 @@ function ShareRow({
   sub,
   amount,
   color,
+  family,
 }: {
   name: string;
   sub: string;
   amount: string;
   color: string;
+  family: ThemeFamily;
 }) {
+  // Wallet Dark: a bare ledger line with mono initials and amount.
+  if (family === "dark") {
+    return (
+      <div className="flex items-center" style={{ gap: 18, padding: "12px 0" }}>
+        <span style={{ width: 28, fontFamily: "var(--app-mono)", fontSize: 13, color: "rgb(var(--fg-rgb) / .4)" }}>
+          {initials(name)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate" style={{ fontSize: 15 }}>
+            {name}
+          </div>
+          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>{sub}</div>
+        </div>
+        <div style={{ fontFamily: "var(--app-mono)", fontSize: 14, color }}>{amount}</div>
+      </div>
+    );
+  }
+  // Wallet Soft: the split-bill screen's white rounded rows.
+  if (family === "soft") {
+    return (
+      <div
+        className="flex items-center"
+        style={{ gap: 14, padding: "14px 16px", borderRadius: 22, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }}
+      >
+        <Avatar size={44} color={color} background={`color-mix(in srgb, ${color} 14%, var(--c-surface))`}>
+          {initials(name)}
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <div className="truncate" style={{ fontSize: 15, fontWeight: 600 }}>
+            {name}
+          </div>
+          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .55)" }}>{sub}</div>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 600 }}>{amount}</div>
+      </div>
+    );
+  }
   return (
     <div
       className="flex items-center"

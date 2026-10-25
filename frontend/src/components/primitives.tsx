@@ -68,7 +68,7 @@ export function Chip({
         "rounded-pill text-xs font-bold border transition-colors",
         active
           ? "bg-primary text-primary-foreground border-primary"
-          : "bg-transparent text-foreground/70 border-white/14",
+          : "bg-transparent text-foreground/70 border-[rgb(var(--ink-rgb)/.14)]",
         className,
       )}
     >
@@ -150,7 +150,7 @@ export function GhostButton({
       aria-busy={busy}
       className={cn(
         "border font-bold",
-        tone === "danger" ? "border-destructive/35 text-destructive" : "border-white/14",
+        tone === "danger" ? "border-destructive/35 text-destructive" : "border-[rgb(var(--ink-rgb)/.14)]",
         tone === "muted" && "text-foreground/50",
         tone === "normal" && "text-foreground/80",
         className,
@@ -248,7 +248,7 @@ export function Overlay({
     <Drawer open onOpenChange={onOpenChange}>
       <DrawerPopup
         backdropClassName="bg-[rgb(var(--scrim-rgb)/.66)] backdrop-blur-none"
-        className="max-w-none rounded-t-sheet border-white/9 bg-cardAlt shadow-none before:hidden"
+        className="max-w-none rounded-t-sheet border-[rgb(var(--ink-rgb)/.09)] bg-cardAlt shadow-none before:hidden"
         style={{ maxHeight: sheetMaxHeight }}
       >
         <DrawerPanel className="no-scrollbar" style={{ padding: "20px 22px 26px" }}>
@@ -279,7 +279,7 @@ export function OverlayHeader({ title, onClose, closeLabel }: { title: string; o
  * ------------------------------------------------------------------ */
 
 export const FIELD_CLASS =
-  "h-auto w-full rounded-[12px] border-white/9 bg-white/5 px-[13px] py-[10px] text-[13px] md:text-[13px] text-foreground dark:bg-white/5";
+  "h-auto w-full rounded-[12px] border-[rgb(var(--ink-rgb)/.09)] bg-[rgb(var(--ink-rgb)/.05)] px-[13px] py-[10px] text-[13px] md:text-[13px] text-foreground dark:bg-[rgb(var(--ink-rgb)/.05)]";
 
 export function Field({
   label,
@@ -344,7 +344,7 @@ export function Select({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       wrapperClassName="w-full"
-      className={cn(FIELD_CLASS, "ps-[13px] pe-9 leading-none shadow-none dark:hover:bg-white/5")}
+      className={cn(FIELD_CLASS, "ps-[13px] pe-9 leading-none shadow-none dark:hover:bg-[rgb(var(--ink-rgb)/.05)]")}
       style={style}
     >
       {options.map((o) => (
@@ -398,7 +398,7 @@ export function MiniButton({
         "rounded-[9px] border px-[10px] py-[6px] text-[11.5px] font-bold whitespace-nowrap",
         tone === "danger" && "border-destructive/30 text-destructive",
         tone === "accent" && "border-primary/35 text-primary",
-        tone === "normal" && "border-white/12 text-foreground/70",
+        tone === "normal" && "border-[rgb(var(--ink-rgb)/.12)] text-foreground/70",
       )}
     >
       <BusyLabel busy={busy}>{children}</BusyLabel>

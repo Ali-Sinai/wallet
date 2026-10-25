@@ -1,33 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Card, CardTitle, Meter } from "@/components/primitives";
-import { api, withQuery } from "../lib/api";
+import { Card, CardTitle } from "@/components/primitives";
 import { useI18n } from "../lib/i18n";
 import { useIsDesktop } from "@/hooks/use-media-query";
-import { useBudgets, useCategories, useDashboard, useSmsPending, useTransactions } from "../lib/queries";
-import { categoryColor, categoryName, dayTick, jalaliMonthLabel, sliceLabel } from "../lib/domain";
+import { useCategories, useSmsPending, useTransactions } from "../lib/queries";
+import { dayTick, jalaliMonthLabel, sliceLabel } from "../lib/domain";
 import { Wordmark } from "../components/shell/TopBar";
 import MobileSmsCard from "../components/MobileSmsCard";
 import { TxRowMobile } from "../components/TxRow";
-import type { CategorySlice } from "../types";
+import { BudgetsCard } from "../components/ReportCards";
+import { useHomeData } from "../designs/shared";
+import { DarkHome } from "../designs/dark/DarkScreens";
+import { SoftHome } from "../designs/soft/SoftScreens";
+import { useFamily } from "../lib/theme";
 import type { ReactNode } from "react";
-
-const PERIOD = "month" as const;
-
-function useDashboardData() {
-  const { data: dashboard, isLoading } = useDashboard(PERIOD, false);
-  const { data: breakdown } = useQuery({
-    queryKey: ["reports", "category-breakdown", PERIOD, false],
-    queryFn: () =>
-      api.get<CategorySlice[]>(withQuery("/reports/category-breakdown", { period: PERIOD, gross: false })),
-  });
-  return { dashboard, breakdown, isLoading };
-}
 
 export default function Dashboard() {
   const isDesktop = useIsDesktop();
+  const family = useFamily();
+  if (family === "dark") return <AppShell><DarkHome /></AppShell>;
+  if (family === "soft") return <AppShell><SoftHome /></AppShell>;
   return <AppShell>{isDesktop ? <DesktopDashboard /> : <MobileHome />}</AppShell>;
 }
 
@@ -37,7 +30,7 @@ export default function Dashboard() {
 
 function DesktopDashboard() {
   const { t, fa, digits, group, money, short, percent, localize } = useI18n();
-  const { dashboard, breakdown, isLoading } = useDashboardData();
+  const { dashboard, breakdown, isLoading } = useHomeData();
   const { data: categories } = useCategories();
   const navigate = useNavigate();
 
@@ -168,89 +161,13 @@ function StatCard({ label, value, color, sub }: { label: string; value: string; 
   );
 }
 
-/** Shared by the dashboard and the reports screen. */
-export function BudgetsCard({
-  slices,
-  columns = false,
-  bare = false,
-}: {
-  slices: CategorySlice[];
-  /** Web dashboard lays budgets out in auto-fit columns. */
-  columns?: boolean;
-  /** Phone reports screen shows them as a bare section, no card chrome. */
-  bare?: boolean;
-}) {
-  const { t, fa, short } = useI18n();
-  const { data: budgets } = useBudgets();
-  const { data: categories } = useCategories();
-
-  const rows = (budgets ?? []).map((b) => {
-    const category = categories?.find((c) => c.id === b.category_id);
-    const used = slices.find((s) => s.category_id === b.category_id)?.amount_cents ?? 0;
-    const pct = b.limit_cents > 0 ? (used / b.limit_cents) * 100 : 0;
-    return {
-      id: b.id,
-      label: categoryName(category, fa, "—"),
-      text: `${short(used)} / ${short(b.limit_cents)}`,
-      width: `${Math.min(100, pct)}%`,
-      color: pct > 100 ? "var(--c-expense)" : categoryColor(category),
-    };
-  });
-
-  if (rows.length === 0) return null;
-
-  const list = (
-    <div
-      style={
-        columns
-          ? {
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
-              gap: "16px 26px",
-              marginTop: 16,
-            }
-          : { display: "flex", flexDirection: "column", gap: bare ? 12 : 14, marginTop: bare ? 12 : 16 }
-      }
-    >
-      {rows.map((r) => (
-        <div key={r.id}>
-          <div
-            className="flex justify-between"
-            style={{ fontSize: bare ? 12 : 12.5, color: "rgb(var(--fg-rgb) / .72)" }}
-          >
-            <span>{r.label}</span>
-            <span>{r.text}</span>
-          </div>
-          <Meter width={r.width} color={r.color} height={bare ? 6 : 7} />
-        </div>
-      ))}
-    </div>
-  );
-
-  if (bare) {
-    return (
-      <>
-        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.budgets}</div>
-        {list}
-      </>
-    );
-  }
-
-  return (
-    <Card style={{ padding: 22 }}>
-      <CardTitle>{t.budgets}</CardTitle>
-      {list}
-    </Card>
-  );
-}
-
 /* ------------------------------------------------------------------ *
  * Toman Tracker App.dc.html — home screen
  * ------------------------------------------------------------------ */
 
 function MobileHome() {
   const { t, fa, lang, money, short } = useI18n();
-  const { dashboard, breakdown, isLoading } = useDashboardData();
+  const { dashboard, breakdown, isLoading } = useHomeData();
   const { data: categories } = useCategories();
   const { data: pending } = useSmsPending();
   const hasSms = (pending?.length ?? 0) > 0;

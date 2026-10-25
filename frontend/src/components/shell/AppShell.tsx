@@ -5,13 +5,24 @@ import { useI18n } from "../../lib/i18n";
 import TopBar from "./TopBar";
 import Sidebar from "./Sidebar";
 import { MobileStatusBar, MobileTabBar } from "./MobileChrome";
+import { useFamily } from "../../lib/theme";
+import DarkShell from "../../designs/dark/DarkShell";
+import SoftShell from "../../designs/soft/SoftShell";
 
 /**
  * Two layouts, one per design file:
  *  - >=1000px  Wallet Web.dc.html — sticky top bar, 1240px shell, 330px rail
  *  - <1000px   Toman Tracker App.dc.html — status strip, scroller, tab bar
+ * The Wallet Dark / Wallet Soft themes bring their own shells.
  */
-export default function AppShell({
+export default function AppShell(props: { children: ReactNode; sidebar?: boolean }) {
+  const family = useFamily();
+  if (family === "dark") return <DarkShell>{props.children}</DarkShell>;
+  if (family === "soft") return <SoftShell>{props.children}</SoftShell>;
+  return <ClassicShell {...props} />;
+}
+
+function ClassicShell({
   children,
   sidebar = true,
 }: {

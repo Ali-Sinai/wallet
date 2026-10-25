@@ -7,9 +7,15 @@ import { useIsDesktop } from "@/hooks/use-media-query";
 import { usePeopleBalances, useSettleAllMutation } from "../lib/queries";
 import { initials } from "../lib/domain";
 import type { PersonBalance } from "../types";
+import { useFamily } from "../lib/theme";
+import { DarkPeople } from "../designs/dark/DarkScreens";
+import { SoftPeople } from "../designs/soft/SoftScreens";
 
 export default function People() {
   const isDesktop = useIsDesktop();
+  const family = useFamily();
+  if (family === "dark") return <AppShell><DarkPeople /></AppShell>;
+  if (family === "soft") return <AppShell><SoftPeople /></AppShell>;
   return <AppShell>{isDesktop ? <DesktopPeople /> : <MobilePeople />}</AppShell>;
 }
 
