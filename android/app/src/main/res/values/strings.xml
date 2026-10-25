@@ -128,4 +128,51 @@
     <string name="new_budget">بودجهٔ جدید</string>
     <string name="edit_budget">ویرایش بودجه</string>
     <string name="budget_limit">سقف ماهانه (تومان)</string>
+
+    <string name="tab_people">اشخاص</string>
+    <string name="tab_reports">گزارش‌ها</string>
+    <string name="add_person">شخص جدید</string>
+    <string name="no_people">هنوز کسی اضافه نشده</string>
+    <string name="person_name">نام</string>
+    <string name="contact_note">یادداشت تماس</string>
+    <string name="owes_you">%1$s به شما بدهکار است</string>
+    <string name="you_owe">%1$s بدهکارید</string>
+    <string name="settled">تسویه</string>
+    <string name="open_debts">%1$s بدهی باز</string>
+    <string name="settle_up">تسویهٔ همه</string>
+    <string name="settle">تسویه</string>
+    <string name="debts">بدهی‌ها</string>
+    <string name="ledger">تراکنش‌های مشترک</string>
+    <string name="owed_to_me_short">طلب من</string>
+    <string name="i_owe_short">بدهی من</string>
+    <string name="remaining_of">مانده %1$s از %2$s</string>
+    <string name="edit">ویرایش</string>
+
+    <string name="split">دنگ کردن</string>
+    <string name="view_split">دنگ این تراکنش</string>
+    <string name="split_shares">سهم‌ها</string>
+    <string name="delete_split">حذف دنگ</string>
+    <string name="me">من</string>
+    <string name="i_paid">من پرداختم</string>
+    <string name="they_paid">دیگری پرداخت</string>
+    <string name="split_with">با چه کسانی؟</string>
+    <string name="include_me">سهم من هم حساب شود</string>
+    <string name="split_equal">مساوی</string>
+    <string name="split_amounts">مبلغ</string>
+    <string name="split_percentages">درصد</string>
+    <string name="split_each">هر نفر حدود %1$s تومان</string>
+    <string name="split_left_amount">مانده برای تقسیم: %1$s تومان</string>
+    <string name="split_left_percent">درصد باقی‌مانده: %1$s٪</string>
+
+    <string name="period_today">امروز</string>
+    <string name="period_week">این هفته</string>
+    <string name="period_month">این ماه</string>
+    <string name="period_all">همه</string>
+    <string name="income_vs_expense">درآمد و هزینه</string>
+    <string name="net_line">خالص: %1$s تومان</string>
+    <string name="spend_over_time">هزینه در طول زمان</string>
+    <string name="month_over_month">این ماه در برابر ماه قبل</string>
+    <string name="previous_month">ماه قبل %1$s</string>
+    <string name="new_this_month">جدید</string>
+    <string name="by_account">به تفکیک حساب</string>
 </resources>

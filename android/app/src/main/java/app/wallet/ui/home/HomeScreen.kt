@@ -62,6 +62,7 @@ fun HomeScreen(
     onSeeAll: () -> Unit,
     onOpenInbox: () -> Unit,
     onSettings: () -> Unit,
+    onSplit: (Long) -> Unit,
 ) {
     PullToRefreshBox(isRefreshing = vm.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
         LazyColumn(Modifier.fillMaxSize()) {
@@ -121,6 +122,10 @@ fun HomeScreen(
             deleting = vm.deleting,
             onDelete = { vm.delete(selected) },
             onDismiss = { vm.selected = null },
+            onSplit = {
+                vm.selected = null
+                onSplit(selected.id)
+            },
         )
     }
 }

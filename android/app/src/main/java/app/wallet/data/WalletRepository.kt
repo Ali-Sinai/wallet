@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.json.JsonNull
 
 /** Names for the ids a transaction carries. */
 data class Lookups(
@@ -38,10 +39,12 @@ class WalletRepository(private val auth: AuthRepository, private val client: Api
 
     suspend fun dashboard() = client.call { api.dashboard() }
 
-    suspend fun categoryBreakdown() = client.call { api.categoryBreakdown() }
+    suspend fun categoryBreakdown(period: String = "month") = client.call { api.categoryBreakdown(period) }
 
     suspend fun transactions(limit: Int? = null, direction: Direction? = null, search: String? = null) =
         client.call { api.transactions(limit, direction, search?.takeIf { it.isNotBlank() }) }
+
+    suspend fun transaction(id: Long) = client.call { api.transaction(id) }
 
     suspend fun suggestCategory(merchant: String): Long? =
         client.call { api.suggestCategory(merchant) }.categoryId
@@ -86,6 +89,58 @@ class WalletRepository(private val auth: AuthRepository, private val client: Api
         client.call { api.deleteBudget(id) }
         notifyChanged()
     }
+
+    suspend fun balances() = client.call { api.balances() }
+
+    suspend fun people() = client.call { api.people() }
+
+    suspend fun savePerson(id: Long?, body: PersonIn) {
+        client.call { if (id == null) api.createPerson(body) else api.updatePerson(id, body) }
+        notifyChanged()
+    }
+
+    suspend fun deletePerson(id: Long) {
+        client.call { api.deletePerson(id) }
+        notifyChanged()
+    }
+
+    suspend fun personDebts(id: Long) = client.call { api.personDebts(id) }
+
+    suspend fun personTransactions(id: Long) = client.call { api.transactions(personId = id) }
+
+    suspend fun settleAll(personId: Long) {
+        client.call { api.settleAll(personId) }
+        notifyChanged()
+    }
+
+    suspend fun settleDebt(id: Long, amountCents: Long) {
+        client.call { api.settleDebt(id, SettleDebt(amountCents)) }
+        notifyChanged()
+    }
+
+    // Retrofit's converter can't decode a bare JSON null into a nullable type, so decode by hand.
+    suspend fun splitFor(txId: Long): Split? {
+        val body = client.call { api.splitFor(txId) }
+        return if (body is JsonNull) null else client.json.decodeFromJsonElement(Split.serializer(), body)
+    }
+
+    suspend fun createSplit(txId: Long, body: SplitRequest) {
+        client.call { api.createSplit(txId, body) }
+        notifyChanged()
+    }
+
+    suspend fun deleteSplit(id: Long) {
+        client.call { api.deleteSplit(id) }
+        notifyChanged()
+    }
+
+    suspend fun incomeVsExpense(period: String) = client.call { api.incomeVsExpense(period) }
+
+    suspend fun spendOverTime(period: String, groupBy: String) = client.call { api.spendOverTime(period, groupBy) }
+
+    suspend fun monthOverMonth() = client.call { api.monthOverMonth() }
+
+    suspend fun byAccount(period: String) = client.call { api.byAccount(period) }
 
     /** Something outside the repository (the SMS worker) changed server data. */
     fun notifyChanged() = _changes.update { it + 1 }

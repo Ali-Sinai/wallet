@@ -2,6 +2,7 @@ package app.wallet.data
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -36,7 +37,11 @@ interface WalletApi {
         @Query("limit") limit: Int? = null,
         @Query("direction") direction: Direction? = null,
         @Query("search") search: String? = null,
+        @Query("person_id") personId: Long? = null,
     ): List<Transaction>
+
+    @GET("api/transactions/{id}")
+    suspend fun transaction(@Path("id") id: Long): Transaction
 
     @POST("api/transactions")
     suspend fun createTransaction(@Body body: TransactionIn): Transaction
@@ -82,6 +87,52 @@ interface WalletApi {
 
     @DELETE("api/budgets/{id}")
     suspend fun deleteBudget(@Path("id") id: Long)
+
+    @GET("api/people")
+    suspend fun people(): List<Person>
+
+    @GET("api/people/balances")
+    suspend fun balances(): List<PersonBalance>
+
+    @POST("api/people")
+    suspend fun createPerson(@Body body: PersonIn): Person
+
+    @PATCH("api/people/{id}")
+    suspend fun updatePerson(@Path("id") id: Long, @Body body: PersonIn): Person
+
+    @DELETE("api/people/{id}")
+    suspend fun deletePerson(@Path("id") id: Long)
+
+    @GET("api/people/{id}/debts")
+    suspend fun personDebts(@Path("id") id: Long): List<Debt>
+
+    @POST("api/people/{id}/settle-all")
+    suspend fun settleAll(@Path("id") id: Long)
+
+    @POST("api/debts/{id}/settle")
+    suspend fun settleDebt(@Path("id") id: Long, @Body body: SettleDebt): Debt
+
+    /** The transaction's [Split], or JSON null when it has none (see WalletRepository.splitFor). */
+    @GET("api/transactions/{id}/split")
+    suspend fun splitFor(@Path("id") txId: Long): JsonElement
+
+    @POST("api/transactions/{id}/split")
+    suspend fun createSplit(@Path("id") txId: Long, @Body body: SplitRequest): Split
+
+    @DELETE("api/splits/{id}")
+    suspend fun deleteSplit(@Path("id") id: Long)
+
+    @GET("api/reports/income-vs-expense")
+    suspend fun incomeVsExpense(@Query("period") period: String): IncomeExpense
+
+    @GET("api/reports/spend-over-time")
+    suspend fun spendOverTime(@Query("period") period: String, @Query("group_by") groupBy: String): List<Point>
+
+    @GET("api/reports/month-over-month")
+    suspend fun monthOverMonth(): List<MonthCategoryDelta>
+
+    @GET("api/reports/by-account")
+    suspend fun byAccount(@Query("period") period: String): List<AccountBreakdown>
 
     @GET("api/sms/pending")
     suspend fun smsPending(): List<SmsAttempt>
@@ -273,3 +324,70 @@ data class Budget(val id: Long, val categoryId: Long, val limitCents: Long, val 
 
 @Serializable
 data class BudgetIn(val categoryId: Long, val limitCents: Long, val monthJalali: String? = null)
+
+@Serializable
+data class Person(val id: Long, val name: String, val contactNote: String? = null)
+
+@Serializable
+data class PersonIn(val name: String, val contactNote: String? = null)
+
+/** [netCents] > 0: they owe me; < 0: I owe them. */
+@Serializable
+data class PersonBalance(val personId: Long, val name: String, val netCents: Long, val openDebtCount: Int)
+
+@Serializable
+data class Debt(
+    val id: Long,
+    val personId: Long,
+    /** "owed_to_me" or "i_owe". */
+    val direction: String,
+    val amountCents: Long,
+    val amountSettledCents: Long,
+    val status: String,
+) {
+    val remainingCents: Long get() = amountCents - amountSettledCents
+    val owedToMe: Boolean get() = direction == "owed_to_me"
+}
+
+@Serializable
+data class SettleDebt(val amountCents: Long, val note: String? = null)
+
+@Serializable
+data class SplitShare(val personId: Long?, val amountCents: Long)
+
+@Serializable
+data class Split(val id: Long, val transactionId: Long, val mode: String, val shares: List<SplitShare>)
+
+/**
+ * POST /transactions/{id}/split. Participant keys in [percentages] and
+ * [customAmounts] are "me" or a person id as a string.
+ */
+@Serializable
+data class SplitRequest(
+    /** "i_paid" or "they_paid". */
+    val mode: String,
+    /** "equal", "percentage" or "custom". */
+    val method: String,
+    val participantPersonIds: List<Long>,
+    val includeMe: Boolean,
+    val percentages: Map<String, Double>? = null,
+    val customAmounts: Map<String, Long>? = null,
+)
+
+@Serializable
+data class IncomeExpense(val incomeCents: Long, val expenseCents: Long)
+
+@Serializable
+data class Point(val label: String, val amountCents: Long)
+
+@Serializable
+data class MonthCategoryDelta(
+    val categoryId: Long?,
+    val label: String,
+    val currentCents: Long,
+    val previousCents: Long,
+    val deltaPercentage: Double? = null,
+)
+
+@Serializable
+data class AccountBreakdown(val accountId: Long, val label: String, val totalInCents: Long, val totalOutCents: Long)

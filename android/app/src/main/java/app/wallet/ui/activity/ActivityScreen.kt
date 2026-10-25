@@ -34,7 +34,7 @@ import app.wallet.ui.components.TxRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActivityScreen(vm: ActivityViewModel) {
+fun ActivityScreen(vm: ActivityViewModel, onSplit: (Long) -> Unit) {
     Column(Modifier.fillMaxSize()) {
         Text(
             stringResource(R.string.tab_activity),
@@ -98,6 +98,10 @@ fun ActivityScreen(vm: ActivityViewModel) {
                             deleting = vm.deleting,
                             onDelete = { vm.delete(tx) },
                             onDismiss = { vm.selected = null },
+                            onSplit = {
+                                vm.selected = null
+                                onSplit(tx.id)
+                            },
                         )
                     }
                 }

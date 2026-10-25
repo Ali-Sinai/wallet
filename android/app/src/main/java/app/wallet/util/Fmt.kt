@@ -77,6 +77,38 @@ object Fmt {
         format.format(Date.from(parseApiDate(iso)))
     }.getOrDefault("")
 
+    /** Jalali month names, as the server writes them (backend/app/jalali.py MONTH_LABELS_FA). */
+    val MONTHS = listOf("فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند")
+
+    /** "1405-06" (the server's month key) → "شهریور ۱۴۰۵". */
+    fun monthKeyLabel(key: String): String {
+        val (y, m) = key.split("-").takeIf { it.size == 2 } ?: return digits(key)
+        val name = m.toIntOrNull()?.let { MONTHS.getOrNull(it - 1) } ?: return digits(key)
+        return "$name ${digits(y)}"
+    }
+
+    /**
+     * Sort key for a server day label ("۳ آبان"): month, then day. Labels
+     * sort wrongly as strings, and within one month or week they never
+     * cross a year.
+     */
+    fun dayLabelOrder(label: String): Int {
+        val parts = label.trim().split(" ", limit = 2)
+        val day = latinDigits(parts[0]).toIntOrNull() ?: 0
+        val month = MONTHS.indexOf(parts.getOrNull(1)?.trim())
+        return month * 100 + day
+    }
+
+    /** Two-character avatar initials, for Persian and Latin names alike. */
+    fun initials(name: String): String {
+        val parts = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        return when (parts.size) {
+            0 -> "—"
+            1 -> parts[0].take(2)
+            else -> "${parts[0].first()}${parts[1].first()}"
+        }
+    }
+
     /** "آبان ۱۴۰۵" for the current month. */
     fun jalaliMonthLabel(): String {
         val format = SimpleDateFormat("MMMM y", ULocale("fa_IR@calendar=persian"))

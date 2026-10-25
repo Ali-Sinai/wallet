@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -42,7 +44,15 @@ import app.wallet.ui.inbox.InboxScreen
 import app.wallet.ui.inbox.InboxViewModel
 import app.wallet.ui.inbox.SmsSettingsScreen
 import app.wallet.ui.inbox.SmsSettingsViewModel
+import app.wallet.ui.people.PeopleScreen
+import app.wallet.ui.people.PeopleViewModel
+import app.wallet.ui.people.PersonScreen
+import app.wallet.ui.people.PersonViewModel
+import app.wallet.ui.reports.ReportsScreen
+import app.wallet.ui.reports.ReportsViewModel
 import app.wallet.ui.settings.SettingsScreen
+import app.wallet.ui.split.SplitScreen
+import app.wallet.ui.split.SplitViewModel
 import app.wallet.ui.settings.SettingsViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.wallet.ui.theme.WalletColors
@@ -53,6 +63,13 @@ private object Routes {
     const val INBOX = "inbox"
     const val SMS_SETTINGS = "sms-settings"
     const val SETTINGS = "settings"
+    const val PEOPLE = "people"
+    const val PERSON = "person/{id}"
+    const val REPORTS = "reports"
+    const val SPLIT = "split/{tx}"
+
+    fun person(id: Long) = "person/$id"
+    fun split(txId: Long) = "split/$txId"
     const val ADD = "add?attempt={attempt}"
 
     fun add(attemptId: Long? = null) = if (attemptId == null) "add" else "add?attempt=$attemptId"
@@ -64,6 +81,8 @@ private val tabs = listOf(
     Tab(Routes.HOME, R.string.tab_home, Icons.Filled.Home),
     Tab(Routes.ACTIVITY, R.string.tab_activity, Icons.AutoMirrored.Filled.List),
     Tab(Routes.INBOX, R.string.tab_inbox, Icons.Filled.Email),
+    Tab(Routes.PEOPLE, R.string.tab_people, Icons.Filled.Person),
+    Tab(Routes.REPORTS, R.string.tab_reports, Icons.Filled.DateRange),
 )
 
 /** Everything behind the login: the bottom tabs and the screens they open. */
@@ -102,6 +121,7 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                         onSeeAll = { nav.switchTab(Routes.ACTIVITY) },
                         onOpenInbox = { nav.switchTab(Routes.INBOX) },
                         onSettings = { nav.navigate(Routes.SETTINGS) },
+                        onSplit = { nav.navigate(Routes.split(it)) },
                     )
                 }
                 composable(Routes.SETTINGS) {
@@ -119,7 +139,31 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                     )
                 }
                 composable(Routes.ACTIVITY) {
-                    ActivityScreen(appViewModel { ActivityViewModel(it.wallet) })
+                    ActivityScreen(appViewModel { ActivityViewModel(it.wallet) }, onSplit = { nav.navigate(Routes.split(it)) })
+                }
+                composable(Routes.PEOPLE) {
+                    PeopleScreen(appViewModel { PeopleViewModel(it.wallet) }, onOpen = { nav.navigate(Routes.person(it)) })
+                }
+                composable(
+                    Routes.PERSON,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType }),
+                ) { entry ->
+                    val id = entry.arguments?.getLong("id") ?: 0L
+                    PersonScreen(
+                        appViewModel { PersonViewModel(it.wallet, id) },
+                        onClose = { nav.popBackStack() },
+                        onSplit = { nav.navigate(Routes.split(it)) },
+                    )
+                }
+                composable(Routes.REPORTS) {
+                    ReportsScreen(appViewModel { ReportsViewModel(it.wallet) })
+                }
+                composable(
+                    Routes.SPLIT,
+                    arguments = listOf(navArgument("tx") { type = NavType.LongType }),
+                ) { entry ->
+                    val txId = entry.arguments?.getLong("tx") ?: 0L
+                    SplitScreen(appViewModel { SplitViewModel(it.wallet, txId) }, onClose = { nav.popBackStack() })
                 }
                 composable(Routes.INBOX) {
                     InboxScreen(
