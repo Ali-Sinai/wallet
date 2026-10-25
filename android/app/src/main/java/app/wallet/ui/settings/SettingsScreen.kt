@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,6 +54,7 @@ import app.wallet.ui.theme.ThemeId
 import app.wallet.ui.theme.WalletColors
 import app.wallet.ui.theme.paletteFor
 import app.wallet.util.Fmt
+import app.wallet.util.Lang
 
 /** Which editor dialog is open; a null item means "new". */
 private sealed interface Editor {
@@ -91,6 +94,27 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     for (id in ThemeId.entries) ThemeSwatch(id, selected = id == theme, onClick = { onTheme(id) })
+                }
+            }
+
+            item {
+                SectionTitle(R.string.language)
+                val context = LocalContext.current
+                Row(Modifier.padding(horizontal = 22.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Names in their own language, so either can be found whatever is showing.
+                    for ((persian, label) in listOf(true to "فارسی", false to "English")) {
+                        FilterChip(
+                            selected = Lang.fa == persian,
+                            onClick = {
+                                if (Lang.fa != persian) {
+                                    Lang.set(context, persian)
+                                    // Resources and layout direction are fixed per activity: rebuild it.
+                                    context.findActivity()?.recreate()
+                                }
+                            },
+                            label = { Text(label) },
+                        )
+                    }
                 }
             }
 
@@ -240,6 +264,15 @@ private fun ThemeSwatch(id: ThemeId, selected: Boolean, onClick: () -> Unit) {
         ) {
             Box(Modifier.size(16.dp).clip(CircleShape).background(p.primary))
         }
-        Text(id.label, fontSize = 11.sp)
+        Text(stringResource(id.label), fontSize = 11.sp)
     }
+}
+
+private fun android.content.Context.findActivity(): android.app.Activity? {
+    var c: android.content.Context? = this
+    while (c is android.content.ContextWrapper) {
+        if (c is android.app.Activity) return c
+        c = c.baseContext
+    }
+    return null
 }

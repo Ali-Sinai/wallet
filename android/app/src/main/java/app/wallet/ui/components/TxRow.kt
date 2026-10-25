@@ -35,7 +35,7 @@ fun TxRow(tx: Transaction, lookups: Lookups, onClick: () -> Unit) {
     val category = lookups.category(tx.categoryId)
     val account = lookups.account(tx.accountId)
     val categoryLabel = category?.displayName() ?: stringResource(R.string.uncategorized)
-    val accountName = account?.let { it.nameFa.ifBlank { it.nameEn.ifBlank { it.bankName } } }
+    val accountName = account?.shortName()
     val out = tx.direction == Direction.WITHDRAWAL
 
     Column(Modifier.clickable(onClick = onClick)) {
@@ -76,7 +76,7 @@ fun TxRow(tx: Transaction, lookups: Lookups, onClick: () -> Unit) {
                     color = if (out) WalletColors.expense else WalletColors.income,
                 )
                 Text(
-                    "${tx.occurredAtJalali} · ${Fmt.time(tx.occurredAt)}",
+                    "${Fmt.localize(tx.occurredAtJalali)} · ${Fmt.time(tx.occurredAt)}",
                     fontSize = 10.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English. values/strings.xml (Persian) is the default; every key there needs one here. -->
+<resources>
+    <string name="app_name">Wallet</string>
+    <string name="app_tagline">Personal finance tracker</string>
+
+    <string name="login_title">Sign in</string>
+    <string name="login_server">Server address</string>
+    <string name="login_server_hint">e.g. wallet.example.com or 192.168.1.10:8000</string>
+    <string name="login_username">Username</string>
+    <string name="login_password">Password</string>
+    <string name="login_submit">Sign in</string>
+
+    <string name="error_invalid_credentials">Wrong username or password</string>
+    <string name="error_network">Couldn\'t reach the server</string>
+    <string name="error_bad_server">That isn\'t a valid server address</string>
+    <string name="error_server">Server error: %1$s</string>
+    <string name="error_fields_required">Fill in every field</string>
+
+    <string name="startup_unreachable">The server is unreachable</string>
+    <string name="retry">Try again</string>
+    <string name="change_server">Change server</string>
+
+    <string name="logout">Sign out</string>
+    <string name="logout_confirm">Sign out of %1$s on %2$s?</string>
+    <string name="cancel">Cancel</string>
+    <string name="loading">Loading…</string>
+    <string name="load_failed">Couldn\'t load</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_activity">Activity</string>
+    <string name="add_transaction">New transaction</string>
+
+    <string name="balance">Net this month</string>
+    <string name="toman">Toman</string>
+    <string name="toman_short">T</string>
+    <string name="income">In</string>
+    <string name="expense">Out</string>
+    <string name="count_deposits">%1$s deposits</string>
+    <string name="count_withdrawals">%1$s withdrawals</string>
+    <string name="daily_spend">Daily spend — last 14 days</string>
+    <string name="average">avg %1$s</string>
+    <string name="categories">Categories</string>
+    <string name="recent">Recent</string>
+    <string name="see_all">All</string>
+    <string name="uncategorized">Uncategorized</string>
+    <string name="transaction">Transaction</string>
+    <string name="no_transactions">No transactions</string>
+
+    <string name="filter_all">All</string>
+    <string name="search">Search notes and merchants</string>
+
+    <string name="amount">Amount</string>
+    <string name="account">Account</string>
+    <string name="category">Category</string>
+    <string name="merchant">Merchant</string>
+    <string name="note">Note</string>
+    <string name="date">Date</string>
+    <string name="source">Source</string>
+    <string name="source_sms">SMS</string>
+    <string name="source_manual">Manual</string>
+    <string name="source_split_settlement">Split settlement</string>
+    <string name="save">Save</string>
+    <string name="close">Close</string>
+    <string name="delete">Delete</string>
+    <string name="delete_confirm">Delete this transaction?</string>
+    <string name="no_accounts">Add an account in Settings first</string>
+    <string name="error_amount_required">Enter an amount</string>
+    <string name="shared">Shared</string>
+
+    <string name="tab_inbox">SMS</string>
+    <string name="inbox_empty">No messages waiting</string>
+    <string name="inbox_pending">To confirm · %1$s</string>
+    <string name="inbox_unparsed">Not understood · %1$s</string>
+    <string name="no_card_in_sms">No card number</string>
+    <string name="pick_account">Pick the account for this message</string>
+    <string name="confirm">Confirm</string>
+    <string name="ignore">Ignore</string>
+    <string name="resolve_manually">Record manually</string>
+    <string name="paste_sms">Paste SMS</string>
+    <string name="paste_hint">Paste one or more bank messages, separated by a blank line.</string>
+    <string name="paste_result">%1$s messages added to the inbox</string>
+    <string name="send">Send</string>
+    <string name="pending_sms_banner">%1$s bank messages to confirm</string>
+    <string name="review">Review</string>
+
+    <string name="sms_settings">SMS settings</string>
+    <string name="sms_auto_read">Read bank SMS automatically</string>
+    <string name="sms_auto_read_hint">Messages from the bank senders below are sent to your server; every other message stays on the phone.</string>
+    <string name="sms_permission_denied">This needs permission to receive SMS.</string>
+    <string name="sms_token">API token</string>
+    <string name="sms_token_hint">The webhook token you made in the web app\'s settings for forwarder apps.</string>
+    <string name="sms_token_rotate">Make a new token</string>
+    <string name="sms_token_rotate_confirm">The old token stops working, so any forwarder app using it will stop sending messages. Continue?</string>
+    <string name="sms_token_missing">Without a token, no messages are sent.</string>
+    <string name="sms_senders">Bank senders</string>
+    <string name="sms_senders_hint">Taken from the enabled SMS patterns on the server; for a new sender, make a pattern.</string>
+    <string name="sms_senders_empty">No enabled pattern on the server names a sender, so no messages are sent.</string>
+    <string name="sms_senders_refresh">Refresh from server</string>
+    <string name="sms_last_status">Last message (%1$s): %2$s</string>
+    <string name="sms_status_parsed">read and waiting in the inbox</string>
+    <string name="sms_status_unparsed">arrived, but no pattern read it</string>
+    <string name="sms_status_otp">purchase code — seller noted</string>
+    <string name="sms_status_ignored_account">card not in your accounts; ignored</string>
+    <string name="sms_status_bad_token">the token is invalid</string>
+    <string name="sms_status_rejected">the server rejected the message</string>
+
+    <string name="settings">Settings</string>
+    <string name="theme">Theme</string>
+    <string name="accounts">Accounts</string>
+    <string name="budgets">Budgets</string>
+    <string name="budget_this_month">Budgets this month</string>
+    <string name="more">More</string>
+    <string name="add">Add</string>
+    <string name="inactive">Inactive</string>
+    <string name="budget_line">%1$s Toman a month</string>
+    <string name="delete_tap_again">Tap again to delete</string>
+    <string name="new_account">New account</string>
+    <string name="edit_account">Edit account</string>
+    <string name="name_fa">Name (Persian)</string>
+    <string name="name_en">Name (English)</string>
+    <string name="bank_name">Bank</string>
+    <string name="last4">Card\'s last 4 digits</string>
+    <string name="active">Active</string>
+    <string name="new_category">New category</string>
+    <string name="edit_category">Edit category</string>
+    <string name="icon">Icon (emoji)</string>
+    <string name="color">Colour</string>
+    <string name="new_budget">New budget</string>
+    <string name="edit_budget">Edit budget</string>
+    <string name="budget_limit">Monthly limit (Toman)</string>
+
+    <string name="tab_people">People</string>
+    <string name="tab_reports">Reports</string>
+    <string name="add_person">New person</string>
+    <string name="no_people">Nobody added yet</string>
+    <string name="person_name">Name</string>
+    <string name="contact_note">Contact note</string>
+    <string name="owes_you">Owes you %1$s</string>
+    <string name="you_owe">You owe %1$s</string>
+    <string name="settled">Settled</string>
+    <string name="open_debts">%1$s open</string>
+    <string name="settle_up">Settle up</string>
+    <string name="settle">Settle</string>
+    <string name="debts">Debts</string>
+    <string name="ledger">Shared transactions</string>
+    <string name="owed_to_me_short">Owed to me</string>
+    <string name="i_owe_short">I owe</string>
+    <string name="remaining_of">%1$s left of %2$s</string>
+    <string name="edit">Edit</string>
+
+    <string name="split">Split</string>
+    <string name="view_split">This split</string>
+    <string name="split_shares">Shares</string>
+    <string name="delete_split">Remove split</string>
+    <string name="me">Me</string>
+    <string name="i_paid">I paid</string>
+    <string name="they_paid">They paid</string>
+    <string name="split_with">Split with</string>
+    <string name="include_me">Include my share</string>
+    <string name="split_equal">Equal</string>
+    <string name="split_amounts">Amounts</string>
+    <string name="split_percentages">Percent</string>
+    <string name="split_each">About %1$s Toman each</string>
+    <string name="split_left_amount">Left to split: %1$s Toman</string>
+    <string name="split_left_percent">Percent left: %1$s%%</string>
+
+    <string name="period_today">Today</string>
+    <string name="period_week">This week</string>
+    <string name="period_month">This month</string>
+    <string name="period_all">All time</string>
+    <string name="income_vs_expense">Income and spending</string>
+    <string name="net_line">Net: %1$s Toman</string>
+    <string name="spend_over_time">Spending over time</string>
+    <string name="month_over_month">This month vs last</string>
+    <string name="previous_month">Last month %1$s</string>
+    <string name="new_this_month">New</string>
+    <string name="by_account">By account</string>
+
+    <string-array name="weekdays_short">
+        <item>Sa</item>
+        <item>Su</item>
+        <item>Mo</item>
+        <item>Tu</item>
+        <item>We</item>
+        <item>Th</item>
+        <item>Fr</item>
+    </string-array>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="edit_transaction">Edit transaction</string>
+    <string name="queued_offline">You\'re offline: the transaction is saved and will be sent once you\'re back online.</string>
+
+    <string name="sms_patterns">SMS patterns</string>
+    <string name="sms_patterns_empty">No patterns yet</string>
+    <string name="any_sender">Any sender</string>
+    <string name="kind_transaction">Transaction</string>
+    <string name="kind_otp">Purchase code</string>
+    <string name="new_pattern">New pattern</string>
+    <string name="edit_pattern">Edit pattern</string>
+    <string name="pattern_name">Pattern name</string>
+    <string name="pattern_sender">Sender</string>
+    <string name="pattern_sender_hint">Part of the sender\'s number, e.g. 9810002; empty means any sender.</string>
+    <string name="pattern_regex">Regular expression</string>
+    <string name="pattern_regex_hint">With the groups (?P&lt;amount&gt;…), (?P&lt;type&gt;…), (?P&lt;account&gt;…), (?P&lt;datetime&gt;…), (?P&lt;merchant&gt;…) — Python style.</string>
+    <string name="unit_rial">Rial</string>
+    <string name="pattern_test">Try it on a message</string>
+    <string name="pattern_test_hint">A bank message\'s text</string>
+    <string name="pattern_run_test">Save and test</string>
+    <string name="pattern_no_match">The pattern didn\'t match this message</string>
+    <string name="pattern_matched">Matched</string>
+
+    <string name="notifications">Notifications</string>
+    <string name="channel_sms">Bank messages</string>
+    <string name="channel_server">From the server</string>
+    <string name="notify_sms_title">New bank message</string>
+    <string name="notify_sms_body">Open the SMS inbox to confirm and categorize it.</string>
+    <string name="notify_allow">Allow notifications</string>
+    <string name="notify_allow_hint">For new bank messages and the server\'s notifications.</string>
+    <string name="notify_push">Server notifications</string>
+    <string name="notify_push_hint">Periodic summaries and reminders about uncategorized transactions.</string>
+    <string name="notify_push_not_built">This build of the app has no Firebase config.</string>
+    <string name="notify_push_server_off">Firebase isn\'t set up on the server.</string>
+    <string name="notify_summary">Summary</string>
+    <string name="summary_off">Off</string>
+    <string name="summary_weekly">Weekly</string>
+    <string name="summary_monthly">Monthly</string>
+    <string name="notify_threshold">Remind me after this many uncategorized</string>
+
+    <string name="percent_sign" formatted="false">%</string>
+    <string name="theme_classic">Classic</string>
+    <string name="theme_dark_red">Dark · Red</string>
+    <string name="theme_dark_purple">Dark · Purple</string>
+    <string name="theme_dark_green">Dark · Green</string>
+    <string name="theme_soft_mono">Soft · Mono</string>
+    <string name="theme_soft_purple">Soft · Purple</string>
+    <string name="theme_soft_green">Soft · Green</string>
+    <string name="language">Language</string>
+</resources>

@@ -41,7 +41,6 @@ import app.wallet.ui.components.displayName
 import app.wallet.ui.components.parseColor
 import app.wallet.ui.theme.WalletColors
 import app.wallet.util.Fmt
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,7 +175,7 @@ private fun SpendBars(d: ReportsData) {
                                 .background(if (point.amountCents > max * 0.7) WalletColors.primary else WalletColors.barIdle),
                         )
                     }
-                    Text(point.label.split(" ").first(), fontSize = 9.5.sp, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(Fmt.localize(point.label).split(" ").first(), fontSize = 9.5.sp, maxLines = 1, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -199,7 +198,7 @@ private fun Categories(d: ReportsData) {
                     Text(name, Modifier.weight(1f), fontSize = 13.sp)
                     Text(Fmt.group(slice.amountCents), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        Fmt.digits(String.format(Locale.US, "%.0f", slice.percentage)) + "٪",
+                        Fmt.percent(slice.percentage),
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -245,7 +244,7 @@ private fun MonthOverMonth(d: ReportsData) {
                     Text(
                         if (delta == null) stringResource(R.string.new_this_month)
                         else (if (delta > 0) "+" else if (delta < 0) "−" else "") +
-                            Fmt.digits(String.format(Locale.US, "%.0f", kotlin.math.abs(delta))) + "٪",
+                            Fmt.percent(kotlin.math.abs(delta)),
                         fontSize = 11.sp,
                         // Spending more than last month is the bad direction.
                         color = when {

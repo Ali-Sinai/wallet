@@ -151,7 +151,7 @@ fun SplitScreen(vm: SplitViewModel, onClose: () -> Unit) {
                                     onValueChange = { vm.inputs[key] = it },
                                     singleLine = true,
                                     suffix = {
-                                        Text(if (vm.method == SplitMethod.PERCENTAGES) "٪" else stringResource(R.string.toman_short))
+                                        Text(if (vm.method == SplitMethod.PERCENTAGES) stringResource(R.string.percent_sign) else stringResource(R.string.toman_short))
                                     },
                                     textStyle = MaterialTheme.typography.bodyMedium.copy(textDirection = TextDirection.Ltr),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),

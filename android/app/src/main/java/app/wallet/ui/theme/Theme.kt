@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import app.wallet.R
+import app.wallet.util.Lang
 
 private val LocalPalette = staticCompositionLocalOf { paletteFor(ThemeId.CLASSIC) }
 
@@ -98,15 +99,15 @@ private val typography = Typography().let { base ->
 }
 
 /**
- * The app is Persian-first, so layout is right-to-left whatever the phone's
- * own language is. Letter spacing is off: tracking breaks joined Persian script.
+ * Layout follows the app's own language (right-to-left in Persian), not the
+ * phone's. Letter spacing is off: tracking breaks joined Persian script.
  */
 @Composable
 fun WalletTheme(theme: ThemeId = ThemeId.CLASSIC, content: @Composable () -> Unit) {
     val palette = paletteFor(theme)
     CompositionLocalProvider(LocalPalette provides palette) {
         MaterialTheme(colorScheme = palette.colorScheme(), typography = typography) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+            CompositionLocalProvider(LocalLayoutDirection provides if (Lang.fa) LayoutDirection.Rtl else LayoutDirection.Ltr) {
                 // Surface, not a plain background, so text defaults to the foreground colour.
                 Surface(Modifier.fillMaxSize(), color = palette.background, content = content)
             }

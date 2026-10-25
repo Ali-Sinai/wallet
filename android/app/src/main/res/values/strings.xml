@@ -63,7 +63,7 @@
     <string name="close">بستن</string>
     <string name="delete">حذف</string>
     <string name="delete_confirm">این تراکنش حذف شود؟</string>
-    <string name="no_accounts">اول یک حساب در تنظیمات نسخهٔ وب بسازید</string>
+    <string name="no_accounts">اول یک حساب در تنظیمات بسازید</string>
     <string name="error_amount_required">مبلغ را وارد کنید</string>
     <string name="shared">دنگی</string>
 
@@ -93,7 +93,7 @@
     <string name="sms_token_rotate_confirm">توکن قبلی از کار می‌افتد و اگر اپ فورواردر دیگری از آن استفاده می‌کند، دیگر پیامک نمی‌فرستد. ادامه می‌دهید؟</string>
     <string name="sms_token_missing">بدون توکن، پیامکی فرستاده نمی‌شود.</string>
     <string name="sms_senders">فرستنده‌های بانکی</string>
-    <string name="sms_senders_hint">از الگوهای پیامک فعال روی سرور گرفته می‌شود. فرستندهٔ جدید را در تنظیمات نسخهٔ وب اضافه کنید.</string>
+    <string name="sms_senders_hint">از الگوهای پیامک فعال روی سرور گرفته می‌شود؛ برای فرستندهٔ جدید یک الگو بسازید.</string>
     <string name="sms_senders_empty">هیچ الگوی فعالی با فرستنده روی سرور نیست، پس پیامکی فرستاده نمی‌شود.</string>
     <string name="sms_senders_refresh">به‌روزرسانی از سرور</string>
     <string name="sms_last_status">آخرین پیامک (%1$s): %2$s</string>
@@ -225,4 +225,14 @@
     <string name="summary_weekly">هفتگی</string>
     <string name="summary_monthly">ماهانه</string>
     <string name="notify_threshold">یادآوری پس از این تعداد دسته‌بندی‌نشده</string>
+
+    <string name="percent_sign">٪</string>
+    <string name="theme_classic">کلاسیک</string>
+    <string name="theme_dark_red">تیره · قرمز</string>
+    <string name="theme_dark_purple">تیره · بنفش</string>
+    <string name="theme_dark_green">تیره · سبز</string>
+    <string name="theme_soft_mono">روشن · تک‌رنگ</string>
+    <string name="theme_soft_purple">روشن · بنفش</string>
+    <string name="theme_soft_green">روشن · سبز</string>
+    <string name="language">زبان</string>
 </resources>

@@ -20,6 +20,7 @@ import app.wallet.R
 import app.wallet.data.Account
 import app.wallet.data.Category
 import app.wallet.util.Fmt
+import app.wallet.util.Lang
 
 /** Category colours are "#rrggbb" strings from the API; anything unreadable gets the no-category grey. */
 fun parseColor(hex: String?): Color = runCatching {
@@ -28,10 +29,14 @@ fun parseColor(hex: String?): Color = runCatching {
 
 val NoCategoryColor = Color(0xFF5A6663)
 
-fun Category.displayName() = nameFa.ifBlank { nameEn }
+/** The name in the app's language, falling back to the other one. */
+fun Category.displayName() = if (Lang.fa) nameFa.ifBlank { nameEn } else nameEn.ifBlank { nameFa }
+
+fun Account.shortName(): String =
+    (if (Lang.fa) nameFa.ifBlank { nameEn } else nameEn.ifBlank { nameFa }).ifBlank { bankName }
 
 fun Account.displayName(): String {
-    val name = nameFa.ifBlank { nameEn.ifBlank { bankName } }
+    val name = shortName()
     return if (last4.isNotBlank()) "$name ····${Fmt.digits(last4)}" else name
 }
 

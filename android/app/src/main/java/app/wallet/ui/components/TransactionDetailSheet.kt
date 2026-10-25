@@ -71,7 +71,7 @@ fun TransactionDetailSheet(
                 )
             }
             Spacer(Modifier.height(4.dp))
-            DetailLine(R.string.date, "${tx.occurredAtJalali} · ${Fmt.time(tx.occurredAt)}")
+            DetailLine(R.string.date, "${Fmt.localize(tx.occurredAtJalali)} · ${Fmt.time(tx.occurredAt)}")
             DetailLine(R.string.account, lookups.account(tx.accountId)?.displayName() ?: "—")
             DetailLine(
                 R.string.category,

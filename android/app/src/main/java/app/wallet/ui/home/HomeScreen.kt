@@ -285,10 +285,10 @@ private fun Categories(slices: List<CategorySlice>, data: HomeData) {
         ) {
             for (slice in slices) {
                 val name = if (slice.categoryId == null) uncategorized
-                else data.lookups.category(slice.categoryId)?.nameFa ?: slice.label
+                else data.lookups.category(slice.categoryId)?.displayName() ?: slice.label
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     Box(Modifier.size(7.dp).clip(RoundedCornerShape(2.dp)).background(parseColor(slice.color)))
-                    Text("$name ${Fmt.digits(Math.round(slice.percentage))}٪", fontSize = 11.5.sp)
+                    Text("$name ${Fmt.percent(slice.percentage)}", fontSize = 11.5.sp)
                 }
             }
         }

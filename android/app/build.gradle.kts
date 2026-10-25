@@ -26,9 +26,24 @@ android {
         buildConfigField("String", "FIREBASE_SENDER_ID", "\"${setting("WALLET_FIREBASE_SENDER_ID")}\"")
     }
 
+    // Release signing comes from the environment (CI secrets, see README); without
+    // it a release build is left unsigned and only the debug APK is installable.
+    val keystore = setting("WALLET_KEYSTORE_PATH")
+    signingConfigs {
+        if (keystore.isNotBlank()) {
+            create("release") {
+                storeFile = file(keystore)
+                storePassword = setting("WALLET_KEYSTORE_PASSWORD")
+                keyAlias = setting("WALLET_KEY_ALIAS")
+                keyPassword = setting("WALLET_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (keystore.isNotBlank()) signingConfig = signingConfigs.getByName("release")
         }
     }
 

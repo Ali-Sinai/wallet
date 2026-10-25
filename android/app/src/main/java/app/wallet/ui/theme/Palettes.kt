@@ -1,8 +1,10 @@
 package app.wallet.ui.theme
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import app.wallet.R
 
 /**
  * One theme's colours — the `:root[data-theme=…]` blocks in
@@ -38,14 +40,14 @@ data class Palette(
     val border: Color get() = ink.copy(alpha = 0.07f)
 }
 
-enum class ThemeId(val label: String) {
-    CLASSIC("کلاسیک"),
-    DARK_RED("تیره · قرمز"),
-    DARK_PURPLE("تیره · بنفش"),
-    DARK_GREEN("تیره · سبز"),
-    SOFT_MONO("روشن · تک‌رنگ"),
-    SOFT_PURPLE("روشن · بنفش"),
-    SOFT_GREEN("روشن · سبز"),
+enum class ThemeId(@StringRes val label: Int) {
+    CLASSIC(R.string.theme_classic),
+    DARK_RED(R.string.theme_dark_red),
+    DARK_PURPLE(R.string.theme_dark_purple),
+    DARK_GREEN(R.string.theme_dark_green),
+    SOFT_MONO(R.string.theme_soft_mono),
+    SOFT_PURPLE(R.string.theme_soft_purple),
+    SOFT_GREEN(R.string.theme_soft_green),
 }
 
 private val classic = Palette(
