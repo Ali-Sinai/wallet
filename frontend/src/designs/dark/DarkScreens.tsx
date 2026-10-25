@@ -14,6 +14,7 @@ import type { Transaction } from "../../types";
 import { Icon, P, useHomeData, useSplitPicker, useTxView, type PersonView } from "../shared";
 import { MONO, label, muted } from "./DarkShell";
 import { PillButton } from "../buttons";
+import { DarkTitle as ScreenTitle } from "../Page";
 import SpendLineChart from "../../components/SpendLineChart";
 
 /* ------------------------------------------------------------------ *
@@ -267,18 +268,6 @@ function TextTabs<K extends string | number>({
           </Button>
         );
       })}
-    </div>
-  );
-}
-
-function ScreenTitle({ title, right, left }: { title: string; right?: ReactNode; left?: ReactNode }) {
-  return (
-    <div className="flex items-center justify-between" style={{ paddingTop: 16 }}>
-      <div style={{ width: 22 }}>{left}</div>
-      <span style={{ fontSize: 15, letterSpacing: "calc(var(--track) * .2em)", fontWeight: 500, textTransform: "uppercase" }}>{title}</span>
-      <div className="flex justify-end" style={{ width: 22 }}>
-        {right}
-      </div>
     </div>
   );
 }

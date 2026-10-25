@@ -25,6 +25,7 @@ import {
 } from "../shared";
 import { RoundBtn, softMuted, softShadow, whiteCard } from "./SoftShell";
 import { TotalBar } from "../buttons";
+import { SoftTitle as Header } from "../Page";
 import SpendLineChart from "../../components/SpendLineChart";
 
 /* ------------------------------------------------------------------ *
@@ -71,20 +72,6 @@ export function SoftTxRow({ tx, onClick }: { tx: Transaction; onClick?: () => vo
 
 function useSoftSplitPicker() {
   return useSplitPicker((tx, pick) => <SoftTxRow tx={tx} onClick={pick} />);
-}
-
-function Header({ left, title, right }: { left?: ReactNode; title: ReactNode; right?: ReactNode }) {
-  return (
-    <div className="flex items-center justify-between" style={{ paddingTop: 12, gap: 12 }}>
-      <div style={{ minWidth: 46 }}>{left}</div>
-      <span className="truncate" style={{ fontSize: 16, fontWeight: 600 }}>
-        {title}
-      </span>
-      <div className="flex justify-end" style={{ minWidth: 46 }}>
-        {right}
-      </div>
-    </div>
-  );
 }
 
 function SectionTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {
@@ -666,7 +653,7 @@ export function SoftPerson({ person, openDebts, shared, settleAll }: PersonView)
       )}
 
       <SectionTitle>{t.debts}</SectionTitle>
-      <div className="flex flex-col" style={{ gap: 10, padding: 10, ...whiteCard }}>
+      <div className="soft-card flex flex-col" style={{ gap: 10, padding: 10, ...whiteCard }}>
         {openDebts.map((debt) => (
           <DebtRow key={debt.id} debt={debt} />
         ))}

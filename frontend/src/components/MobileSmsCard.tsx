@@ -10,7 +10,8 @@ import {
   useIgnoreSmsMutation,
 } from "../lib/queries";
 import { accountLabel, categoryName } from "../lib/domain";
-import { BusyLabel, Chip } from "@/components/primitives";
+import { ActionButton, BusyLabel, Chip, DARK_LABEL } from "@/components/primitives";
+import { useFamily } from "../lib/theme";
 import type { SmsAttempt, Transaction } from "../types";
 
 /**
@@ -35,6 +36,7 @@ export default function MobileSmsCard({
   const [picked, setPicked] = useState<number | null>(null);
   const [accountId, setAccountId] = useState<number | null>(null);
   const [splitting, setSplitting] = useState(false);
+  const family = useFamily();
 
   // Messages that name no card (transfers, most of Blu's wording) parse fine
   // but leave the server nothing to file them under. One account needs no
@@ -164,6 +166,72 @@ export default function MobileSmsCard({
       {title}
     </div>
   );
+
+  if (family !== "classic") {
+    // Wallet Dark: a hairline-topped ledger block; Wallet Soft: a white card.
+    const dark = family === "dark";
+    return (
+      <div
+        className="soft-card"
+        style={
+          dark
+            ? { paddingTop: 18, paddingBottom: 6, borderTop: "1px solid rgb(var(--ink-rgb) / .12)" }
+            : { padding: 16, borderRadius: 22, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }
+        }
+      >
+        <div className="flex items-center justify-between" style={{ gap: 12 }}>
+          <span style={dark ? DARK_LABEL : { fontSize: 12, color: "rgb(var(--fg-rgb) / .55)" }}>{attempt.sender}</span>
+          <span style={dark ? { ...DARK_LABEL, color: "var(--c-accent)" } : { fontSize: 12, fontWeight: 500, color: "var(--c-primary)" }}>
+            {t.detected}
+          </span>
+        </div>
+        <div className="flex items-center" style={{ gap: 14, marginTop: 12 }}>
+          {!dark && (
+            <div
+              className="flex flex-none items-center justify-center"
+              style={{ width: 46, height: 46, borderRadius: "50%", background: `color-mix(in srgb, ${color} 14%, var(--c-surface))`, color, fontWeight: 600 }}
+            >
+              {Array.from(title)[0] ?? "·"}
+            </div>
+          )}
+          {dark && <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, flex: "none" }} />}
+          <div className="min-w-0 flex-1">
+            <div className="truncate" style={{ fontSize: 15, fontWeight: dark ? 400 : 600 }}>
+              {title}
+            </div>
+            <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .45)", marginTop: 2 }}>{meta}</div>
+          </div>
+          <span style={{ fontSize: dark ? 15 : 16, fontWeight: dark ? 400 : 600, color, fontFamily: dark ? "var(--app-mono)" : undefined }}>
+            {amountText}
+          </span>
+        </div>
+        <div className="flex flex-wrap" style={{ gap: dark ? "4px 18px" : 8, marginTop: 14 }}>
+          {categories?.slice(0, 6).map((c) => (
+            <Chip key={c.id} active={picked === c.id} onClick={() => setPicked(c.id)} className="px-[12px] py-[7px]">
+              {categoryName(c, fa, "")}
+            </Chip>
+          ))}
+        </div>
+        {accountPicker}
+        <div className="flex" style={{ gap: 8, marginTop: 16 }}>
+          <ActionButton
+            grow
+            busy={confirming}
+            disabled={busy}
+            onClick={() => confirm.mutate({ id: attempt.id, categoryId: picked, accountId: chosenAccountId })}
+          >
+            {t.confirm}
+          </ActionButton>
+          <ActionButton tone="outline" busy={splitting} disabled={busy} onClick={confirmThenSplit}>
+            {t.split}
+          </ActionButton>
+          <ActionButton tone="outline" busy={ignore.isPending} disabled={busy} onClick={() => ignore.mutate(attempt.id)}>
+            {t.ignore}
+          </ActionButton>
+        </div>
+      </div>
+    );
+  }
 
   if (highlight) {
     return (

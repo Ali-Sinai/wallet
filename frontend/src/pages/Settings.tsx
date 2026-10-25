@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input as UiInput } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import AppShell from "../components/shell/AppShell";
-import { BusyLabel, DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "@/components/primitives";
+import { ActionButton, DARK_LABEL, DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "@/components/primitives";
+import { PageBody, PageTitle } from "../designs/Page";
+import { useFamily } from "../lib/theme";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { useI18n } from "../lib/i18n";
 import { useAuth } from "../lib/auth";
 import { S } from "../lib/settingsStrings";
@@ -52,6 +54,30 @@ function useS() {
 }
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  const family = useFamily();
+  if (family === "dark") {
+    // Wallet Dark: no box — a hairline, a small-caps label, the rows.
+    return (
+      <div style={{ paddingTop: 22, borderTop: "1px solid rgb(var(--ink-rgb) / .12)" }}>
+        <div style={DARK_LABEL}>{title}</div>
+        {hint && <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 8 }}>{hint}</div>}
+        <div className="flex flex-col" style={{ gap: 14, marginTop: 14 }}>
+          {children}
+        </div>
+      </div>
+    );
+  }
+  if (family === "soft") {
+    return (
+      <div className="soft-card" style={{ padding: 20, borderRadius: 22, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }}>
+        <div style={{ fontSize: 17, fontWeight: 600 }}>{title}</div>
+        {hint && <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .55)", marginTop: 4 }}>{hint}</div>}
+        <div className="flex flex-col" style={{ gap: 12, marginTop: 16 }}>
+          {children}
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={{ padding: 22, borderRadius: 20, background: "var(--c-surface)", border: "1px solid rgb(var(--ink-rgb) / .07)" }}>
       <div style={{ fontSize: 15, fontWeight: 700 }}>{title}</div>
@@ -90,37 +116,13 @@ function SaveRow({
 }) {
   return (
     <div className="flex" style={{ gap: 8 }}>
-      <Button variant="plain" size="plain"
-        onClick={onSave}
-        disabled={busy}
-        aria-busy={busy}
-        style={{
-          flex: 1,
-          textAlign: "center",
-          padding: "10px 0",
-          borderRadius: 12,
-          background: "var(--c-primary)",
-          color: "var(--c-on-primary)",
-          fontSize: 12.5,
-          fontWeight: 700,
-        }}
-      >
-        <BusyLabel busy={busy}>{saveLabel}</BusyLabel>
-      </Button>
+      <ActionButton onClick={onSave} busy={busy} grow>
+        {saveLabel}
+      </ActionButton>
       {onCancel && (
-        <Button variant="plain" size="plain"
-          onClick={onCancel}
-          style={{
-            padding: "10px 16px",
-            borderRadius: 12,
-            border: "1px solid rgb(var(--ink-rgb) / .14)",
-            color: "rgb(var(--fg-rgb) / .7)",
-            fontSize: 12.5,
-            fontWeight: 700,
-          }}
-        >
+        <ActionButton tone="outline" onClick={onCancel}>
           {cancelLabel}
-        </Button>
+        </ActionButton>
       )}
     </div>
   );
@@ -128,6 +130,34 @@ function SaveRow({
 
 export default function Settings() {
   const s = useS();
+  const family = useFamily();
+  const wide = useIsDesktop();
+
+  if (family !== "classic") {
+    return (
+      <AppShell sidebar={false}>
+        <PageBody maxWidth={1100}>
+          <PageTitle title={s.title} />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: wide ? "repeat(auto-fit,minmax(340px,1fr))" : "minmax(0,1fr)",
+              gap: family === "dark" ? "40px 56px" : 16,
+              alignItems: "start",
+              marginTop: family === "dark" ? 36 : 22,
+            }}
+          >
+            <SettingsSections />
+          </div>
+          <div className="flex flex-col" style={{ gap: 18, marginTop: 32 }}>
+            <LogoutRow />
+            <IconCredit />
+          </div>
+        </PageBody>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell sidebar={false}>
       <div
@@ -143,20 +173,28 @@ export default function Settings() {
             alignItems: "start",
           }}
         >
-          <GeneralSection />
-          <AccountsSection />
-          <CategoriesSection />
-          <BudgetsSection />
-          <PeopleSection />
-          <PushSection />
-          <WebhookSection />
-          <SmsPatternsSection />
-          <KeywordRulesSection />
+          <SettingsSections />
         </div>
         <LogoutRow />
         <IconCredit />
       </div>
     </AppShell>
+  );
+}
+
+function SettingsSections() {
+  return (
+    <>
+      <GeneralSection />
+      <AccountsSection />
+      <CategoriesSection />
+      <BudgetsSection />
+      <PeopleSection />
+      <PushSection />
+      <WebhookSection />
+      <SmsPatternsSection />
+      <KeywordRulesSection />
+    </>
   );
 }
 
@@ -183,29 +221,22 @@ function LogoutRow() {
   const { logout } = useAuth();
   const [busy, setBusy] = useState(false);
   return (
-    <Button variant="plain" size="plain"
-      onClick={async () => {
-        setBusy(true);
-        try {
-          await logout();
-        } finally {
-          setBusy(false);
-        }
-      }}
-      disabled={busy}
-      aria-busy={busy}
-      className="self-start"
-      style={{
-        padding: "10px 16px",
-        borderRadius: 12,
-        border: "1px solid rgb(var(--expense-rgb) / .35)",
-        color: "var(--c-expense)",
-        fontSize: 13,
-        fontWeight: 700,
-      }}
-    >
-      <BusyLabel busy={busy}>{s.logout}</BusyLabel>
-    </Button>
+    <div className="flex">
+      <ActionButton
+        tone="danger"
+        busy={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await logout();
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {s.logout}
+      </ActionButton>
+    </div>
   );
 }
 
@@ -742,24 +773,9 @@ function PushSection() {
 
   return (
     <Section title={s.notifications} hint={status?.enabled ? s.pushReady : s.pushNotReady}>
-      <Button variant="plain" size="plain"
-        onClick={onEnable}
-        disabled={!canEnable || enabling}
-        aria-busy={enabling}
-        style={{
-          width: "100%",
-          textAlign: "center",
-          padding: "11px 0",
-          borderRadius: 12,
-          background: "var(--c-primary)",
-          color: "var(--c-on-primary)",
-          fontSize: 12.5,
-          fontWeight: 700,
-          opacity: canEnable ? 1 : 0.4,
-        }}
-      >
-        <BusyLabel busy={enabling}>{s.enablePush}</BusyLabel>
-      </Button>
+      <ActionButton onClick={onEnable} disabled={!canEnable} busy={enabling}>
+        {s.enablePush}
+      </ActionButton>
       {!isFirebaseConfigured && (
         <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .45)" }}>{s.firebaseIncomplete}</div>
       )}
@@ -809,26 +825,19 @@ function WebhookSection() {
 
   return (
     <Section title={s.webhookTitle} hint={s.webhookHint}>
-      <Button variant="plain" size="plain"
-        onClick={async () => {
-          const res = await rotate.mutateAsync();
-          setToken(res.token);
-        }}
-        disabled={rotate.isPending}
-        aria-busy={rotate.isPending}
-        style={{
-          width: "100%",
-          textAlign: "center",
-          padding: "11px 0",
-          borderRadius: 12,
-          border: "1px solid rgb(var(--ink-rgb) / .14)",
-          fontSize: 12.5,
-          fontWeight: 700,
-          color: "rgb(var(--fg-rgb) / .8)",
-        }}
-      >
-        <BusyLabel busy={rotate.isPending}>{s.generateToken}</BusyLabel>
-      </Button>
+      <div className="flex">
+        <ActionButton
+          tone="outline"
+          grow
+          busy={rotate.isPending}
+          onClick={async () => {
+            const res = await rotate.mutateAsync();
+            setToken(res.token);
+          }}
+        >
+          {s.generateToken}
+        </ActionButton>
+      </div>
       {token && (
         <div
           className="select-all break-all font-mono"

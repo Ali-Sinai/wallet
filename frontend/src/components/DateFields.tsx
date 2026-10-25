@@ -2,7 +2,7 @@ import { CalendarIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { Button } from "@/components/ui/button";
 import { DatePicker, DateTimePicker } from "@/components/ui/date-picker";
-import { FIELD_CLASS } from "@/components/primitives";
+import { FIELD_CLASS, useFieldClass } from "@/components/primitives";
 import { DESKTOP_MIN_WIDTH } from "@/hooks/use-media-query";
 import { useI18n } from "@/lib/i18n";
 import { toLatinDigits } from "@/lib/persian-date";
@@ -24,12 +24,13 @@ function Trigger({
   ...props
 }: ComponentProps<typeof Button> & { label: string | null; placeholder: string }) {
   const { fa } = useI18n();
+  const fieldClass = useFieldClass();
   return (
     <Button
       {...props}
       variant="plain"
       size="plain"
-      className={cn(FIELD_CLASS, "flex items-center gap-2 border text-start", !label && "text-muted-foreground", className)}
+      className={cn(fieldClass, fieldClass === FIELD_CLASS && "border", "flex items-center gap-2 text-start", !label && "text-muted-foreground", className)}
     >
       <CalendarIcon className="size-4 opacity-50" />
       <span className="truncate">{label === null ? placeholder : fa ? label : toLatinDigits(label)}</span>

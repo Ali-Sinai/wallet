@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DateTimeField } from "@/components/DateFields";
-import { Button } from "@/components/ui/button";
-import { BusyLabel, Chip, Field, Input, Overlay, OverlayHeader, Select } from "@/components/primitives";
+import { ActionButton, Chip, DARK_LABEL, Field, Input, Overlay, OverlayHeader, Select, SubLabel } from "@/components/primitives";
+import { useFamily } from "../lib/theme";
 import {
   useAccounts,
   useCategories,
@@ -49,6 +49,7 @@ export default function TransactionDetailModal({
   const deleteSplit = useDeleteSplitMutation();
 
   const [editing, setEditing] = useState(false);
+  const family = useFamily();
   const [form, setForm] = useState(() => formFrom(tx));
 
   const signed = signedCents(tx);
@@ -122,44 +123,17 @@ export default function TransactionDetailModal({
           </Field>
 
           <div className="flex" style={{ gap: 8, marginTop: 6 }}>
-            <Button variant="plain" size="plain"
-              onClick={save}
-              disabled={update.isPending}
-              aria-busy={update.isPending}
-              style={{
-                flex: 1,
-                textAlign: "center",
-                padding: "12px 0",
-                borderRadius: 14,
-                background: "var(--c-primary)",
-                color: "var(--c-on-primary)",
-                fontSize: 13,
-                fontWeight: 700,
-              }}
-            >
-              <BusyLabel busy={update.isPending}>{t.saveChanges}</BusyLabel>
-            </Button>
-            <Button variant="plain" size="plain"
-              onClick={() => setEditing(false)}
-              style={{
-                padding: "12px 16px",
-                borderRadius: 14,
-                border: "1px solid rgb(var(--ink-rgb) / .14)",
-                color: "rgb(var(--fg-rgb) / .7)",
-                fontSize: 13,
-                fontWeight: 700,
-              }}
-            >
+            <ActionButton onClick={save} busy={update.isPending} grow>
+              {t.saveChanges}
+            </ActionButton>
+            <ActionButton tone="outline" onClick={() => setEditing(false)}>
               {t.cancel}
-            </Button>
+            </ActionButton>
           </div>
         </div>
       ) : (
         <>
-          <div style={{ fontSize: 18, fontWeight: 700, marginTop: 12 }}>{txTitle(tx, t.transaction)}</div>
-          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 4, color: signed < 0 ? "var(--c-expense)" : "var(--c-income)" }}>
-            {money(signed, true)}
-          </div>
+          <Headline title={txTitle(tx, t.transaction)} amount={money(signed, true)} color={signed < 0 ? "var(--c-expense)" : "var(--c-income)"} />
 
           <div className="flex" style={{ gap: 10, marginTop: 16 }}>
             <InfoBox label={t.account} value={accountLabel(account, fa, digits)} />
@@ -172,7 +146,7 @@ export default function TransactionDetailModal({
             </div>
           )}
 
-          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 18 }}>{t.category}</div>
+          <SubLabel top={18}>{t.category}</SubLabel>
           <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
             {categories?.map((c) => (
               <Chip
@@ -185,77 +159,32 @@ export default function TransactionDetailModal({
             ))}
           </div>
 
-          <div className="flex flex-wrap" style={{ gap: 8, marginTop: 22 }}>
+          <div className="flex flex-wrap" style={{ gap: 8, marginTop: family === "dark" ? 32 : 22 }}>
             {tx.direction === "withdrawal" && !tx.is_shared && (
-              <Button variant="plain" size="plain"
-                onClick={onSplit}
-                style={{
-                  flex: 1,
-                  textAlign: "center",
-                  padding: "12px 0",
-                  borderRadius: 14,
-                  background: "var(--c-primary)",
-                  color: "var(--c-on-primary)",
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
+              <ActionButton onClick={onSplit} grow>
                 {t.splitBtn}
-              </Button>
+              </ActionButton>
             )}
 
             {tx.is_shared && split && (
-              <Button variant="plain" size="plain"
-                onClick={() => deleteSplit.mutate(split.id)}
-                disabled={deleteSplit.isPending}
-                aria-busy={deleteSplit.isPending}
-                style={{
-                  flex: 1,
-                  textAlign: "center",
-                  padding: "12px 0",
-                  borderRadius: 14,
-                  border: "1px solid rgb(var(--ink-rgb) / .14)",
-                  color: "rgb(var(--fg-rgb) / .8)",
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
-                <BusyLabel busy={deleteSplit.isPending}>{t.unsplit}</BusyLabel>
-              </Button>
+              <ActionButton tone="outline" grow onClick={() => deleteSplit.mutate(split.id)} busy={deleteSplit.isPending}>
+                {t.unsplit}
+              </ActionButton>
             )}
 
-            <Button variant="plain" size="plain"
+            <ActionButton
+              tone="outline"
               onClick={() => {
                 setForm(formFrom(tx));
                 setEditing(true);
               }}
-              style={{
-                padding: "12px 16px",
-                borderRadius: 14,
-                border: "1px solid rgb(var(--ink-rgb) / .14)",
-                color: "rgb(var(--fg-rgb) / .8)",
-                fontSize: 13,
-                fontWeight: 700,
-              }}
             >
               {t.edit}
-            </Button>
+            </ActionButton>
 
-            <Button variant="plain" size="plain"
-              onClick={() => remove.mutate(tx.id, { onSuccess: onClose })}
-              disabled={remove.isPending}
-              aria-busy={remove.isPending}
-              style={{
-                padding: "12px 16px",
-                borderRadius: 14,
-                border: "1px solid rgb(var(--expense-rgb) / .35)",
-                color: "var(--c-expense)",
-                fontSize: 13,
-                fontWeight: 700,
-              }}
-            >
-              <BusyLabel busy={remove.isPending}>{t.delete}</BusyLabel>
-            </Button>
+            <ActionButton tone="danger" onClick={() => remove.mutate(tx.id, { onSuccess: onClose })} busy={remove.isPending}>
+              {t.delete}
+            </ActionButton>
           </div>
 
           {deleteSplit.isError && (
@@ -269,7 +198,63 @@ export default function TransactionDetailModal({
   );
 }
 
+/** Merchant and signed amount: bold (classic), oversized thin (Dark), centred (Soft). */
+function Headline({ title, amount, color }: { title: string; amount: string; color: string }) {
+  const family = useFamily();
+  if (family === "dark") {
+    return (
+      <div style={{ paddingTop: 22 }}>
+        <div style={{ fontSize: 17 }}>{title}</div>
+        <div style={{ fontSize: "clamp(36px, 12vw, 52px)", fontWeight: 300, letterSpacing: "-.03em", lineHeight: 1, marginTop: 12, color, whiteSpace: "nowrap" }}>
+          {amount}
+        </div>
+      </div>
+    );
+  }
+  if (family === "soft") {
+    return (
+      <div className="flex flex-col items-center text-center" style={{ paddingTop: 18 }}>
+        <div
+          className="flex items-center justify-center"
+          style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.06)", fontSize: 18, fontWeight: 600 }}
+        >
+          {Array.from(title)[0] ?? "·"}
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 600, marginTop: 12 }}>{title}</div>
+        <div style={{ fontSize: 30, fontWeight: 600, marginTop: 2, color }}>{amount}</div>
+      </div>
+    );
+  }
+  return (
+    <>
+      <div style={{ fontSize: 18, fontWeight: 700, marginTop: 12 }}>{title}</div>
+      <div style={{ fontSize: 32, fontWeight: 700, marginTop: 4, color }}>{amount}</div>
+    </>
+  );
+}
+
 function InfoBox({ label, value }: { label: string; value: string }) {
+  const family = useFamily();
+  if (family === "dark") {
+    return (
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 12, borderTop: "1px solid rgb(var(--ink-rgb) / .12)" }}>
+        <div style={{ ...DARK_LABEL, fontSize: 10.5 }}>{label}</div>
+        <div className="truncate" style={{ fontSize: 14, marginTop: 6 }}>
+          {value}
+        </div>
+      </div>
+    );
+  }
+  if (family === "soft") {
+    return (
+      <div style={{ flex: 1, minWidth: 0, padding: "14px 16px", borderRadius: 20, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }}>
+        <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .55)" }}>{label}</div>
+        <div className="truncate" style={{ fontSize: 14, fontWeight: 600, marginTop: 3 }}>
+          {value}
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={{ flex: 1, padding: "12px 14px", borderRadius: 14, background: "rgb(var(--ink-rgb) / .04)" }}>
       <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .45)" }}>{label}</div>

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { DateTimeField } from "@/components/DateFields";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { BusyLabel, Chip, Field, Input, Overlay, OverlayHeader } from "@/components/primitives";
+import { ActionButton, Chip, Field, Input, Overlay, OverlayHeader, Segmented, SubLabel } from "@/components/primitives";
+import { useFamily } from "../lib/theme";
 import {
   useAccounts,
   useCategories,
@@ -17,6 +18,13 @@ import type { Direction } from "../types";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "000", "0", "⌫"];
 
+/** Keypad keys: grey blocks (classic), bare thin numerals (Dark), white tiles (Soft). */
+const KEY_STYLES = {
+  classic: { textAlign: "center", padding: "14px 0", borderRadius: 14, background: "rgb(var(--ink-rgb) / .05)", fontSize: 17, fontWeight: 700 },
+  dark: { textAlign: "center", padding: "12px 0", fontSize: 26, fontWeight: 300 },
+  soft: { textAlign: "center", padding: "14px 0", borderRadius: 18, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)", fontSize: 19, fontWeight: 500 },
+} as const;
+
 /** Marks the deliberate "we are offline, queue it" path, vs a server error. */
 class OfflineError extends Error {}
 
@@ -25,6 +33,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
   const { data: categories } = useCategories();
   const { data: accounts } = useAccounts();
   const createTx = useCreateTransactionMutation();
+  const family = useFamily();
 
   const [amount, setAmount] = useState("");
   const [direction, setDirection] = useState<Direction>("withdrawal");
@@ -110,34 +119,33 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
         </div>
       ) : (
         <>
-          <div className="flex items-baseline justify-center" style={{ gap: 6, padding: "18px 0 6px" }}>
-            <span style={{ fontSize: 34, fontWeight: 700 }}>
+          <div
+            className="flex items-baseline justify-center"
+            style={{ gap: 6, padding: family === "dark" ? "30px 0 14px" : family === "soft" ? "22px 0 10px" : "18px 0 6px" }}
+          >
+            <span
+              style={
+                family === "dark"
+                  ? { fontSize: "clamp(40px, 13vw, 56px)", fontWeight: 300, letterSpacing: "-.03em", lineHeight: 1 }
+                  : { fontSize: family === "soft" ? 36 : 34, fontWeight: family === "soft" ? 600 : 700 }
+              }
+            >
               {amount ? group(Number(amount) * 100) : digits(0)}
             </span>
             <span style={{ fontSize: 13, color: "rgb(var(--fg-rgb) / .45)" }}>{t.tomanShort}</span>
           </div>
 
-          <div className="flex" style={{ gap: 6, marginTop: 10 }}>
-            {(["withdrawal", "deposit"] as Direction[]).map((d) => (
-              <Button variant="plain" size="plain"
-                key={d}
-                type="button"
-                onClick={() => setDirection(d)}
-                style={{
-                  flex: 1,
-                  textAlign: "center",
-                  padding: "11px 0",
-                  borderRadius: 12,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  background: direction === d ? "var(--c-primary)" : "transparent",
-                  color: direction === d ? "var(--c-on-primary)" : "rgb(var(--fg-rgb) / .7)",
-                  border: `1px solid ${direction === d ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .14)"}`,
-                }}
-              >
-                {d === "withdrawal" ? t.withdraw : t.deposit}
-              </Button>
-            ))}
+          <div className="flex justify-center" style={{ marginTop: 10 }}>
+            <div style={{ flex: family === "dark" ? "none" : 1 }}>
+              <Segmented
+                items={[
+                  { key: "withdrawal" as Direction, label: t.withdraw },
+                  { key: "deposit" as Direction, label: t.deposit },
+                ]}
+                value={direction}
+                onChange={setDirection}
+              />
+            </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginTop: 14 }}>
@@ -147,14 +155,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
                 type="button"
                 onClick={() => pressKey(k)}
                 className="select-none"
-                style={{
-                  textAlign: "center",
-                  padding: "14px 0",
-                  borderRadius: 14,
-                  background: "rgb(var(--ink-rgb) / .05)",
-                  fontSize: 17,
-                  fontWeight: 700,
-                }}
+                style={KEY_STYLES[family]}
               >
                 {k === "⌫" ? k : digits(k)}
               </Button>
@@ -178,7 +179,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
 
           {(accounts?.length ?? 0) > 1 && (
             <>
-              <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 16 }}>{t.account}</div>
+              <SubLabel>{t.account}</SubLabel>
               <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
                 {accounts?.map((a) => (
                   <Chip key={a.id} active={effectiveAccountId === a.id} onClick={() => setAccountId(a.id)}>
@@ -189,7 +190,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
             </>
           )}
 
-          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 16 }}>{t.category}</div>
+          <SubLabel>{t.category}</SubLabel>
           <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
             {categories?.map((c) => (
               <Chip
@@ -205,25 +206,11 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
             ))}
           </div>
 
-          <Button variant="plain" size="plain"
-            onClick={save}
-            disabled={saving || !amount || !effectiveAccountId}
-            aria-busy={saving}
-            style={{
-              width: "100%",
-              textAlign: "center",
-              padding: "13px 0",
-              borderRadius: 14,
-              background: "var(--c-primary)",
-              color: "var(--c-on-primary)",
-              fontSize: 13.5,
-              fontWeight: 700,
-              marginTop: 20,
-              opacity: !amount || !effectiveAccountId ? 0.5 : 1,
-            }}
-          >
-            <BusyLabel busy={saving}>{queued ? t.queued : t.saveTx}</BusyLabel>
-          </Button>
+          <div style={{ marginTop: 22 }}>
+            <ActionButton onClick={save} busy={saving} disabled={!amount || !effectiveAccountId}>
+              {queued ? t.queued : t.saveTx}
+            </ActionButton>
+          </div>
 
           {error && (
             <div className="text-center" style={{ color: "var(--c-expense)", fontSize: 12, marginTop: 8 }}>

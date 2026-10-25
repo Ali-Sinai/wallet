@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BusyLabel, Input, MiniButton } from "@/components/primitives";
+import { useFamily } from "../lib/theme";
 import { useI18n } from "../lib/i18n";
 import { useSettleDebtMutation } from "../lib/queries";
 import type { Debt } from "../types";
@@ -15,9 +16,16 @@ export default function DebtRow({ debt }: { debt: Debt }) {
   const remaining = debt.amount_cents - debt.amount_settled_cents;
   const owedToMe = debt.direction === "owed_to_me";
   const color = owedToMe ? "var(--c-income)" : "var(--c-expense)";
+  const family = useFamily();
+  const box =
+    family === "dark"
+      ? { padding: "14px 0", borderBottom: "1px solid rgb(var(--ink-rgb) / .08)" }
+      : family === "soft"
+        ? { padding: "14px 16px", borderRadius: 18, background: "var(--row-bg)", boxShadow: "var(--row-shadow)" }
+        : { padding: "12px 14px", borderRadius: 15, background: "rgb(var(--ink-rgb) / .04)" };
 
   return (
-    <div style={{ padding: "12px 14px", borderRadius: 15, background: "rgb(var(--ink-rgb) / .04)" }}>
+    <div style={box}>
       <div className="flex items-center" style={{ gap: 11 }}>
         <div className="min-w-0 flex-1">
           <div style={{ fontSize: 13, fontWeight: 700, color }}>
@@ -60,7 +68,7 @@ export default function DebtRow({ debt }: { debt: Debt }) {
             style={{
               flex: "none",
               padding: "10px 16px",
-              borderRadius: 12,
+              borderRadius: family === "classic" ? 12 : 99,
               background: "var(--c-primary)",
               color: "var(--c-on-primary)",
               fontSize: 12.5,

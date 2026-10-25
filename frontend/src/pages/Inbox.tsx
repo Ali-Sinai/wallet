@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { DateTimeField } from "@/components/DateFields";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { BusyLabel, Card, EmptyNote, Field, Input, MiniButton, Select } from "@/components/primitives";
+import { ActionButton, Card, DARK_LABEL, EmptyNote, Field, Input, ListRow, MiniButton, Select } from "@/components/primitives";
+import { PageBody, PageTitle } from "../designs/Page";
+import { useFamily } from "../lib/theme";
+import type { ReactNode } from "react";
 import MobileSmsCard from "../components/MobileSmsCard";
 import { useI18n } from "../lib/i18n";
 import { useIsDesktop } from "@/hooks/use-media-query";
@@ -35,68 +37,56 @@ export default function Inbox() {
   const { data: hints } = useSellerHints();
   const { data: patterns } = useSmsPatterns();
   const items = pending ?? [];
+  const family = useFamily();
 
   const content = (
     <>
-      <div className="flex items-center justify-between">
-        <div style={{ fontSize: 19, fontWeight: 700 }}>{t.inbox}</div>
-        <Link to="/activity" style={{ fontSize: 11.5, color: "var(--c-primary)" }}>
-          {t.activity}
-        </Link>
-      </div>
+      <PageTitle
+        title={t.inbox}
+        right={
+          <Link to="/activity" style={{ fontSize: family === "classic" ? 11.5 : 12.5, color: "var(--c-accent)" }}>
+            {t.activity}
+          </Link>
+        }
+      />
 
       <PasteBox />
 
       {items.length === 0 && <EmptyNote pad={32}>{t.inboxEmpty}</EmptyNote>}
 
-      <div className="flex flex-col" style={{ gap: 10, marginTop: 14 }}>
+      <div className="flex flex-col" style={{ gap: family === "dark" ? 0 : family === "soft" ? 12 : 10, marginTop: 14 }}>
         {items.map((m) => (
           <MobileSmsCard key={m.id} attempt={m} variant="list" />
         ))}
       </div>
 
       {(hints?.length ?? 0) > 0 && (
-        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
-          <div className="flex items-baseline justify-between">
-            <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.sellerHints}</div>
-            <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>{t.sellerHintsHint}</div>
-          </div>
-          <div className="flex flex-col" style={{ gap: 8, marginTop: 12 }}>
-            {(hints ?? []).map((h) => (
-              <SellerHintRow key={h.id} hint={h} />
-            ))}
-          </div>
-        </div>
+        <InboxSection title={t.sellerHints} aside={t.sellerHintsHint}>
+          {(hints ?? []).map((h) => (
+            <SellerHintRow key={h.id} hint={h} />
+          ))}
+        </InboxSection>
       )}
 
       {(unparsed?.length ?? 0) > 0 && (
-        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
-          <div className="flex items-baseline justify-between">
-            <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.unparsed}</div>
-            <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>{t.unparsedHint}</div>
-          </div>
-          <div className="flex flex-col" style={{ gap: 10, marginTop: 12 }}>
-            {(unparsed ?? []).map((m) => (
-              <UnparsedRow key={m.id} attempt={m} />
-            ))}
-          </div>
-        </div>
+        <InboxSection title={t.unparsed} aside={t.unparsedHint}>
+          {(unparsed ?? []).map((m) => (
+            <UnparsedRow key={m.id} attempt={m} />
+          ))}
+        </InboxSection>
       )}
 
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
-        <div className="flex items-baseline justify-between">
-          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.rules}</div>
-          <Link to="/settings" style={{ fontSize: 11, color: "var(--c-primary)" }}>
+      <InboxSection
+        title={t.rules}
+        aside={
+          <Link to="/settings" style={{ fontSize: 11.5, color: "var(--c-accent)" }}>
             {t.settings}
           </Link>
-        </div>
-        <div className="flex flex-col" style={{ gap: 8, marginTop: 10 }}>
+        }
+      >
           {(patterns ?? []).map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center"
-              style={{ gap: 11, padding: "12px 13px", borderRadius: 14, background: "var(--c-surface-2)" }}
-            >
+            <ListRow key={p.id} actions={<div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .5)" }}>{p.enabled ? t.on : t.off}</div>}>
+              <div className="flex items-center" style={{ gap: 11 }}>
               <span
                 className="flex-none"
                 style={{
@@ -114,13 +104,20 @@ export default function Inbox() {
                   {p.sender_match}
                 </div>
               </div>
-              <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .5)" }}>{p.enabled ? t.on : t.off}</div>
-            </div>
+              </div>
+            </ListRow>
           ))}
-        </div>
-      </div>
+      </InboxSection>
     </>
   );
+
+  if (family !== "classic") {
+    return (
+      <AppShell>
+        <PageBody maxWidth={820}>{content}</PageBody>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -144,12 +141,19 @@ function PasteBox() {
   const [text, setText] = useState("");
   const [sender, setSender] = useState("");
   const [result, setResult] = useState<string | null>(null);
+  const family = useFamily();
+  const box =
+    family === "dark"
+      ? { marginTop: 28 }
+      : family === "soft"
+        ? { marginTop: 22, padding: 18, borderRadius: 22, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }
+        : { marginTop: 14, padding: 14, borderRadius: 16, background: "rgb(var(--ink-rgb) / .04)" };
 
   return (
-    <div
-      style={{ marginTop: 14, padding: 14, borderRadius: 16, background: "rgb(var(--ink-rgb) / .04)" }}
-    >
-      <div style={{ fontSize: 12, fontWeight: 700 }}>{t.pasteSms}</div>
+    <div className="soft-card" style={box}>
+      <div style={family === "dark" ? DARK_LABEL : { fontSize: family === "soft" ? 15 : 12, fontWeight: family === "soft" ? 600 : 700 }}>
+        {t.pasteSms}
+      </div>
       <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 3 }}>{t.pasteHint}</div>
       <Textarea
         className="inline-block min-h-0 field-sizing-fixed leading-[1.5] md:text-xs"
@@ -172,27 +176,18 @@ function PasteBox() {
         <Field label={t.senderHint}>
           <Input value={sender} onChange={setSender} dir="ltr" />
         </Field>
-        <Button variant="plain" size="plain"
+        <ActionButton
+          tone={family === "classic" ? "primary" : "outline"}
+          busy={paste.isPending}
           onClick={async () => {
             if (!text.trim()) return;
             const created = await paste.mutateAsync({ text, senderHint: sender || "paste" });
             setResult(digits(created.length));
             setText("");
           }}
-          disabled={paste.isPending}
-          aria-busy={paste.isPending}
-          style={{
-            flex: "none",
-            padding: "10px 16px",
-            borderRadius: 12,
-            background: "var(--c-primary)",
-            color: "var(--c-on-primary)",
-            fontSize: 12.5,
-            fontWeight: 700,
-          }}
         >
-          <BusyLabel busy={paste.isPending}>{t.parse}</BusyLabel>
-        </Button>
+          {t.parse}
+        </ActionButton>
       </div>
       {result !== null && (
         <div style={{ fontSize: 11.5, color: "var(--c-income)", marginTop: 8 }}>
@@ -219,9 +214,16 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
   const [categoryId, setCategoryId] = useState("");
 
   const effectiveAccount = accountId || String(accounts?.[0]?.id ?? "");
+  const family = useFamily();
+  const box =
+    family === "dark"
+      ? { padding: "16px 0", borderBottom: "1px solid rgb(var(--ink-rgb) / .08)" }
+      : family === "soft"
+        ? { padding: 16, borderRadius: 22, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }
+        : { padding: 14, borderRadius: 16, background: "var(--c-surface-2)", border: "1px solid rgb(var(--ink-rgb) / .07)" };
 
   return (
-    <div style={{ padding: 14, borderRadius: 16, background: "var(--c-surface-2)", border: "1px solid rgb(var(--ink-rgb) / .07)" }}>
+    <div className="soft-card" style={box}>
       <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>{attempt.sender}</div>
       <div
         style={{
@@ -292,7 +294,8 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
               />
             </Field>
           </div>
-          <Button variant="plain" size="plain"
+          <ActionButton
+            busy={resolve.isPending}
             onClick={() => {
               if (!amount || !effectiveAccount) return;
               resolve.mutate({
@@ -305,20 +308,9 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
                 note: null,
               });
             }}
-            disabled={resolve.isPending}
-            aria-busy={resolve.isPending}
-            style={{
-              textAlign: "center",
-              padding: "11px 0",
-              borderRadius: 12,
-              background: "var(--c-primary)",
-              color: "var(--c-on-primary)",
-              fontSize: 12.5,
-              fontWeight: 700,
-            }}
           >
-            <BusyLabel busy={resolve.isPending}>{t.saveTx}</BusyLabel>
-          </Button>
+            {t.saveTx}
+          </ActionButton>
         </div>
       )}
     </div>
@@ -335,21 +327,49 @@ function SellerHintRow({ hint }: { hint: SellerHint }) {
   const drop = useDeleteSellerHintMutation();
 
   return (
-    <div
-      className="flex items-center"
-      style={{ gap: 11, padding: "11px 13px", borderRadius: 14, background: "var(--c-surface-2)" }}
+    <ListRow
+      actions={
+        <MiniButton onClick={() => drop.mutate(hint.id)} busy={drop.isPending}>
+          {t.ignore}
+        </MiniButton>
+      }
     >
-      <div className="min-w-0 flex-1">
-        <div className="truncate" style={{ fontSize: 12.5, fontWeight: 700 }}>
-          {hint.seller}
-        </div>
-        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
-          {hint.amount_cents !== null ? money(hint.amount_cents, true) : hint.sender}
-        </div>
+      <div className="truncate" style={{ fontSize: 12.5, fontWeight: 700 }}>
+        {hint.seller}
       </div>
-      <MiniButton onClick={() => drop.mutate(hint.id)} busy={drop.isPending}>
-        {t.ignore}
-      </MiniButton>
+      <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
+        {hint.amount_cents !== null ? money(hint.amount_cents, true) : hint.sender}
+      </div>
+    </ListRow>
+  );
+}
+
+/** A titled block of the inbox, in each design's section style. */
+function InboxSection({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
+  const family = useFamily();
+  const head =
+    family === "dark" ? (
+      <span style={DARK_LABEL}>{title}</span>
+    ) : family === "soft" ? (
+      <span style={{ fontSize: 17, fontWeight: 600 }}>{title}</span>
+    ) : (
+      <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{title}</div>
+    );
+  return (
+    <div
+      style={
+        family === "classic"
+          ? { marginTop: 18, paddingTop: 14, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }
+          : { marginTop: family === "dark" ? 40 : 26 }
+      }
+    >
+      <div className="flex items-baseline justify-between" style={{ gap: 12 }}>
+        {head}
+        {typeof aside === "string" ? <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .38)", textAlign: "end" }}>{aside}</div> : aside}
+      </div>
+      <div className="flex flex-col" style={{ gap: family === "dark" ? 0 : family === "soft" ? 10 : 8, marginTop: 12 }}>
+        {children}
+      </div>
     </div>
   );
 }

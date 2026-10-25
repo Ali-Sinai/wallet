@@ -249,6 +249,20 @@ html[lang="fa"] {
   border: 34px solid rgba(255, 255, 255, 0.07);
   pointer-events: none;
 }
+/*
+ * Soft rows and secondary buttons are white cards on the grey canvas, and
+ * grey wells inside a white card. Containers that are white cards set
+ * .soft-card so what they hold flips to the grey form.
+ */
+:root[data-theme^="soft-"] {
+  --row-bg: var(--c-surface);
+  --row-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+:root[data-theme^="soft-"] .soft-card,
+:root[data-theme^="soft-"] .bg-card {
+  --row-bg: var(--c-bg);
+  --row-shadow: none;
+}
 :root[data-theme^="soft-"] .bg-card {
   box-shadow: var(--card-shadow);
 }

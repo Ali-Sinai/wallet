@@ -7,6 +7,7 @@ import { useI18n } from "../lib/i18n";
 import { useAccounts, useCategories, useTransactions } from "../lib/queries";
 import { accountLabel, categoryName } from "../lib/domain";
 import type { Direction } from "../types";
+import { useFamily } from "../lib/theme";
 
 export type TypeFilter = Direction | "all";
 
@@ -58,12 +59,16 @@ export function useFilters() {
 export function RangeFilters({ f }: { f: ReturnType<typeof useFilters> }) {
   const { t, fa, digits } = useI18n();
   const { data: accounts } = useAccounts();
+  const family = useFamily();
+  const box =
+    family === "dark"
+      ? { gap: 16, marginTop: 18, paddingTop: 6 }
+      : family === "soft"
+        ? { gap: 12, marginTop: 14, padding: 18, borderRadius: 22, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }
+        : { gap: 10, marginTop: 12, padding: 14, borderRadius: 16, background: "rgb(var(--ink-rgb) / .04)" };
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ gap: 10, marginTop: 12, padding: 14, borderRadius: 16, background: "rgb(var(--ink-rgb) / .04)" }}
-    >
+    <div className="soft-card flex flex-col" style={box}>
       <div className="flex flex-wrap" style={{ gap: 10 }}>
         <Field label={t.fromDate}>
           <DateField value={f.range.dateFrom} onChange={(v) => f.setRange({ ...f.range, dateFrom: v })} />
