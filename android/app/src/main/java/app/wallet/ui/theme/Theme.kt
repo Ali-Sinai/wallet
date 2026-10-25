@@ -5,59 +5,76 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.sp
 import app.wallet.R
 
-// The "classic" palette from frontend/src/styles.css (:root).
-object WalletColors {
-    val Background = Color(0xFF08090A)
-    val Surface = Color(0xFF0E1110)
-    val Surface2 = Color(0xFF101318)
-    val Surface3 = Color(0xFF141820)
-    val Foreground = Color(0xFFE8EAEC)
-    val Muted = Color(0x73E8EAEC) // fg at 45%
-    val Primary = Color(0xFF0F9B6E)
-    val OnPrimary = Color(0xFF04120C)
-    val PrimaryTint = Color(0xFF101A16)
-    val Income = Color(0xFF3FD39A)
-    val Expense = Color(0xFFFF7A6B)
-    val Border = Color(0x12FFFFFF) // ink at 7%
-    val BarIdle = Color(0xFF1F2B27)
-    val TabBar = Color(0xFF0A0C0B)
-}
+private val LocalPalette = staticCompositionLocalOf { paletteFor(ThemeId.CLASSIC) }
+
+/** The active theme's colours. */
+val WalletColors: Palette
+    @Composable @ReadOnlyComposable
+    get() = LocalPalette.current
 
 val Rooyin = FontFamily(
     Font(R.font.rooyin_regular, FontWeight.Normal),
     Font(R.font.rooyin_bold, FontWeight.Bold),
 )
 
-private val colors = darkColorScheme(
-    primary = WalletColors.Primary,
-    onPrimary = WalletColors.OnPrimary,
-    primaryContainer = WalletColors.PrimaryTint,
-    onPrimaryContainer = WalletColors.Income,
-    background = WalletColors.Background,
-    onBackground = WalletColors.Foreground,
-    surface = WalletColors.Surface,
-    onSurface = WalletColors.Foreground,
-    surfaceVariant = WalletColors.Surface2,
-    onSurfaceVariant = WalletColors.Muted,
-    surfaceContainer = WalletColors.Surface2,
-    surfaceContainerHigh = WalletColors.Surface3,
-    outline = WalletColors.Border,
-    outlineVariant = WalletColors.Border,
-    error = WalletColors.Expense,
-)
+private fun Palette.colorScheme() = if (dark) {
+    darkColorScheme(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryTint,
+        onPrimaryContainer = accent,
+        secondaryContainer = primaryTint2,
+        onSecondaryContainer = foreground,
+        background = background,
+        onBackground = foreground,
+        surface = surface,
+        onSurface = foreground,
+        surfaceVariant = surface2,
+        onSurfaceVariant = muted,
+        surfaceContainer = surface2,
+        surfaceContainerHigh = surface3,
+        surfaceContainerLow = surface,
+        outline = ink.copy(alpha = 0.16f),
+        outlineVariant = border,
+        error = expense,
+    )
+} else {
+    lightColorScheme(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryTint,
+        onPrimaryContainer = primary,
+        secondaryContainer = primaryTint2,
+        onSecondaryContainer = foreground,
+        background = background,
+        onBackground = foreground,
+        surface = surface,
+        onSurface = foreground,
+        surfaceVariant = surface3,
+        onSurfaceVariant = muted,
+        surfaceContainer = surface,
+        surfaceContainerHigh = surface3,
+        surfaceContainerLow = surface,
+        outline = ink.copy(alpha = 0.16f),
+        outlineVariant = border,
+        error = expense,
+    )
+}
 
 private val typography = Typography().let { base ->
     fun TextStyle.rooyin() = copy(fontFamily = Rooyin, letterSpacing = 0.sp)
@@ -85,11 +102,14 @@ private val typography = Typography().let { base ->
  * own language is. Letter spacing is off: tracking breaks joined Persian script.
  */
 @Composable
-fun WalletTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = colors, typography = typography) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            // Surface, not a plain background, so text defaults to the foreground colour.
-            Surface(Modifier.fillMaxSize(), color = WalletColors.Background, content = content)
+fun WalletTheme(theme: ThemeId = ThemeId.CLASSIC, content: @Composable () -> Unit) {
+    val palette = paletteFor(theme)
+    CompositionLocalProvider(LocalPalette provides palette) {
+        MaterialTheme(colorScheme = palette.colorScheme(), typography = typography) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                // Surface, not a plain background, so text defaults to the foreground colour.
+                Surface(Modifier.fillMaxSize(), color = palette.background, content = content)
+            }
         }
     }
 }

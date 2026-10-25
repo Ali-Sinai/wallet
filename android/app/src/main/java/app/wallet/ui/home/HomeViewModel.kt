@@ -1,5 +1,6 @@
 package app.wallet.ui.home
 
+import app.wallet.data.Budget
 import app.wallet.data.CategorySlice
 import app.wallet.data.Dashboard
 import app.wallet.data.Lookups
@@ -15,6 +16,7 @@ data class HomeData(
     val recent: List<Transaction>,
     val lookups: Lookups,
     val pendingSms: Int,
+    val budgets: List<Budget>,
 )
 
 class HomeViewModel(repo: WalletRepository) : TxListViewModel<HomeData>(repo) {
@@ -28,6 +30,7 @@ class HomeViewModel(repo: WalletRepository) : TxListViewModel<HomeData>(repo) {
         val recent = async { repo.transactions(limit = 5) }
         val lookups = async { repo.lookups(force) }
         val pending = async { runCatching { repo.smsPending().size }.getOrDefault(0) }
-        HomeData(dashboard.await(), slices.await(), recent.await(), lookups.await(), pending.await())
+        val budgets = async { runCatching { repo.budgets() }.getOrDefault(emptyList()) }
+        HomeData(dashboard.await(), slices.await(), recent.await(), lookups.await(), pending.await(), budgets.await())
     }
 }

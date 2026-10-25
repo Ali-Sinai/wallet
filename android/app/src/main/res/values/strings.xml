@@ -103,4 +103,29 @@
     <string name="sms_status_ignored_account">کارت در حساب‌ها نیست؛ نادیده گرفته شد</string>
     <string name="sms_status_bad_token">توکن نامعتبر است</string>
     <string name="sms_status_rejected">سرور پیامک را رد کرد</string>
+
+    <string name="settings">تنظیمات</string>
+    <string name="theme">پوسته</string>
+    <string name="accounts">حساب‌ها</string>
+    <string name="budgets">بودجه‌ها</string>
+    <string name="budget_this_month">بودجهٔ این ماه</string>
+    <string name="more">بیشتر</string>
+    <string name="add">افزودن</string>
+    <string name="inactive">غیرفعال</string>
+    <string name="budget_line">سقف ماهانه %1$s تومان</string>
+    <string name="delete_tap_again">برای حذف دوباره بزنید</string>
+    <string name="new_account">حساب جدید</string>
+    <string name="edit_account">ویرایش حساب</string>
+    <string name="name_fa">نام (فارسی)</string>
+    <string name="name_en">نام (انگلیسی)</string>
+    <string name="bank_name">بانک</string>
+    <string name="last4">۴ رقم آخر کارت</string>
+    <string name="active">فعال</string>
+    <string name="new_category">دسته‌بندی جدید</string>
+    <string name="edit_category">ویرایش دسته‌بندی</string>
+    <string name="icon">آیکون (ایموجی)</string>
+    <string name="color">رنگ</string>
+    <string name="new_budget">بودجهٔ جدید</string>
+    <string name="edit_budget">ویرایش بودجه</string>
+    <string name="budget_limit">سقف ماهانه (تومان)</string>
 </resources>

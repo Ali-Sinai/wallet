@@ -3,6 +3,7 @@ package app.wallet
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +30,7 @@ import app.wallet.ui.SignedInApp
 import app.wallet.ui.login.LoginScreen
 import app.wallet.ui.login.LoginViewModel
 import app.wallet.ui.theme.WalletTheme
+import app.wallet.ui.theme.paletteFor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +38,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val container = (application as WalletApp).container
         setContent {
-            WalletTheme {
+            val theme by container.theme.theme.collectAsStateWithLifecycle()
+            val dark = paletteFor(theme).dark
+            // Status/navigation bar icons have to contrast with the theme, not the phone's own setting.
+            LaunchedEffect(dark) {
+                val transparent = android.graphics.Color.TRANSPARENT
+                val style = if (dark) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent)
+                enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+            }
+            WalletTheme(theme) {
                 val session: SessionViewModel = viewModel(
                     factory = viewModelFactory { initializer { SessionViewModel(container.auth, container.api) } },
                 )

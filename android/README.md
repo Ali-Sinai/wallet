@@ -53,4 +53,5 @@ meant to be installed from the APK, not published there.
 1. ✅ Project skeleton, CI build, login
 2. ✅ Home (net, in/out, daily spend, categories, recent), transaction list with search and filter, transaction detail and delete, adding a transaction
 3. ✅ SMS inbox (confirm, ignore, resolve by hand, paste), and reading bank SMS on the phone directly
-4. Reports, people and splits, settings, themes
+4. ✅ Themes (all seven from the web app) and settings: accounts, categories, budgets (with this month's progress on home), logout
+5. People and splits, reports

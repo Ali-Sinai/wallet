@@ -85,10 +85,10 @@ fun SmsSettingsScreen(vm: SmsSettingsViewModel, onClose: () -> Unit) {
                 )
             }
             if (permissionDenied) {
-                Text(stringResource(R.string.sms_permission_denied), color = WalletColors.Expense, fontSize = 12.sp)
+                Text(stringResource(R.string.sms_permission_denied), color = WalletColors.expense, fontSize = 12.sp)
             }
 
-            HorizontalDivider(color = WalletColors.Border)
+            HorizontalDivider(color = WalletColors.border)
 
             Text(stringResource(R.string.sms_token), fontWeight = FontWeight.Bold)
             Text(stringResource(R.string.sms_token_hint), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -103,15 +103,15 @@ fun SmsSettingsScreen(vm: SmsSettingsViewModel, onClose: () -> Unit) {
                 Text(stringResource(R.string.sms_token_rotate))
             }
             if (vm.enabled && vm.token.isBlank()) {
-                Text(stringResource(R.string.sms_token_missing), color = WalletColors.Expense, fontSize = 12.sp)
+                Text(stringResource(R.string.sms_token_missing), color = WalletColors.expense, fontSize = 12.sp)
             }
 
-            HorizontalDivider(color = WalletColors.Border)
+            HorizontalDivider(color = WalletColors.border)
 
             Text(stringResource(R.string.sms_senders), fontWeight = FontWeight.Bold)
             Text(stringResource(R.string.sms_senders_hint), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (vm.senders.isEmpty() && !vm.loadingSenders) {
-                Text(stringResource(R.string.sms_senders_empty), color = WalletColors.Expense, fontSize = 12.sp)
+                Text(stringResource(R.string.sms_senders_empty), color = WalletColors.expense, fontSize = 12.sp)
             }
             for (sender in vm.senders) {
                 Text("• $sender", style = MaterialTheme.typography.bodyMedium.copy(textDirection = TextDirection.Ltr))
@@ -121,7 +121,7 @@ fun SmsSettingsScreen(vm: SmsSettingsViewModel, onClose: () -> Unit) {
             }
 
             vm.lastStatus?.let { status ->
-                HorizontalDivider(color = WalletColors.Border)
+                HorizontalDivider(color = WalletColors.border)
                 val label = stringResource(
                     when (status) {
                         "parsed" -> R.string.sms_status_parsed
@@ -140,7 +140,7 @@ fun SmsSettingsScreen(vm: SmsSettingsViewModel, onClose: () -> Unit) {
                 )
             }
 
-            vm.error?.let { Text(stringResource(R.string.error_server, it), color = WalletColors.Expense, fontSize = 12.sp) }
+            vm.error?.let { Text(stringResource(R.string.error_server, it), color = WalletColors.expense, fontSize = 12.sp) }
         }
     }
 

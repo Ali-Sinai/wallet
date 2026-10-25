@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -51,6 +52,36 @@ interface WalletApi {
 
     @GET("api/categories")
     suspend fun categories(): List<Category>
+
+    @POST("api/accounts")
+    suspend fun createAccount(@Body body: AccountIn): Account
+
+    @PATCH("api/accounts/{id}")
+    suspend fun updateAccount(@Path("id") id: Long, @Body body: AccountIn): Account
+
+    @DELETE("api/accounts/{id}")
+    suspend fun deleteAccount(@Path("id") id: Long)
+
+    @POST("api/categories")
+    suspend fun createCategory(@Body body: CategoryIn): Category
+
+    @PATCH("api/categories/{id}")
+    suspend fun updateCategory(@Path("id") id: Long, @Body body: CategoryIn): Category
+
+    @DELETE("api/categories/{id}")
+    suspend fun deleteCategory(@Path("id") id: Long)
+
+    @GET("api/budgets")
+    suspend fun budgets(): List<Budget>
+
+    @POST("api/budgets")
+    suspend fun createBudget(@Body body: BudgetIn): Budget
+
+    @PATCH("api/budgets/{id}")
+    suspend fun updateBudget(@Path("id") id: Long, @Body body: BudgetIn): Budget
+
+    @DELETE("api/budgets/{id}")
+    suspend fun deleteBudget(@Path("id") id: Long)
 
     @GET("api/sms/pending")
     suspend fun smsPending(): List<SmsAttempt>
@@ -216,3 +247,29 @@ data class SmsPattern(
 
 @Serializable
 data class WebhookToken(val token: String)
+
+@Serializable
+data class AccountIn(
+    val nameFa: String,
+    val nameEn: String,
+    val bankName: String,
+    val last4: String,
+    val isActive: Boolean = true,
+)
+
+@Serializable
+data class CategoryIn(
+    val nameFa: String,
+    val nameEn: String,
+    val icon: String,
+    val color: String,
+    val parentId: Long? = null,
+    val sortOrder: Int = 0,
+)
+
+/** A monthly spending limit; [monthJalali] null means every month. */
+@Serializable
+data class Budget(val id: Long, val categoryId: Long, val limitCents: Long, val monthJalali: String? = null)
+
+@Serializable
+data class BudgetIn(val categoryId: Long, val limitCents: Long, val monthJalali: String? = null)

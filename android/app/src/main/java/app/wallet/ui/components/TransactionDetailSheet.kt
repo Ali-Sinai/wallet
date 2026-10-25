@@ -60,7 +60,7 @@ fun TransactionDetailSheet(
                     Fmt.money(tx.signedCents, signed = true),
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (tx.direction == Direction.WITHDRAWAL) WalletColors.Expense else WalletColors.Income,
+                    color = if (tx.direction == Direction.WITHDRAWAL) WalletColors.expense else WalletColors.income,
                 )
                 Text(
                     stringResource(R.string.toman),
@@ -93,7 +93,7 @@ fun TransactionDetailSheet(
                 enabled = !deleting,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(stringResource(R.string.delete), color = WalletColors.Expense)
+                Text(stringResource(R.string.delete), color = WalletColors.expense)
             }
             Spacer(Modifier.height(12.dp))
         }
@@ -107,7 +107,7 @@ fun TransactionDetailSheet(
                 TextButton(onClick = {
                     confirming = false
                     onDelete()
-                }) { Text(stringResource(R.string.delete), color = WalletColors.Expense) }
+                }) { Text(stringResource(R.string.delete), color = WalletColors.expense) }
             },
             dismissButton = {
                 TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) }

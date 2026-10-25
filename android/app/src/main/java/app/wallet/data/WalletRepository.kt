@@ -49,6 +49,44 @@ class WalletRepository(private val auth: AuthRepository, private val client: Api
     suspend fun createTransaction(body: TransactionIn): Transaction =
         client.call { api.createTransaction(body) }.also { _changes.update { it + 1 } }
 
+    /** After a change to accounts or categories: drop the cached names, tell every screen. */
+    private fun lookupsChanged() {
+        lookups = null
+        notifyChanged()
+    }
+
+    suspend fun saveAccount(id: Long?, body: AccountIn) {
+        client.call { if (id == null) api.createAccount(body) else api.updateAccount(id, body) }
+        lookupsChanged()
+    }
+
+    suspend fun deleteAccount(id: Long) {
+        client.call { api.deleteAccount(id) }
+        lookupsChanged()
+    }
+
+    suspend fun saveCategory(id: Long?, body: CategoryIn) {
+        client.call { if (id == null) api.createCategory(body) else api.updateCategory(id, body) }
+        lookupsChanged()
+    }
+
+    suspend fun deleteCategory(id: Long) {
+        client.call { api.deleteCategory(id) }
+        lookupsChanged()
+    }
+
+    suspend fun budgets() = client.call { api.budgets() }
+
+    suspend fun saveBudget(id: Long?, body: BudgetIn) {
+        client.call { if (id == null) api.createBudget(body) else api.updateBudget(id, body) }
+        notifyChanged()
+    }
+
+    suspend fun deleteBudget(id: Long) {
+        client.call { api.deleteBudget(id) }
+        notifyChanged()
+    }
+
     /** Something outside the repository (the SMS worker) changed server data. */
     fun notifyChanged() = _changes.update { it + 1 }
 

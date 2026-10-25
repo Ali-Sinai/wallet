@@ -73,7 +73,7 @@ fun TxRow(tx: Transaction, lookups: Lookups, onClick: () -> Unit) {
                     Fmt.money(tx.signedCents, signed = true),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = if (out) WalletColors.Expense else WalletColors.Income,
+                    color = if (out) WalletColors.expense else WalletColors.income,
                 )
                 Text(
                     "${tx.occurredAtJalali} · ${Fmt.time(tx.occurredAt)}",
@@ -82,6 +82,6 @@ fun TxRow(tx: Transaction, lookups: Lookups, onClick: () -> Unit) {
                 )
             }
         }
-        HorizontalDivider(Modifier.padding(horizontal = 22.dp), color = WalletColors.Border)
+        HorizontalDivider(Modifier.padding(horizontal = 22.dp), color = WalletColors.border)
     }
 }

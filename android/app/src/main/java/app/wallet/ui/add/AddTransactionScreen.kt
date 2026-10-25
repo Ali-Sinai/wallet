@@ -37,7 +37,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -103,10 +102,10 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
 
                 // Amount display + keypad
                 val amountColor = when {
-                    vm.amountMissing -> WalletColors.Expense
+                    vm.amountMissing -> WalletColors.expense
                     vm.amount.isEmpty() -> MaterialTheme.colorScheme.onSurfaceVariant
-                    vm.direction == Direction.WITHDRAWAL -> WalletColors.Expense
-                    else -> WalletColors.Income
+                    vm.direction == Direction.WITHDRAWAL -> WalletColors.expense
+                    else -> WalletColors.income
                 }
                 Row(
                     Modifier.fillMaxWidth(),
@@ -127,12 +126,12 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
                     )
                 }
                 if (vm.amountMissing) {
-                    Text(stringResource(R.string.error_amount_required), color = WalletColors.Expense, fontSize = 12.sp)
+                    Text(stringResource(R.string.error_amount_required), color = WalletColors.expense, fontSize = 12.sp)
                 }
                 Keypad(onKey = vm::press)
 
                 if (lookups.accounts.isEmpty()) {
-                    Text(stringResource(R.string.no_accounts), color = WalletColors.Expense)
+                    Text(stringResource(R.string.no_accounts), color = WalletColors.expense)
                 } else {
                     Label(R.string.account)
                     Row(
@@ -184,7 +183,7 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                vm.error?.let { Text(stringResource(R.string.error_server, it), color = WalletColors.Expense) }
+                vm.error?.let { Text(stringResource(R.string.error_server, it), color = WalletColors.expense) }
             }
         }
 
@@ -224,7 +223,7 @@ private fun Keypad(onKey: (String) -> Unit) {
                         Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color.White.copy(alpha = 0.05f))
+                            .background(WalletColors.ink.copy(alpha = 0.05f))
                             .clickable { onKey(key) }
                             .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,

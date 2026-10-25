@@ -42,6 +42,9 @@ import app.wallet.ui.inbox.InboxScreen
 import app.wallet.ui.inbox.InboxViewModel
 import app.wallet.ui.inbox.SmsSettingsScreen
 import app.wallet.ui.inbox.SmsSettingsViewModel
+import app.wallet.ui.settings.SettingsScreen
+import app.wallet.ui.settings.SettingsViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.wallet.ui.theme.WalletColors
 
 private object Routes {
@@ -49,6 +52,7 @@ private object Routes {
     const val ACTIVITY = "activity"
     const val INBOX = "inbox"
     const val SMS_SETTINGS = "sms-settings"
+    const val SETTINGS = "settings"
     const val ADD = "add?attempt={attempt}"
 
     fun add(attemptId: Long? = null) = if (attemptId == null) "add" else "add?attempt=$attemptId"
@@ -78,8 +82,8 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
             if (onTab) {
                 FloatingActionButton(
                     onClick = { nav.navigate(Routes.add()) },
-                    containerColor = WalletColors.Primary,
-                    contentColor = WalletColors.OnPrimary,
+                    containerColor = WalletColors.primary,
+                    contentColor = WalletColors.onPrimary,
                 ) { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_transaction)) }
             }
         },
@@ -95,11 +99,23 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                 composable(Routes.HOME) {
                     HomeScreen(
                         vm = appViewModel { HomeViewModel(it.wallet) },
-                        username = username,
-                        serverUrl = serverUrl,
                         onSeeAll = { nav.switchTab(Routes.ACTIVITY) },
                         onOpenInbox = { nav.switchTab(Routes.INBOX) },
+                        onSettings = { nav.navigate(Routes.SETTINGS) },
+                    )
+                }
+                composable(Routes.SETTINGS) {
+                    val themeStore = container().theme
+                    val theme by themeStore.theme.collectAsStateWithLifecycle()
+                    SettingsScreen(
+                        vm = appViewModel { SettingsViewModel(it.wallet) },
+                        theme = theme,
+                        onTheme = themeStore::set,
+                        username = username,
+                        serverUrl = serverUrl,
+                        onSmsSettings = { nav.navigate(Routes.SMS_SETTINGS) },
                         onLogout = onLogout,
+                        onClose = { nav.popBackStack() },
                     )
                 }
                 composable(Routes.ACTIVITY) {
@@ -135,7 +151,7 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
 
 @Composable
 private fun BottomBar(nav: NavHostController, route: String?) {
-    NavigationBar(containerColor = WalletColors.TabBar) {
+    NavigationBar(containerColor = WalletColors.tabBar) {
         for (tab in tabs) {
             NavigationBarItem(
                 selected = route == tab.route,
@@ -143,9 +159,9 @@ private fun BottomBar(nav: NavHostController, route: String?) {
                 icon = { Icon(tab.icon, contentDescription = null) },
                 label = { Text(stringResource(tab.label)) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = WalletColors.Primary,
-                    selectedTextColor = WalletColors.Primary,
-                    indicatorColor = WalletColors.PrimaryTint,
+                    selectedIconColor = WalletColors.primary,
+                    selectedTextColor = WalletColors.primary,
+                    indicatorColor = WalletColors.primaryTint,
                 ),
             )
         }

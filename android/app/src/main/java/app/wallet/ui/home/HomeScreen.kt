@@ -20,25 +20,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +48,7 @@ import app.wallet.ui.components.LoadingBox
 import app.wallet.ui.components.Load
 import app.wallet.ui.components.TransactionDetailSheet
 import app.wallet.ui.components.TxRow
+import app.wallet.ui.components.displayName
 import app.wallet.ui.components.parseColor
 import app.wallet.ui.theme.WalletColors
 import app.wallet.util.Fmt
@@ -62,14 +59,10 @@ import app.wallet.util.Fmt
 @Composable
 fun HomeScreen(
     vm: HomeViewModel,
-    username: String,
-    serverUrl: String,
     onSeeAll: () -> Unit,
     onOpenInbox: () -> Unit,
-    onLogout: () -> Unit,
+    onSettings: () -> Unit,
 ) {
-    var confirmLogout by remember { mutableStateOf(false) }
-
     PullToRefreshBox(isRefreshing = vm.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
         LazyColumn(Modifier.fillMaxSize()) {
             item {
@@ -81,10 +74,10 @@ fun HomeScreen(
                         Text(stringResource(R.string.app_name), fontSize = 22.sp, fontWeight = FontWeight.Bold)
                         Text(Fmt.jalaliMonthLabel(), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { confirmLogout = true }) {
+                    IconButton(onClick = onSettings) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = stringResource(R.string.logout),
+                            Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.settings),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -99,6 +92,7 @@ fun HomeScreen(
                     if (data.pendingSms > 0) item { PendingSmsBanner(data.pendingSms, onOpenInbox) }
                     item { DailySpend(data.dashboard) }
                     if (data.slices.isNotEmpty()) item { Categories(data.slices, data) }
+                    if (data.budgets.isNotEmpty()) item { Budgets(data) }
                     item {
                         Row(
                             Modifier
@@ -129,62 +123,50 @@ fun HomeScreen(
             onDismiss = { vm.selected = null },
         )
     }
-
-    if (confirmLogout) {
-        AlertDialog(
-            onDismissRequest = { confirmLogout = false },
-            text = { Text(stringResource(R.string.logout_confirm, username, serverUrl.trimEnd('/'))) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmLogout = false
-                    onLogout()
-                }) { Text(stringResource(R.string.logout)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmLogout = false }) { Text(stringResource(R.string.cancel)) }
-            },
-        )
-    }
 }
 
 @Composable
 private fun Hero(d: Dashboard) {
     val shape = RoundedCornerShape(22.dp)
-    Column(
-        Modifier
-            .padding(horizontal = 22.dp)
-            .padding(top = 14.dp)
-            .fillMaxWidth()
-            .clip(shape)
-            .background(Brush.linearGradient(listOf(Color(0xFF12241D), Color(0xFF0B120F))))
-            .border(BorderStroke(1.dp, WalletColors.Primary.copy(alpha = 0.28f)), shape)
-            .padding(18.dp),
-    ) {
-        Text(stringResource(R.string.balance), fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            Text(Fmt.money(d.netCents), fontSize = 34.sp, fontWeight = FontWeight.Bold)
-            Text(
-                stringResource(R.string.toman_short),
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 6.dp),
-            )
-        }
-        Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            MiniStat(
-                stringResource(R.string.income),
-                Fmt.short(d.totalInCents),
-                stringResource(R.string.count_deposits, Fmt.digits(d.depositCount)),
-                WalletColors.Income,
-                Modifier.weight(1f),
-            )
-            MiniStat(
-                stringResource(R.string.expense),
-                Fmt.short(d.totalOutCents),
-                stringResource(R.string.count_withdrawals, Fmt.digits(d.withdrawalCount)),
-                WalletColors.Expense,
-                Modifier.weight(1f),
-            )
+    val palette = WalletColors
+    val fg = palette.heroForeground
+    CompositionLocalProvider(LocalContentColor provides fg) {
+        Column(
+            Modifier
+                .padding(horizontal = 22.dp)
+                .padding(top = 14.dp)
+                .fillMaxWidth()
+                .clip(shape)
+                .background(palette.hero)
+                .border(BorderStroke(1.dp, palette.heroBorder), shape)
+                .padding(18.dp),
+        ) {
+            Text(stringResource(R.string.balance), fontSize = 11.5.sp, color = fg.copy(alpha = 0.5f))
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                Text(Fmt.money(d.netCents), fontSize = 34.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(R.string.toman_short),
+                    fontSize = 14.sp,
+                    color = fg.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
+            }
+            Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                MiniStat(
+                    stringResource(R.string.income),
+                    Fmt.short(d.totalInCents),
+                    stringResource(R.string.count_deposits, Fmt.digits(d.depositCount)),
+                    palette.heroIncome,
+                    Modifier.weight(1f),
+                )
+                MiniStat(
+                    stringResource(R.string.expense),
+                    Fmt.short(d.totalOutCents),
+                    stringResource(R.string.count_withdrawals, Fmt.digits(d.withdrawalCount)),
+                    palette.heroExpense,
+                    Modifier.weight(1f),
+                )
+            }
         }
     }
 }
@@ -198,13 +180,13 @@ private fun PendingSmsBanner(count: Int, onClick: () -> Unit) {
             .padding(top = 14.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(WalletColors.PrimaryTint)
+            .background(WalletColors.primaryTint)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(stringResource(R.string.pending_sms_banner, Fmt.digits(count)), Modifier.weight(1f), fontSize = 13.5.sp)
-        Text(stringResource(R.string.review), color = WalletColors.Income, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        Text(stringResource(R.string.review), color = WalletColors.income, fontWeight = FontWeight.Bold, fontSize = 13.sp)
     }
 }
 
@@ -213,19 +195,20 @@ private fun MiniStat(label: String, value: String, sub: String, color: Color, mo
     Column(
         modifier
             .clip(RoundedCornerShape(13.dp))
-            .background(Color.White.copy(alpha = 0.04f))
+            .background(LocalContentColor.current.copy(alpha = 0.06f))
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        Text(label, fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val faint = LocalContentColor.current.copy(alpha = 0.5f)
+        Text(label, fontSize = 11.5.sp, color = faint)
         Text(value, fontSize = 15.5.sp, fontWeight = FontWeight.Bold, color = color)
-        Text(sub, fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(sub, fontSize = 10.5.sp, color = faint)
     }
 }
 
 @Composable
 private fun Section(content: @Composable () -> Unit) {
     Column(Modifier.padding(horizontal = 22.dp).padding(top = 16.dp)) {
-        HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
+        HorizontalDivider(color = WalletColors.ink.copy(alpha = 0.08f))
         Column(Modifier.padding(top = 13.dp)) { content() }
     }
 }
@@ -260,7 +243,7 @@ private fun DailySpend(d: Dashboard) {
                         .weight(1f)
                         .fillMaxHeight(fraction)
                         .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
-                        .background(if (bar.amountCents > max * 0.7) WalletColors.Primary else WalletColors.BarIdle),
+                        .background(if (bar.amountCents > max * 0.7) WalletColors.primary else WalletColors.barIdle),
                 )
             }
         }
@@ -296,6 +279,41 @@ private fun Categories(slices: List<CategorySlice>, data: HomeData) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                     Box(Modifier.size(7.dp).clip(RoundedCornerShape(2.dp)).background(parseColor(slice.color)))
                     Text("$name ${Fmt.digits(Math.round(slice.percentage))}٪", fontSize = 11.5.sp)
+                }
+            }
+        }
+    }
+}
+
+/** Each budget against this month's spend in its category — BudgetsCard in ReportCards.tsx. */
+@Composable
+private fun Budgets(data: HomeData) {
+    Section {
+        SectionLabel(stringResource(R.string.budget_this_month))
+        Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            for (budget in data.budgets) {
+                val category = data.lookups.category(budget.categoryId)
+                val used = data.slices.firstOrNull { it.categoryId == budget.categoryId }?.amountCents ?: 0L
+                val fraction = if (budget.limitCents > 0) used.toFloat() / budget.limitCents else 0f
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Row {
+                        Text(category?.displayName() ?: "—", Modifier.weight(1f), fontSize = 12.sp)
+                        Text("${Fmt.short(used)} / ${Fmt.short(budget.limitCents)}", fontSize = 12.sp)
+                    }
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(WalletColors.barIdle),
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                                .fillMaxHeight()
+                                .background(if (fraction > 1f) WalletColors.expense else category?.let { parseColor(it.color) } ?: WalletColors.primary),
+                        )
+                    }
                 }
             }
         }

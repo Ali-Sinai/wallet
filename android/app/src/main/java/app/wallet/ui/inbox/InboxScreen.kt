@@ -172,12 +172,12 @@ private fun PendingCard(attempt: SmsAttempt, lookups: Lookups, vm: InboxViewMode
                 Fmt.money(if (out) -cents else cents, signed = true),
                 fontWeight = FontWeight.Bold,
                 fontSize = 17.sp,
-                color = if (out) WalletColors.Expense else WalletColors.Income,
+                color = if (out) WalletColors.expense else WalletColors.income,
             )
         }
 
         if (needsAccount) {
-            Text(stringResource(R.string.pick_account), fontSize = 12.sp, color = WalletColors.Expense)
+            Text(stringResource(R.string.pick_account), fontSize = 12.sp, color = WalletColors.expense)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (account in active) {
                     FilterChip(
@@ -200,7 +200,7 @@ private fun PendingCard(attempt: SmsAttempt, lookups: Lookups, vm: InboxViewMode
             }
         }
 
-        card.error?.let { Text(it, color = WalletColors.Expense, fontSize = 12.sp) }
+        card.error?.let { Text(it, color = WalletColors.expense, fontSize = 12.sp) }
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(
@@ -228,7 +228,7 @@ private fun UnparsedCard(attempt: SmsAttempt, vm: InboxViewModel, onResolve: (Lo
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(attempt.rawBody.orEmpty(), fontSize = 13.sp)
-        card.error?.let { Text(it, color = WalletColors.Expense, fontSize = 12.sp) }
+        card.error?.let { Text(it, color = WalletColors.expense, fontSize = 12.sp) }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Button(onClick = { onResolve(attempt.id) }, enabled = !card.busy, modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.resolve_manually))
@@ -256,7 +256,7 @@ private fun PasteDialog(vm: InboxViewModel, onDismiss: () -> Unit) {
                         .fillMaxWidth()
                         .heightIn(min = 140.dp),
                 )
-                vm.pasteError?.let { Text(stringResource(R.string.error_server, it), color = WalletColors.Expense, fontSize = 12.sp) }
+                vm.pasteError?.let { Text(stringResource(R.string.error_server, it), color = WalletColors.expense, fontSize = 12.sp) }
             }
         },
         confirmButton = {
