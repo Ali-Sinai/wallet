@@ -6,6 +6,7 @@ import app.wallet.data.AuthRepository
 import app.wallet.data.PersistentCookieJar
 import app.wallet.data.ServerStore
 import app.wallet.data.WalletRepository
+import app.wallet.sms.SmsSettings
 
 class WalletApp : Application() {
     lateinit var container: AppContainer
@@ -24,4 +25,5 @@ class AppContainer(app: Application) {
     val api = ApiClient(cookies)
     val auth = AuthRepository(server, api, cookies)
     val wallet = WalletRepository(auth, api)
+    val smsSettings = SmsSettings(app)
 }

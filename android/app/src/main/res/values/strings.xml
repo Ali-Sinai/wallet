@@ -66,4 +66,41 @@
     <string name="no_accounts">اول یک حساب در تنظیمات نسخهٔ وب بسازید</string>
     <string name="error_amount_required">مبلغ را وارد کنید</string>
     <string name="shared">دنگی</string>
+
+    <string name="tab_inbox">پیامک‌ها</string>
+    <string name="inbox_empty">پیامکی در انتظار نیست</string>
+    <string name="inbox_pending">در انتظار تأیید · %1$s</string>
+    <string name="inbox_unparsed">خوانده نشد · %1$s</string>
+    <string name="no_card_in_sms">بدون شماره کارت</string>
+    <string name="pick_account">حساب این پیامک را انتخاب کنید</string>
+    <string name="confirm">تأیید</string>
+    <string name="ignore">نادیده</string>
+    <string name="resolve_manually">ثبت دستی</string>
+    <string name="paste_sms">چسباندن پیامک</string>
+    <string name="paste_hint">متن یک یا چند پیامک بانکی را بچسبانید؛ پیامک‌ها را با یک خط خالی از هم جدا کنید.</string>
+    <string name="paste_result">%1$s پیامک به صندوق اضافه شد</string>
+    <string name="send">ارسال</string>
+    <string name="pending_sms_banner">%1$s پیامک بانکی در انتظار تأیید</string>
+    <string name="review">بررسی</string>
+
+    <string name="sms_settings">تنظیمات پیامک</string>
+    <string name="sms_auto_read">خواندن خودکار پیامک بانک</string>
+    <string name="sms_auto_read_hint">پیامک‌های رسیده از فرستنده‌های بانکی (پایین) به سرور فرستاده می‌شوند؛ بقیهٔ پیامک‌ها از گوشی خارج نمی‌شوند.</string>
+    <string name="sms_permission_denied">بدون اجازهٔ دریافت پیامک این قابلیت کار نمی‌کند.</string>
+    <string name="sms_token">توکن API</string>
+    <string name="sms_token_hint">همان توکن وب‌هوکی که در تنظیمات نسخهٔ وب برای اپ‌های فورواردر ساخته‌اید.</string>
+    <string name="sms_token_rotate">ساخت توکن جدید</string>
+    <string name="sms_token_rotate_confirm">توکن قبلی از کار می‌افتد و اگر اپ فورواردر دیگری از آن استفاده می‌کند، دیگر پیامک نمی‌فرستد. ادامه می‌دهید؟</string>
+    <string name="sms_token_missing">بدون توکن، پیامکی فرستاده نمی‌شود.</string>
+    <string name="sms_senders">فرستنده‌های بانکی</string>
+    <string name="sms_senders_hint">از الگوهای پیامک فعال روی سرور گرفته می‌شود. فرستندهٔ جدید را در تنظیمات نسخهٔ وب اضافه کنید.</string>
+    <string name="sms_senders_empty">هیچ الگوی فعالی با فرستنده روی سرور نیست، پس پیامکی فرستاده نمی‌شود.</string>
+    <string name="sms_senders_refresh">به‌روزرسانی از سرور</string>
+    <string name="sms_last_status">آخرین پیامک (%1$s): %2$s</string>
+    <string name="sms_status_parsed">خوانده شد و در صندوق است</string>
+    <string name="sms_status_unparsed">رسید ولی الگویی آن را نخواند</string>
+    <string name="sms_status_otp">رمز پویا — نام فروشنده ثبت شد</string>
+    <string name="sms_status_ignored_account">کارت در حساب‌ها نیست؛ نادیده گرفته شد</string>
+    <string name="sms_status_bad_token">توکن نامعتبر است</string>
+    <string name="sms_status_rejected">سرور پیامک را رد کرد</string>
 </resources>

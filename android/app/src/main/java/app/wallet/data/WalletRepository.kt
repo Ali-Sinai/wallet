@@ -49,6 +49,34 @@ class WalletRepository(private val auth: AuthRepository, private val client: Api
     suspend fun createTransaction(body: TransactionIn): Transaction =
         client.call { api.createTransaction(body) }.also { _changes.update { it + 1 } }
 
+    /** Something outside the repository (the SMS worker) changed server data. */
+    fun notifyChanged() = _changes.update { it + 1 }
+
+    suspend fun smsPending() = client.call { api.smsPending() }
+
+    suspend fun smsUnparsed() = client.call { api.smsUnparsed() }
+
+    suspend fun confirmSms(id: Long, categoryId: Long?, accountId: Long?): ConfirmResult =
+        client.call { api.confirmSms(id, ConfirmSms(categoryId = categoryId, accountId = accountId)) }
+            .also { notifyChanged() }
+
+    suspend fun ignoreSms(id: Long) {
+        client.call { api.ignoreSms(id) }
+        notifyChanged()
+    }
+
+    suspend fun resolveSms(id: Long, body: ResolveSms) {
+        client.call { api.resolveSms(id, body) }
+        notifyChanged()
+    }
+
+    suspend fun pasteSms(text: String): List<SmsAttempt> =
+        client.call { api.pasteSms(PasteSms(text)) }.also { notifyChanged() }
+
+    suspend fun smsPatterns() = client.call { api.smsPatterns() }
+
+    suspend fun rotateWebhookToken(): String = client.call { api.rotateWebhookToken() }.token
+
     suspend fun deleteTransaction(id: Long) {
         client.call { api.deleteTransaction(id) }
         _changes.update { it + 1 }

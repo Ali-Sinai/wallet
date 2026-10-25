@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -24,6 +25,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -35,12 +38,20 @@ import app.wallet.ui.add.AddTransactionScreen
 import app.wallet.ui.add.AddTransactionViewModel
 import app.wallet.ui.home.HomeScreen
 import app.wallet.ui.home.HomeViewModel
+import app.wallet.ui.inbox.InboxScreen
+import app.wallet.ui.inbox.InboxViewModel
+import app.wallet.ui.inbox.SmsSettingsScreen
+import app.wallet.ui.inbox.SmsSettingsViewModel
 import app.wallet.ui.theme.WalletColors
 
 private object Routes {
     const val HOME = "home"
     const val ACTIVITY = "activity"
-    const val ADD = "add"
+    const val INBOX = "inbox"
+    const val SMS_SETTINGS = "sms-settings"
+    const val ADD = "add?attempt={attempt}"
+
+    fun add(attemptId: Long? = null) = if (attemptId == null) "add" else "add?attempt=$attemptId"
 }
 
 private data class Tab(val route: String, val label: Int, val icon: ImageVector)
@@ -48,6 +59,7 @@ private data class Tab(val route: String, val label: Int, val icon: ImageVector)
 private val tabs = listOf(
     Tab(Routes.HOME, R.string.tab_home, Icons.Filled.Home),
     Tab(Routes.ACTIVITY, R.string.tab_activity, Icons.AutoMirrored.Filled.List),
+    Tab(Routes.INBOX, R.string.tab_inbox, Icons.Filled.Email),
 )
 
 /** Everything behind the login: the bottom tabs and the screens they open. */
@@ -65,7 +77,7 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
         floatingActionButton = {
             if (onTab) {
                 FloatingActionButton(
-                    onClick = { nav.navigate(Routes.ADD) },
+                    onClick = { nav.navigate(Routes.add()) },
                     containerColor = WalletColors.Primary,
                     contentColor = WalletColors.OnPrimary,
                 ) { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_transaction)) }
@@ -86,15 +98,33 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                         username = username,
                         serverUrl = serverUrl,
                         onSeeAll = { nav.switchTab(Routes.ACTIVITY) },
+                        onOpenInbox = { nav.switchTab(Routes.INBOX) },
                         onLogout = onLogout,
                     )
                 }
                 composable(Routes.ACTIVITY) {
                     ActivityScreen(appViewModel { ActivityViewModel(it.wallet) })
                 }
-                composable(Routes.ADD) {
+                composable(Routes.INBOX) {
+                    InboxScreen(
+                        appViewModel { InboxViewModel(it.wallet, it.smsSettings) },
+                        onResolve = { id -> nav.navigate(Routes.add(id)) },
+                        onSettings = { nav.navigate(Routes.SMS_SETTINGS) },
+                    )
+                }
+                composable(Routes.SMS_SETTINGS) {
+                    SmsSettingsScreen(
+                        appViewModel { SmsSettingsViewModel(it.wallet, it.smsSettings) },
+                        onClose = { nav.popBackStack() },
+                    )
+                }
+                composable(
+                    Routes.ADD,
+                    arguments = listOf(navArgument("attempt") { type = NavType.LongType; defaultValue = -1L }),
+                ) { entry ->
+                    val attemptId = entry.arguments?.getLong("attempt")?.takeIf { it >= 0 }
                     AddTransactionScreen(
-                        appViewModel { AddTransactionViewModel(it.wallet) },
+                        appViewModel { AddTransactionViewModel(it.wallet, attemptId) },
                         onClose = { nav.popBackStack() },
                     )
                 }

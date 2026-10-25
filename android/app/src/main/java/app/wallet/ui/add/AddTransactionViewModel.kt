@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import app.wallet.data.ApiError
 import app.wallet.data.Direction
 import app.wallet.data.Lookups
+import app.wallet.data.ResolveSms
+import app.wallet.data.SmsAttempt
 import app.wallet.data.TransactionIn
 import app.wallet.data.WalletRepository
 import java.time.Instant
@@ -15,8 +17,16 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** AddTransactionModal in frontend/src/components/AddTransactionModal.tsx. */
-class AddTransactionViewModel(private val repo: WalletRepository) : ViewModel() {
+/**
+ * AddTransactionModal in frontend/src/components/AddTransactionModal.tsx.
+ * With [attemptId], it records an SMS the server couldn't read instead
+ * ("resolve manually"): the message is shown above the form, and saving
+ * turns that inbox entry into the transaction.
+ */
+class AddTransactionViewModel(
+    private val repo: WalletRepository,
+    private val attemptId: Long? = null,
+) : ViewModel() {
     /** Whole Toman, as typed on the keypad. */
     var amount by mutableStateOf("")
         private set
@@ -37,6 +47,8 @@ class AddTransactionViewModel(private val repo: WalletRepository) : ViewModel() 
         private set
     var amountMissing by mutableStateOf(false)
         private set
+    var attempt by mutableStateOf<SmsAttempt?>(null)
+        private set
 
     private var categoryTouched = false
     private var suggestJob: Job? = null
@@ -49,6 +61,12 @@ class AddTransactionViewModel(private val repo: WalletRepository) : ViewModel() 
         loadError = null
         viewModelScope.launch {
             try {
+                if (attemptId != null && attempt == null) {
+                    val a = repo.smsUnparsed().firstOrNull { it.id == attemptId }
+                    attempt = a
+                    a?.amountCents?.let { amount = (it / 100).toString() }
+                    a?.direction?.let { direction = it }
+                }
                 val l = repo.lookups()
                 lookups = l
                 if (accountId == null) accountId = l.accounts.firstOrNull { it.isActive }?.id ?: l.accounts.firstOrNull()?.id
@@ -98,6 +116,22 @@ class AddTransactionViewModel(private val repo: WalletRepository) : ViewModel() 
         error = null
         viewModelScope.launch {
             try {
+                val a = attempt
+                if (a != null) {
+                    repo.resolveSms(
+                        a.id,
+                        ResolveSms(
+                            amountCents = toman * 100,
+                            direction = direction,
+                            accountId = account,
+                            occurredAt = a.occurredAt ?: a.receivedAt,
+                            categoryId = categoryId,
+                            note = note.trim().ifEmpty { null },
+                        ),
+                    )
+                    onSaved()
+                    return@launch
+                }
                 repo.createTransaction(
                     TransactionIn(
                         amountCents = toman * 100,

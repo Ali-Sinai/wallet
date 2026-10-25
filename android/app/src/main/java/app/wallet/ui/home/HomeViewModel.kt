@@ -14,6 +14,7 @@ data class HomeData(
     val slices: List<CategorySlice>,
     val recent: List<Transaction>,
     val lookups: Lookups,
+    val pendingSms: Int,
 )
 
 class HomeViewModel(repo: WalletRepository) : TxListViewModel<HomeData>(repo) {
@@ -26,6 +27,7 @@ class HomeViewModel(repo: WalletRepository) : TxListViewModel<HomeData>(repo) {
         val slices = async { repo.categoryBreakdown() }
         val recent = async { repo.transactions(limit = 5) }
         val lookups = async { repo.lookups(force) }
-        HomeData(dashboard.await(), slices.await(), recent.await(), lookups.await())
+        val pending = async { runCatching { repo.smsPending().size }.getOrDefault(0) }
+        HomeData(dashboard.await(), slices.await(), recent.await(), lookups.await(), pending.await())
     }
 }

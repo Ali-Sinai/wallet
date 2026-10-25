@@ -51,6 +51,30 @@ interface WalletApi {
 
     @GET("api/categories")
     suspend fun categories(): List<Category>
+
+    @GET("api/sms/pending")
+    suspend fun smsPending(): List<SmsAttempt>
+
+    @GET("api/sms/unparsed")
+    suspend fun smsUnparsed(): List<SmsAttempt>
+
+    @POST("api/sms/{id}/confirm")
+    suspend fun confirmSms(@Path("id") id: Long, @Body body: ConfirmSms): ConfirmResult
+
+    @POST("api/sms/{id}/ignore")
+    suspend fun ignoreSms(@Path("id") id: Long)
+
+    @POST("api/sms/{id}/resolve-manually")
+    suspend fun resolveSms(@Path("id") id: Long, @Body body: ResolveSms)
+
+    @POST("api/ingest/sms/paste")
+    suspend fun pasteSms(@Body body: PasteSms): List<SmsAttempt>
+
+    @GET("api/sms-patterns")
+    suspend fun smsPatterns(): List<SmsPattern>
+
+    @POST("api/settings/webhook-token/rotate")
+    suspend fun rotateWebhookToken(): WebhookToken
 }
 
 @Serializable
@@ -146,3 +170,49 @@ data class Category(
     val parentId: Long? = null,
     val sortOrder: Int = 0,
 )
+
+/** A bank SMS the server read (parseStatus "parsed") or couldn't ("unparsed", with [rawBody]). */
+@Serializable
+data class SmsAttempt(
+    val id: Long,
+    val sender: String,
+    val parseStatus: String,
+    val amountCents: Long? = null,
+    val direction: Direction? = null,
+    val accountLast4: String? = null,
+    val occurredAt: String? = null,
+    val merchant: String? = null,
+    val rawBody: String? = null,
+    val receivedAt: String,
+)
+
+@Serializable
+data class ConfirmSms(val categoryId: Long?, val note: String? = null, val accountId: Long? = null)
+
+@Serializable
+data class ConfirmResult(val duplicate: Boolean, val transactionId: Long? = null)
+
+@Serializable
+data class ResolveSms(
+    val amountCents: Long,
+    val direction: Direction,
+    val accountId: Long,
+    val occurredAt: String,
+    val categoryId: Long?,
+    val note: String?,
+)
+
+@Serializable
+data class PasteSms(val text: String, val senderHint: String = "paste")
+
+@Serializable
+data class SmsPattern(
+    val id: Long,
+    val name: String,
+    val senderMatch: String,
+    val kind: String = "transaction",
+    val enabled: Boolean = true,
+)
+
+@Serializable
+data class WebhookToken(val token: String)

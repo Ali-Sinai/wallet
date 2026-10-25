@@ -3,6 +3,7 @@ package app.wallet.ui.home
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,6 +65,7 @@ fun HomeScreen(
     username: String,
     serverUrl: String,
     onSeeAll: () -> Unit,
+    onOpenInbox: () -> Unit,
     onLogout: () -> Unit,
 ) {
     var confirmLogout by remember { mutableStateOf(false) }
@@ -94,6 +96,7 @@ fun HomeScreen(
                 is Load.Ready -> {
                     val data = s.data
                     item { Hero(data.dashboard) }
+                    if (data.pendingSms > 0) item { PendingSmsBanner(data.pendingSms, onOpenInbox) }
                     item { DailySpend(data.dashboard) }
                     if (data.slices.isNotEmpty()) item { Categories(data.slices, data) }
                     item {
@@ -183,6 +186,25 @@ private fun Hero(d: Dashboard) {
                 Modifier.weight(1f),
             )
         }
+    }
+}
+
+/** Stands in for the web home's SMS highlight card: there are messages to confirm. */
+@Composable
+private fun PendingSmsBanner(count: Int, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .padding(horizontal = 22.dp)
+            .padding(top = 14.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(WalletColors.PrimaryTint)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(stringResource(R.string.pending_sms_banner, Fmt.digits(count)), Modifier.weight(1f), fontSize = 13.5.sp)
+        Text(stringResource(R.string.review), color = WalletColors.Income, fontWeight = FontWeight.Bold, fontSize = 13.sp)
     }
 }
 

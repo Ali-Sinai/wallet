@@ -61,7 +61,11 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
     ) {
         Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onClose) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close)) }
-            Text(stringResource(R.string.add_transaction), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(if (vm.attempt != null) R.string.resolve_manually else R.string.add_transaction),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
 
         val lookups = vm.lookups
@@ -75,6 +79,17 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
                     .padding(horizontal = 22.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
+                vm.attempt?.rawBody?.let { body ->
+                    Text(
+                        body,
+                        fontSize = 13.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(12.dp),
+                    )
+                }
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     val options = listOf(Direction.WITHDRAWAL to R.string.expense, Direction.DEPOSIT to R.string.income)
                     options.forEachIndexed { i, (dir, label) ->
@@ -134,13 +149,16 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
                     }
                 }
 
-                OutlinedTextField(
-                    value = vm.merchant,
-                    onValueChange = vm::updateMerchant,
-                    label = { Text(stringResource(R.string.merchant)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                // A resolved SMS keeps the merchant the server already read from it.
+                if (vm.attempt == null) {
+                    OutlinedTextField(
+                        value = vm.merchant,
+                        onValueChange = vm::updateMerchant,
+                        label = { Text(stringResource(R.string.merchant)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
 
                 Label(R.string.category)
                 FlowRow(

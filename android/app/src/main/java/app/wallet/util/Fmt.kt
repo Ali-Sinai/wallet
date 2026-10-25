@@ -70,6 +70,13 @@ object Fmt {
     fun time(iso: String): String =
         runCatching { digits(parseApiDate(iso).atZone(TEHRAN).format(timeFormat)) }.getOrDefault("")
 
+    /** "۳ آبان" (or with [withYear], "۳ آبان ۱۴۰۵") for an API datetime, in the Jalali calendar. */
+    fun jalaliDate(iso: String, withYear: Boolean = false): String = runCatching {
+        val format = SimpleDateFormat(if (withYear) "d MMMM y" else "d MMMM", ULocale("fa_IR@calendar=persian"))
+        format.timeZone = TimeZone.getTimeZone("Asia/Tehran")
+        format.format(Date.from(parseApiDate(iso)))
+    }.getOrDefault("")
+
     /** "آبان ۱۴۰۵" for the current month. */
     fun jalaliMonthLabel(): String {
         val format = SimpleDateFormat("MMMM y", ULocale("fa_IR@calendar=persian"))

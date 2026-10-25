@@ -35,7 +35,8 @@ class ApiClient(cookieJar: PersistentCookieJar) {
     /** Fires whenever the server answers 401: the session cookie is gone or expired. */
     val unauthorized: SharedFlow<Unit> = _unauthorized
 
-    private val http = OkHttpClient.Builder()
+    /** Also used directly by the SMS upload worker, which talks to the token-auth webhook. */
+    val http: OkHttpClient = OkHttpClient.Builder()
         .cookieJar(cookieJar)
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
