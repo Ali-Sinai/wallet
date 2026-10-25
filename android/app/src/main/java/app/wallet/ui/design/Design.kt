@@ -224,7 +224,7 @@ fun DesignCard(modifier: Modifier = Modifier, padding: Dp = 16.dp, content: @Com
 
 /** Wallet Dark's big thin number; long amounts shrink to fit. */
 @Composable
-fun BigNumber(text: String, size: TextUnit = 56.sp, color: Color = Color.Unspecified, modifier: Modifier = Modifier) {
+fun BigNumber(text: String, modifier: Modifier = Modifier, size: TextUnit = 56.sp, color: Color = Color.Unspecified) {
     val scaled = if (text.length > 9) size * (9f / text.length).coerceAtLeast(0.6f) else size
     Text(
         text,
