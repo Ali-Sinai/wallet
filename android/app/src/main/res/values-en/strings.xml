@@ -236,4 +236,22 @@
     <string name="theme_soft_purple">Soft · Purple</string>
     <string name="theme_soft_green">Soft · Green</string>
     <string name="language">Language</string>
+
+    <string name="balance_toman">Balance · Toman</string>
+    <string name="new_sms">new SMS</string>
+    <string name="add_short">Add</string>
+    <string name="split_short">Split</string>
+    <string name="sms_short">SMS</string>
+    <string name="today_label">Recent</string>
+    <string name="split_bill">Split a bill</string>
+    <string name="pick_to_split">Which expense should we split?</string>
+    <string name="nothing_to_split">No expenses to split</string>
+    <string name="good_morning">Good morning!</string>
+    <string name="good_afternoon">Good afternoon!</string>
+    <string name="good_evening">Good evening!</string>
+    <string name="all_accounts">All accounts</string>
+    <string name="statistics">Statistics</string>
+    <string name="spent">Spent</string>
+    <string name="top_spending">Top spending</string>
+    <string name="results_count">%1$s transactions</string>
 </resources>

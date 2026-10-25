@@ -235,4 +235,22 @@
     <string name="theme_soft_purple">روشن · بنفش</string>
     <string name="theme_soft_green">روشن · سبز</string>
     <string name="language">زبان</string>
+
+    <string name="balance_toman">موجودی · تومان</string>
+    <string name="new_sms">پیامک جدید</string>
+    <string name="add_short">ثبت</string>
+    <string name="split_short">تقسیم</string>
+    <string name="sms_short">پیامک</string>
+    <string name="today_label">اخیر</string>
+    <string name="split_bill">تقسیم صورت‌حساب</string>
+    <string name="pick_to_split">کدام هزینه را تقسیم کنیم؟</string>
+    <string name="nothing_to_split">هزینه‌ای برای تقسیم نیست</string>
+    <string name="good_morning">صبح بخیر!</string>
+    <string name="good_afternoon">عصر بخیر!</string>
+    <string name="good_evening">شب بخیر!</string>
+    <string name="all_accounts">همه حساب‌ها</string>
+    <string name="statistics">آمار</string>
+    <string name="spent">هزینه شده</string>
+    <string name="top_spending">بیشترین هزینه‌ها</string>
+    <string name="results_count">%1$s تراکنش</string>
 </resources>
