@@ -1,0 +1,76 @@
+name: Android
+
+on:
+  push:
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  # Publishing a GitHub release builds that tag and attaches the signed APK to it.
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write # attaching the APK to a published release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    env:
+      # All optional; see android/README.md. Unset, the app builds with push off.
+      WALLET_FIREBASE_APP_ID: ${{ secrets.WALLET_FIREBASE_APP_ID }}
+      WALLET_FIREBASE_API_KEY: ${{ secrets.WALLET_FIREBASE_API_KEY }}
+      WALLET_FIREBASE_PROJECT_ID: ${{ secrets.WALLET_FIREBASE_PROJECT_ID }}
+      WALLET_FIREBASE_SENDER_ID: ${{ secrets.WALLET_FIREBASE_SENDER_ID }}
+      HAS_KEYSTORE: ${{ secrets.WALLET_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # The runner image already has the Android SDK; this only adds Gradle caching.
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wallet-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Build signed release APK
+        if: env.HAS_KEYSTORE == 'true'
+        env:
+          WALLET_KEYSTORE_BASE64: ${{ secrets.WALLET_KEYSTORE_BASE64 }}
+          WALLET_KEYSTORE_PASSWORD: ${{ secrets.WALLET_KEYSTORE_PASSWORD }}
+          WALLET_KEY_ALIAS: ${{ secrets.WALLET_KEY_ALIAS }}
+          WALLET_KEY_PASSWORD: ${{ secrets.WALLET_KEY_PASSWORD }}
+        run: |
+          echo "$WALLET_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          WALLET_KEYSTORE_PATH="$RUNNER_TEMP/release.jks" ./gradlew assembleRelease --stacktrace
+          rm "$RUNNER_TEMP/release.jks"
+
+      - uses: actions/upload-artifact@v4
+        if: env.HAS_KEYSTORE == 'true'
+        with:
+          name: wallet-release-apk
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Attach to the GitHub release
+        if: env.HAS_KEYSTORE == 'true' && github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/release/*.apk

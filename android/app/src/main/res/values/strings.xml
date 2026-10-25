@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">کیف پول</string>
+    <string name="app_tagline">ردیاب مالی شخصی</string>
+
+    <string name="login_title">ورود</string>
+    <string name="login_server">آدرس سرور</string>
+    <string name="login_server_hint">مثلاً wallet.example.com یا 192.168.1.10:8000</string>
+    <string name="login_username">نام کاربری</string>
+    <string name="login_password">رمز عبور</string>
+    <string name="login_submit">ورود</string>
+
+    <string name="error_invalid_credentials">نام کاربری یا رمز عبور اشتباه است</string>
+    <string name="error_network">اتصال به سرور برقرار نشد</string>
+    <string name="error_bad_server">آدرس سرور معتبر نیست</string>
+    <string name="error_server">خطای سرور: %1$s</string>
+    <string name="error_fields_required">همهٔ فیلدها را پر کنید</string>
+
+    <string name="startup_unreachable">سرور در دسترس نیست</string>
+    <string name="retry">تلاش دوباره</string>
+    <string name="change_server">تغییر سرور</string>
+
+    <string name="logout">خروج</string>
+    <string name="logout_confirm">از حساب %1$s روی %2$s خارج شوید؟</string>
+    <string name="cancel">انصراف</string>
+    <string name="loading">در حال بارگذاری…</string>
+    <string name="load_failed">بارگذاری نشد</string>
+
+    <string name="tab_home">خانه</string>
+    <string name="tab_activity">تراکنش‌ها</string>
+    <string name="add_transaction">تراکنش جدید</string>
+
+    <string name="balance">خالص این ماه</string>
+    <string name="toman">تومان</string>
+    <string name="toman_short">ت</string>
+    <string name="income">واریز</string>
+    <string name="expense">برداشت</string>
+    <string name="count_deposits">%1$s واریز</string>
+    <string name="count_withdrawals">%1$s برداشت</string>
+    <string name="daily_spend">هزینه روزانه — ۱۴ روز گذشته</string>
+    <string name="average">میانگین %1$s</string>
+    <string name="categories">دسته‌بندی‌ها</string>
+    <string name="recent">آخرین تراکنش‌ها</string>
+    <string name="see_all">همه</string>
+    <string name="uncategorized">دسته‌بندی نشده</string>
+    <string name="transaction">تراکنش</string>
+    <string name="no_transactions">تراکنشی نیست</string>
+
+    <string name="filter_all">همه</string>
+    <string name="search">جستجو در یادداشت و فروشنده</string>
+
+    <string name="amount">مبلغ</string>
+    <string name="account">حساب</string>
+    <string name="category">دسته‌بندی</string>
+    <string name="merchant">فروشنده</string>
+    <string name="note">یادداشت</string>
+    <string name="date">تاریخ</string>
+    <string name="source">منبع</string>
+    <string name="source_sms">پیامک</string>
+    <string name="source_manual">دستی</string>
+    <string name="source_split_settlement">تسویهٔ دنگ</string>
+    <string name="save">ذخیره</string>
+    <string name="close">بستن</string>
+    <string name="delete">حذف</string>
+    <string name="delete_confirm">این تراکنش حذف شود؟</string>
+    <string name="no_accounts">اول یک حساب در تنظیمات بسازید</string>
+    <string name="error_amount_required">مبلغ را وارد کنید</string>
+    <string name="shared">دنگی</string>
+
+    <string name="tab_inbox">پیامک‌ها</string>
+    <string name="inbox_empty">پیامکی در انتظار نیست</string>
+    <string name="inbox_pending">در انتظار تأیید · %1$s</string>
+    <string name="inbox_unparsed">خوانده نشد · %1$s</string>
+    <string name="no_card_in_sms">بدون شماره کارت</string>
+    <string name="pick_account">حساب این پیامک را انتخاب کنید</string>
+    <string name="confirm">تأیید</string>
+    <string name="ignore">نادیده</string>
+    <string name="resolve_manually">ثبت دستی</string>
+    <string name="paste_sms">چسباندن پیامک</string>
+    <string name="paste_hint">متن یک یا چند پیامک بانکی را بچسبانید؛ پیامک‌ها را با یک خط خالی از هم جدا کنید.</string>
+    <string name="paste_result">%1$s پیامک به صندوق اضافه شد</string>
+    <string name="send">ارسال</string>
+    <string name="pending_sms_banner">%1$s پیامک بانکی در انتظار تأیید</string>
+    <string name="review">بررسی</string>
+
+    <string name="sms_settings">تنظیمات پیامک</string>
+    <string name="sms_auto_read">خواندن خودکار پیامک بانک</string>
+    <string name="sms_auto_read_hint">پیامک‌های رسیده از فرستنده‌های بانکی (پایین) به سرور فرستاده می‌شوند؛ بقیهٔ پیامک‌ها از گوشی خارج نمی‌شوند.</string>
+    <string name="sms_permission_denied">بدون اجازهٔ دریافت پیامک این قابلیت کار نمی‌کند.</string>
+    <string name="sms_token">توکن API</string>
+    <string name="sms_token_hint">همان توکن وب‌هوکی که در تنظیمات نسخهٔ وب برای اپ‌های فورواردر ساخته‌اید.</string>
+    <string name="sms_token_rotate">ساخت توکن جدید</string>
+    <string name="sms_token_rotate_confirm">توکن قبلی از کار می‌افتد و اگر اپ فورواردر دیگری از آن استفاده می‌کند، دیگر پیامک نمی‌فرستد. ادامه می‌دهید؟</string>
+    <string name="sms_token_missing">بدون توکن، پیامکی فرستاده نمی‌شود.</string>
+    <string name="sms_senders">فرستنده‌های بانکی</string>
+    <string name="sms_senders_hint">از الگوهای پیامک فعال روی سرور گرفته می‌شود؛ برای فرستندهٔ جدید یک الگو بسازید.</string>
+    <string name="sms_senders_empty">هیچ الگوی فعالی با فرستنده روی سرور نیست، پس پیامکی فرستاده نمی‌شود.</string>
+    <string name="sms_senders_refresh">به‌روزرسانی از سرور</string>
+    <string name="sms_last_status">آخرین پیامک (%1$s): %2$s</string>
+    <string name="sms_status_parsed">خوانده شد و در صندوق است</string>
+    <string name="sms_status_unparsed">رسید ولی الگویی آن را نخواند</string>
+    <string name="sms_status_otp">رمز پویا — نام فروشنده ثبت شد</string>
+    <string name="sms_status_ignored_account">کارت در حساب‌ها نیست؛ نادیده گرفته شد</string>
+    <string name="sms_status_bad_token">توکن نامعتبر است</string>
+    <string name="sms_status_rejected">سرور پیامک را رد کرد</string>
+
+    <string name="settings">تنظیمات</string>
+    <string name="theme">پوسته</string>
+    <string name="accounts">حساب‌ها</string>
+    <string name="budgets">بودجه‌ها</string>
+    <string name="budget_this_month">بودجهٔ این ماه</string>
+    <string name="more">بیشتر</string>
+    <string name="add">افزودن</string>
+    <string name="inactive">غیرفعال</string>
+    <string name="budget_line">سقف ماهانه %1$s تومان</string>
+    <string name="delete_tap_again">برای حذف دوباره بزنید</string>
+    <string name="new_account">حساب جدید</string>
+    <string name="edit_account">ویرایش حساب</string>
+    <string name="name_fa">نام (فارسی)</string>
+    <string name="name_en">نام (انگلیسی)</string>
+    <string name="bank_name">بانک</string>
+    <string name="last4">۴ رقم آخر کارت</string>
+    <string name="active">فعال</string>
+    <string name="new_category">دسته‌بندی جدید</string>
+    <string name="edit_category">ویرایش دسته‌بندی</string>
+    <string name="icon">آیکون (ایموجی)</string>
+    <string name="color">رنگ</string>
+    <string name="new_budget">بودجهٔ جدید</string>
+    <string name="edit_budget">ویرایش بودجه</string>
+    <string name="budget_limit">سقف ماهانه (تومان)</string>
+
+    <string name="tab_people">اشخاص</string>
+    <string name="tab_reports">گزارش‌ها</string>
+    <string name="add_person">شخص جدید</string>
+    <string name="no_people">هنوز کسی اضافه نشده</string>
+    <string name="person_name">نام</string>
+    <string name="contact_note">یادداشت تماس</string>
+    <string name="owes_you">%1$s به شما بدهکار است</string>
+    <string name="you_owe">%1$s بدهکارید</string>
+    <string name="settled">تسویه</string>
+    <string name="open_debts">%1$s بدهی باز</string>
+    <string name="settle_up">تسویهٔ همه</string>
+    <string name="settle">تسویه</string>
+    <string name="debts">بدهی‌ها</string>
+    <string name="ledger">تراکنش‌های مشترک</string>
+    <string name="owed_to_me_short">طلب من</string>
+    <string name="i_owe_short">بدهی من</string>
+    <string name="remaining_of">مانده %1$s از %2$s</string>
+    <string name="edit">ویرایش</string>
+
+    <string name="split">دنگ کردن</string>
+    <string name="view_split">دنگ این تراکنش</string>
+    <string name="split_shares">سهم‌ها</string>
+    <string name="delete_split">حذف دنگ</string>
+    <string name="me">من</string>
+    <string name="i_paid">من پرداختم</string>
+    <string name="they_paid">دیگری پرداخت</string>
+    <string name="split_with">با چه کسانی؟</string>
+    <string name="include_me">سهم من هم حساب شود</string>
+    <string name="split_equal">مساوی</string>
+    <string name="split_amounts">مبلغ</string>
+    <string name="split_percentages">درصد</string>
+    <string name="split_each">هر نفر حدود %1$s تومان</string>
+    <string name="split_left_amount">مانده برای تقسیم: %1$s تومان</string>
+    <string name="split_left_percent">درصد باقی‌مانده: %1$s٪</string>
+
+    <string name="period_today">امروز</string>
+    <string name="period_week">این هفته</string>
+    <string name="period_month">این ماه</string>
+    <string name="period_all">همه</string>
+    <string name="income_vs_expense">درآمد و هزینه</string>
+    <string name="net_line">خالص: %1$s تومان</string>
+    <string name="spend_over_time">هزینه در طول زمان</string>
+    <string name="month_over_month">این ماه در برابر ماه قبل</string>
+    <string name="previous_month">ماه قبل %1$s</string>
+    <string name="new_this_month">جدید</string>
+    <string name="by_account">به تفکیک حساب</string>
+
+    <string-array name="weekdays_short">
+        <item>ش</item>
+        <item>ی</item>
+        <item>د</item>
+        <item>س</item>
+        <item>چ</item>
+        <item>پ</item>
+        <item>ج</item>
+    </string-array>
+    <string name="previous">قبلی</string>
+    <string name="next">بعدی</string>
+    <string name="edit_transaction">ویرایش تراکنش</string>
+    <string name="queued_offline">آفلاین هستید؛ تراکنش ذخیره شد و با وصل شدن اینترنت ارسال می‌شود.</string>
+
+    <string name="sms_patterns">الگوهای پیامک</string>
+    <string name="sms_patterns_empty">الگویی تعریف نشده</string>
+    <string name="any_sender">هر فرستنده</string>
+    <string name="kind_transaction">تراکنش</string>
+    <string name="kind_otp">رمز پویا</string>
+    <string name="new_pattern">الگوی جدید</string>
+    <string name="edit_pattern">ویرایش الگو</string>
+    <string name="pattern_name">نام الگو</string>
+    <string name="pattern_sender">فرستنده</string>
+    <string name="pattern_sender_hint">بخشی از شمارهٔ فرستنده، مثلاً 9810002؛ خالی یعنی هر فرستنده.</string>
+    <string name="pattern_regex">عبارت باقاعده</string>
+    <string name="pattern_regex_hint">با گروه‌های (?P&lt;amount&gt;…)، (?P&lt;type&gt;…)، (?P&lt;account&gt;…)، (?P&lt;datetime&gt;…)، (?P&lt;merchant&gt;…) — به سبک پایتون.</string>
+    <string name="unit_rial">ریال</string>
+    <string name="pattern_test">آزمایش روی یک پیامک</string>
+    <string name="pattern_test_hint">متن یک پیامک بانکی</string>
+    <string name="pattern_run_test">ذخیره و آزمایش</string>
+    <string name="pattern_no_match">الگو با این پیامک جور نشد</string>
+    <string name="pattern_matched">جور شد</string>
+
+    <string name="notifications">اعلان‌ها</string>
+    <string name="channel_sms">پیامک‌های بانکی</string>
+    <string name="channel_server">اعلان‌های سرور</string>
+    <string name="notify_sms_title">پیامک بانکی جدید</string>
+    <string name="notify_sms_body">برای تأیید و دسته‌بندی، صندوق پیامک را باز کنید.</string>
+    <string name="notify_allow">اجازهٔ اعلان</string>
+    <string name="notify_allow_hint">برای خبر دادن از پیامک‌های بانکی تازه و اعلان‌های سرور.</string>
+    <string name="notify_push">اعلان از سرور</string>
+    <string name="notify_push_hint">خلاصهٔ دوره‌ای و یادآوری تراکنش‌های دسته‌بندی‌نشده.</string>
+    <string name="notify_push_not_built">این نسخهٔ اپ بدون تنظیمات Firebase ساخته شده است.</string>
+    <string name="notify_push_server_off">Firebase روی سرور تنظیم نشده است.</string>
+    <string name="notify_summary">خلاصه</string>
+    <string name="summary_off">خاموش</string>
+    <string name="summary_weekly">هفتگی</string>
+    <string name="summary_monthly">ماهانه</string>
+    <string name="notify_threshold">یادآوری پس از این تعداد دسته‌بندی‌نشده</string>
+
+    <string name="percent_sign">٪</string>
+    <string name="theme_classic">کلاسیک</string>
+    <string name="theme_dark_red">تیره · قرمز</string>
+    <string name="theme_dark_purple">تیره · بنفش</string>
+    <string name="theme_dark_green">تیره · سبز</string>
+    <string name="theme_soft_mono">روشن · تک‌رنگ</string>
+    <string name="theme_soft_purple">روشن · بنفش</string>
+    <string name="theme_soft_green">روشن · سبز</string>
+    <string name="language">زبان</string>
+</resources>

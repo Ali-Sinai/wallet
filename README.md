@@ -24,6 +24,10 @@ Design source: [`Design/iranian-finance-tracking-app`](Design/iranian-finance-tr
 - Every `/api` error response carries a `request_body` field alongside `detail`, holding the payload the sender sent — parsed JSON when it was valid, raw text when it wasn't, with password/token/secret values redacted. It's what makes a rejected request from a phone or an offline-queue replay reconstructable after the fact; see `backend/app/errors.py`.
 - Firebase Cloud Messaging (push notifications) is fully optional. Without a service-account file configured, the app boots normally with push disabled — nothing else depends on it.
 
+## Android app
+
+A native Android client (Kotlin + Jetpack Compose) lives in [`android/`](android/README.md). It talks to this backend's `/api` like the web frontend does and needs no backend changes; it can also read bank SMS on the phone and post them to the webhook. GitHub Actions builds the APK on every push that touches `android/`.
+
 ## Setup — Docker (recommended)
 
 ```bash
