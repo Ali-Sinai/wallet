@@ -24,7 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import app.wallet.ui.home.HomeScreen
+import app.wallet.ui.SignedInApp
 import app.wallet.ui.login.LoginScreen
 import app.wallet.ui.login.LoginViewModel
 import app.wallet.ui.theme.WalletTheme
@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             WalletTheme {
                 val session: SessionViewModel = viewModel(
-                    factory = viewModelFactory { initializer { SessionViewModel(container.auth) } },
+                    factory = viewModelFactory { initializer { SessionViewModel(container.auth, container.api) } },
                 )
                 val state by session.state.collectAsStateWithLifecycle()
                 when (val s = state) {
@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
                         )
                         LoginScreen(login, onLoggedIn = session::loggedIn)
                     }
-                    is SessionState.LoggedIn -> HomeScreen(
+                    is SessionState.LoggedIn -> SignedInApp(
                         username = s.username,
                         serverUrl = session.serverUrl.orEmpty(),
                         onLogout = session::logout,

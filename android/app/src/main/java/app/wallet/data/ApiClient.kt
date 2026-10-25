@@ -2,7 +2,11 @@ package app.wallet.data
 
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -19,10 +23,17 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 class ApiError(val status: Int?, message: String?) : Exception(message)
 
 class ApiClient(cookieJar: PersistentCookieJar) {
+    @OptIn(ExperimentalSerializationApi::class)
     val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
+        namingStrategy = JsonNamingStrategy.SnakeCase
     }
+
+    private val _unauthorized = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Fires whenever the server answers 401: the session cookie is gone or expired. */
+    val unauthorized: SharedFlow<Unit> = _unauthorized
 
     private val http = OkHttpClient.Builder()
         .cookieJar(cookieJar)
@@ -50,6 +61,7 @@ class ApiClient(cookieJar: PersistentCookieJar) {
     suspend fun <T> call(block: suspend () -> T): T = try {
         block()
     } catch (e: HttpException) {
+        if (e.code() == 401) _unauthorized.tryEmit(Unit)
         throw ApiError(e.code(), e.response()?.errorBody()?.string()?.let(::detailOf))
     } catch (e: IOException) {
         throw ApiError(null, e.message)

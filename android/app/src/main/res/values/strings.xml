@@ -20,8 +20,50 @@
     <string name="retry">تلاش دوباره</string>
     <string name="change_server">تغییر سرور</string>
 
-    <string name="home_greeting">سلام %1$s</string>
-    <string name="home_connected_to">متصل به %1$s</string>
-    <string name="home_placeholder">داشبورد در مرحلهٔ بعد اضافه می‌شود.</string>
     <string name="logout">خروج</string>
+    <string name="logout_confirm">از حساب %1$s روی %2$s خارج شوید؟</string>
+    <string name="cancel">انصراف</string>
+    <string name="loading">در حال بارگذاری…</string>
+    <string name="load_failed">بارگذاری نشد</string>
+
+    <string name="tab_home">خانه</string>
+    <string name="tab_activity">تراکنش‌ها</string>
+    <string name="add_transaction">تراکنش جدید</string>
+
+    <string name="balance">خالص این ماه</string>
+    <string name="toman">تومان</string>
+    <string name="toman_short">ت</string>
+    <string name="income">واریز</string>
+    <string name="expense">برداشت</string>
+    <string name="count_deposits">%1$s واریز</string>
+    <string name="count_withdrawals">%1$s برداشت</string>
+    <string name="daily_spend">هزینه روزانه — ۱۴ روز گذشته</string>
+    <string name="average">میانگین %1$s</string>
+    <string name="categories">دسته‌بندی‌ها</string>
+    <string name="recent">آخرین تراکنش‌ها</string>
+    <string name="see_all">همه</string>
+    <string name="uncategorized">دسته‌بندی نشده</string>
+    <string name="transaction">تراکنش</string>
+    <string name="no_transactions">تراکنشی نیست</string>
+
+    <string name="filter_all">همه</string>
+    <string name="search">جستجو در یادداشت و فروشنده</string>
+
+    <string name="amount">مبلغ</string>
+    <string name="account">حساب</string>
+    <string name="category">دسته‌بندی</string>
+    <string name="merchant">فروشنده</string>
+    <string name="note">یادداشت</string>
+    <string name="date">تاریخ</string>
+    <string name="source">منبع</string>
+    <string name="source_sms">پیامک</string>
+    <string name="source_manual">دستی</string>
+    <string name="source_split_settlement">تسویهٔ دنگ</string>
+    <string name="save">ذخیره</string>
+    <string name="close">بستن</string>
+    <string name="delete">حذف</string>
+    <string name="delete_confirm">این تراکنش حذف شود؟</string>
+    <string name="no_accounts">اول یک حساب در تنظیمات نسخهٔ وب بسازید</string>
+    <string name="error_amount_required">مبلغ را وارد کنید</string>
+    <string name="shared">دنگی</string>
 </resources>

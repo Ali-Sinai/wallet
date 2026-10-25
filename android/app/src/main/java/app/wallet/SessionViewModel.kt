@@ -2,6 +2,7 @@ package app.wallet
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.wallet.data.ApiClient
 import app.wallet.data.ApiError
 import app.wallet.data.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,7 @@ sealed interface SessionState {
 }
 
 /** Decides which screen the app shows: login, or the signed-in app. */
-class SessionViewModel(private val auth: AuthRepository) : ViewModel() {
+class SessionViewModel(private val auth: AuthRepository, api: ApiClient) : ViewModel() {
     private val _state = MutableStateFlow<SessionState>(SessionState.Checking)
     val state: StateFlow<SessionState> = _state.asStateFlow()
 
@@ -27,6 +28,12 @@ class SessionViewModel(private val auth: AuthRepository) : ViewModel() {
 
     init {
         check()
+        viewModelScope.launch {
+            // Any 401 mid-session means the cookie expired: back to the login screen.
+            api.unauthorized.collect {
+                if (_state.value is SessionState.LoggedIn) _state.value = SessionState.LoggedOut
+            }
+        }
     }
 
     fun check() {

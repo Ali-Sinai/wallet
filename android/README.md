@@ -33,6 +33,6 @@ gets `http://`.
 ## Roadmap
 
 1. ✅ Project skeleton, CI build, login
-2. Dashboard, transaction list, adding a transaction
+2. ✅ Home (net, in/out, daily spend, categories, recent), transaction list with search and filter, transaction detail and delete, adding a transaction
 3. SMS inbox, and reading bank SMS on the phone directly
 4. Reports, people and splits, settings, themes

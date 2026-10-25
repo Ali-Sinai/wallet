@@ -32,6 +32,8 @@ object WalletColors {
     val Income = Color(0xFF3FD39A)
     val Expense = Color(0xFFFF7A6B)
     val Border = Color(0x12FFFFFF) // ink at 7%
+    val BarIdle = Color(0xFF1F2B27)
+    val TabBar = Color(0xFF0A0C0B)
 }
 
 val Rooyin = FontFamily(
