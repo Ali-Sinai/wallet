@@ -53,7 +53,7 @@ import app.wallet.util.Fmt
 @Suppress("UNCHECKED_CAST")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PersonScreen(vm: PersonViewModel, onClose: () -> Unit, onSplit: (Long) -> Unit) {
+fun PersonScreen(vm: PersonViewModel, onClose: () -> Unit, onSplit: (Long) -> Unit, onEdit: (Long) -> Unit) {
     var editing by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
@@ -149,6 +149,10 @@ fun PersonScreen(vm: PersonViewModel, onClose: () -> Unit, onSplit: (Long) -> Un
                 onSplit = {
                     vm.selected = null
                     onSplit(tx.id)
+                },
+                onEdit = {
+                    vm.selected = null
+                    onEdit(tx.id)
                 },
             )
         }

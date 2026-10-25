@@ -175,4 +175,18 @@
     <string name="previous_month">ماه قبل %1$s</string>
     <string name="new_this_month">جدید</string>
     <string name="by_account">به تفکیک حساب</string>
+
+    <string-array name="weekdays_short">
+        <item>ش</item>
+        <item>ی</item>
+        <item>د</item>
+        <item>س</item>
+        <item>چ</item>
+        <item>پ</item>
+        <item>ج</item>
+    </string-array>
+    <string name="previous">قبلی</string>
+    <string name="next">بعدی</string>
+    <string name="edit_transaction">ویرایش تراکنش</string>
+    <string name="queued_offline">آفلاین هستید؛ تراکنش ذخیره شد و با وصل شدن اینترنت ارسال می‌شود.</string>
 </resources>

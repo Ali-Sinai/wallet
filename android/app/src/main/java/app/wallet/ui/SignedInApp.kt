@@ -70,9 +70,9 @@ private object Routes {
 
     fun person(id: Long) = "person/$id"
     fun split(txId: Long) = "split/$txId"
-    const val ADD = "add?attempt={attempt}"
+    const val ADD = "add?attempt={attempt}&tx={tx}"
 
-    fun add(attemptId: Long? = null) = if (attemptId == null) "add" else "add?attempt=$attemptId"
+    fun add(attemptId: Long? = null, txId: Long? = null) = "add?attempt=${attemptId ?: -1}&tx=${txId ?: -1}"
 }
 
 private data class Tab(val route: String, val label: Int, val icon: ImageVector)
@@ -122,6 +122,7 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                         onOpenInbox = { nav.switchTab(Routes.INBOX) },
                         onSettings = { nav.navigate(Routes.SETTINGS) },
                         onSplit = { nav.navigate(Routes.split(it)) },
+                        onEdit = { nav.navigate(Routes.add(txId = it)) },
                     )
                 }
                 composable(Routes.SETTINGS) {
@@ -139,7 +140,11 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                     )
                 }
                 composable(Routes.ACTIVITY) {
-                    ActivityScreen(appViewModel { ActivityViewModel(it.wallet) }, onSplit = { nav.navigate(Routes.split(it)) })
+                    ActivityScreen(
+                        appViewModel { ActivityViewModel(it.wallet) },
+                        onSplit = { nav.navigate(Routes.split(it)) },
+                        onEdit = { nav.navigate(Routes.add(txId = it)) },
+                    )
                 }
                 composable(Routes.PEOPLE) {
                     PeopleScreen(appViewModel { PeopleViewModel(it.wallet) }, onOpen = { nav.navigate(Routes.person(it)) })
@@ -153,6 +158,7 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                         appViewModel { PersonViewModel(it.wallet, id) },
                         onClose = { nav.popBackStack() },
                         onSplit = { nav.navigate(Routes.split(it)) },
+                        onEdit = { nav.navigate(Routes.add(txId = it)) },
                     )
                 }
                 composable(Routes.REPORTS) {
@@ -168,7 +174,7 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                 composable(Routes.INBOX) {
                     InboxScreen(
                         appViewModel { InboxViewModel(it.wallet, it.smsSettings) },
-                        onResolve = { id -> nav.navigate(Routes.add(id)) },
+                        onResolve = { id -> nav.navigate(Routes.add(attemptId = id)) },
                         onSettings = { nav.navigate(Routes.SMS_SETTINGS) },
                     )
                 }
@@ -180,11 +186,15 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                 }
                 composable(
                     Routes.ADD,
-                    arguments = listOf(navArgument("attempt") { type = NavType.LongType; defaultValue = -1L }),
+                    arguments = listOf(
+                        navArgument("attempt") { type = NavType.LongType; defaultValue = -1L },
+                        navArgument("tx") { type = NavType.LongType; defaultValue = -1L },
+                    ),
                 ) { entry ->
                     val attemptId = entry.arguments?.getLong("attempt")?.takeIf { it >= 0 }
+                    val txId = entry.arguments?.getLong("tx")?.takeIf { it >= 0 }
                     AddTransactionScreen(
-                        appViewModel { AddTransactionViewModel(it.wallet, attemptId) },
+                        appViewModel { AddTransactionViewModel(it.app, it.wallet, attemptId, txId) },
                         onClose = { nav.popBackStack() },
                     )
                 }

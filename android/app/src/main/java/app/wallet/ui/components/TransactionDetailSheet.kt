@@ -41,6 +41,7 @@ fun TransactionDetailSheet(
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
     onSplit: (() -> Unit)? = null,
+    onEdit: (() -> Unit)? = null,
 ) {
     var confirming by remember { mutableStateOf(false) }
 
@@ -89,6 +90,11 @@ fun TransactionDetailSheet(
                 ) + if (tx.isShared) " · " + stringResource(R.string.shared) else "",
             )
             Spacer(Modifier.height(8.dp))
+            if (onEdit != null) {
+                OutlinedButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.edit))
+                }
+            }
             if (onSplit != null && tx.direction == Direction.WITHDRAWAL) {
                 OutlinedButton(onClick = onSplit, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(if (tx.isShared) R.string.view_split else R.string.split))

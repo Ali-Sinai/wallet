@@ -46,6 +46,9 @@ interface WalletApi {
     @POST("api/transactions")
     suspend fun createTransaction(@Body body: TransactionIn): Transaction
 
+    @PATCH("api/transactions/{id}")
+    suspend fun updateTransaction(@Path("id") id: Long, @Body body: TransactionIn): Transaction
+
     @DELETE("api/transactions/{id}")
     suspend fun deleteTransaction(@Path("id") id: Long)
 

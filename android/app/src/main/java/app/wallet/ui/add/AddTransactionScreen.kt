@@ -21,6 +21,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import app.wallet.R
 import app.wallet.data.Direction
 import app.wallet.ui.components.ErrorBox
+import app.wallet.ui.components.JalaliDateTimeDialog
 import app.wallet.ui.components.LoadingBox
 import app.wallet.ui.components.displayName
 import app.wallet.ui.components.parseColor
@@ -53,6 +61,27 @@ import app.wallet.util.Fmt
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
+    var pickingDate by remember { mutableStateOf(false) }
+
+    if (pickingDate) {
+        JalaliDateTimeDialog(
+            initialMillis = vm.occurredAt,
+            onConfirm = {
+                vm.occurredAt = it
+                pickingDate = false
+            },
+            onDismiss = { pickingDate = false },
+        )
+    }
+
+    if (vm.queued) {
+        AlertDialog(
+            onDismissRequest = onClose,
+            text = { Text(stringResource(R.string.queued_offline)) },
+            confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.close)) } },
+        )
+    }
+
     Column(
         Modifier
             .fillMaxSize()
@@ -61,7 +90,13 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
         Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onClose) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close)) }
             Text(
-                stringResource(if (vm.attempt != null) R.string.resolve_manually else R.string.add_transaction),
+                stringResource(
+                    when {
+                        vm.attempt != null -> R.string.resolve_manually
+                        vm.editing != null -> R.string.edit_transaction
+                        else -> R.string.add_transaction
+                    },
+                ),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -146,6 +181,25 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
                             )
                         }
                     }
+                }
+
+                Label(R.string.date)
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(WalletColors.ink.copy(alpha = 0.05f))
+                        .clickable { pickingDate = true }
+                        .padding(horizontal = 14.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.DateRange, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "${Fmt.jalaliDate(vm.occurredAt)} · ${Fmt.time(vm.occurredAt)}",
+                        Modifier
+                            .weight(1f)
+                            .padding(horizontal = 10.dp),
+                    )
                 }
 
                 // A resolved SMS keeps the merchant the server already read from it.

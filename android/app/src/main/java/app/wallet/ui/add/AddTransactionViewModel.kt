@@ -1,6 +1,8 @@
 package app.wallet.ui.add
 
+import android.app.Application
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -10,22 +12,30 @@ import app.wallet.data.Direction
 import app.wallet.data.Lookups
 import app.wallet.data.ResolveSms
 import app.wallet.data.SmsAttempt
+import app.wallet.data.Transaction
 import app.wallet.data.TransactionIn
 import app.wallet.data.WalletRepository
+import app.wallet.offline.TransactionUploadWorker
+import app.wallet.util.Fmt
 import java.time.Instant
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * AddTransactionModal in frontend/src/components/AddTransactionModal.tsx.
- * With [attemptId], it records an SMS the server couldn't read instead
- * ("resolve manually"): the message is shown above the form, and saving
- * turns that inbox entry into the transaction.
+ * AddTransactionModal in frontend/src/components/AddTransactionModal.tsx,
+ * in one of three modes:
+ * - new (neither id): a manual transaction, queued for later when offline;
+ * - [attemptId]: records an SMS the server couldn't read ("resolve
+ *   manually") — the message is shown above the form, and saving turns that
+ *   inbox entry into the transaction;
+ * - [transactionId]: edits an existing transaction.
  */
 class AddTransactionViewModel(
+    private val app: Application,
     private val repo: WalletRepository,
     private val attemptId: Long? = null,
+    private val transactionId: Long? = null,
 ) : ViewModel() {
     /** Whole Toman, as typed on the keypad. */
     var amount by mutableStateOf("")
@@ -37,6 +47,7 @@ class AddTransactionViewModel(
     var merchant by mutableStateOf("")
         private set
     var note by mutableStateOf("")
+    var occurredAt by mutableLongStateOf(System.currentTimeMillis())
     var lookups by mutableStateOf<Lookups?>(null)
         private set
     var loadError by mutableStateOf<String?>(null)
@@ -48,6 +59,12 @@ class AddTransactionViewModel(
     var amountMissing by mutableStateOf(false)
         private set
     var attempt by mutableStateOf<SmsAttempt?>(null)
+        private set
+    var editing by mutableStateOf<Transaction?>(null)
+        private set
+
+    /** Set when the save went to the offline queue rather than the server. */
+    var queued by mutableStateOf(false)
         private set
 
     private var categoryTouched = false
@@ -66,6 +83,19 @@ class AddTransactionViewModel(
                     attempt = a
                     a?.amountCents?.let { amount = (it / 100).toString() }
                     a?.direction?.let { direction = it }
+                    (a?.occurredAt ?: a?.receivedAt)?.let { occurredAt = Fmt.parseApiDate(it).toEpochMilli() }
+                }
+                if (transactionId != null && editing == null) {
+                    val tx = repo.transaction(transactionId)
+                    editing = tx
+                    amount = (tx.amountCents / 100).toString()
+                    direction = tx.direction
+                    accountId = tx.accountId
+                    categoryId = tx.categoryId
+                    categoryTouched = true
+                    merchant = tx.merchantText.orEmpty()
+                    note = tx.note.orEmpty()
+                    occurredAt = Fmt.parseApiDate(tx.occurredAt).toEpochMilli()
                 }
                 val l = repo.lookups()
                 lookups = l
@@ -104,6 +134,16 @@ class AddTransactionViewModel(
         }
     }
 
+    /**
+     * The amount to save, in cents. An edited transaction keeps its exact
+     * cents (Toman can carry a fraction from a Rial SMS) unless the amount
+     * was actually changed.
+     */
+    private fun amountCents(toman: Long): Long {
+        val original = editing?.amountCents
+        return if (original != null && original / 100 == toman) original else toman * 100
+    }
+
     fun save(onSaved: () -> Unit) {
         if (saving) return
         val toman = amount.toLongOrNull()
@@ -112,40 +152,40 @@ class AddTransactionViewModel(
             return
         }
         val account = accountId ?: return
+        val at = Instant.ofEpochMilli(occurredAt).toString()
+        val body = TransactionIn(
+            amountCents = amountCents(toman),
+            direction = direction,
+            accountId = account,
+            occurredAt = at,
+            categoryId = categoryId,
+            note = note.trim().ifEmpty { null },
+            merchantText = merchant.trim().ifEmpty { null },
+        )
         saving = true
         error = null
         viewModelScope.launch {
             try {
                 val a = attempt
-                if (a != null) {
-                    repo.resolveSms(
+                val tx = editing
+                when {
+                    a != null -> repo.resolveSms(
                         a.id,
-                        ResolveSms(
-                            amountCents = toman * 100,
-                            direction = direction,
-                            accountId = account,
-                            occurredAt = a.occurredAt ?: a.receivedAt,
-                            categoryId = categoryId,
-                            note = note.trim().ifEmpty { null },
-                        ),
+                        ResolveSms(body.amountCents, direction, account, at, categoryId, body.note),
                     )
-                    onSaved()
-                    return@launch
+                    tx != null -> repo.updateTransaction(tx.id, body)
+                    else -> repo.createTransaction(body)
                 }
-                repo.createTransaction(
-                    TransactionIn(
-                        amountCents = toman * 100,
-                        direction = direction,
-                        accountId = account,
-                        occurredAt = Instant.now().toString(),
-                        categoryId = categoryId,
-                        note = note.trim().ifEmpty { null },
-                        merchantText = merchant.trim().ifEmpty { null },
-                    ),
-                )
                 onSaved()
             } catch (e: ApiError) {
-                error = e.message ?: e.status?.toString()
+                if (e.status == null && attempt == null && editing == null) {
+                    // Offline: keep it and send it when there's a network. A server rejection
+                    // is a real problem, though, and is shown rather than queued.
+                    TransactionUploadWorker.enqueue(app, body)
+                    queued = true
+                } else {
+                    error = e.message ?: e.status?.toString()
+                }
             } finally {
                 saving = false
             }

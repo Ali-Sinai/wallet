@@ -8,6 +8,7 @@ import app.wallet.data.ServerStore
 import app.wallet.data.WalletRepository
 import app.wallet.sms.SmsSettings
 import app.wallet.ui.theme.ThemeStore
+import app.wallet.util.Lang
 
 class WalletApp : Application() {
     lateinit var container: AppContainer
@@ -15,12 +16,13 @@ class WalletApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Lang.load(this)
         container = AppContainer(this)
     }
 }
 
 /** The app's singletons, built once at startup. */
-class AppContainer(app: Application) {
+class AppContainer(val app: Application) {
     private val cookies = PersistentCookieJar(app)
     val server = ServerStore(app)
     val api = ApiClient(cookies)

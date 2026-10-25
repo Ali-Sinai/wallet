@@ -34,7 +34,7 @@ import app.wallet.ui.components.TxRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActivityScreen(vm: ActivityViewModel, onSplit: (Long) -> Unit) {
+fun ActivityScreen(vm: ActivityViewModel, onSplit: (Long) -> Unit, onEdit: (Long) -> Unit) {
     Column(Modifier.fillMaxSize()) {
         Text(
             stringResource(R.string.tab_activity),
@@ -101,6 +101,10 @@ fun ActivityScreen(vm: ActivityViewModel, onSplit: (Long) -> Unit) {
                             onSplit = {
                                 vm.selected = null
                                 onSplit(tx.id)
+                            },
+                            onEdit = {
+                                vm.selected = null
+                                onEdit(tx.id)
                             },
                         )
                     }

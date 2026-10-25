@@ -170,6 +170,9 @@ class WalletRepository(private val auth: AuthRepository, private val client: Api
 
     suspend fun rotateWebhookToken(): String = client.call { api.rotateWebhookToken() }.token
 
+    suspend fun updateTransaction(id: Long, body: TransactionIn): Transaction =
+        client.call { api.updateTransaction(id, body) }.also { notifyChanged() }
+
     suspend fun deleteTransaction(id: Long) {
         client.call { api.deleteTransaction(id) }
         _changes.update { it + 1 }
