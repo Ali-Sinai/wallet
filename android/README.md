@@ -82,6 +82,17 @@ received offline still arrives.
 Google Play only allows SMS permissions for default SMS apps, so this app is
 meant to be installed from the APK, not published there.
 
+## Themes and design families
+
+The seven themes come from the web app and, like there, each belongs to a
+design family with its own layout, not just its own colours: classic (the
+original look), Wallet Dark (pure black, no cards, thin oversized numbers,
+mono amounts, text tabs, an icon-only tab bar) and Wallet Soft (grey canvas,
+white shadowed cards, round buttons, a swipeable stack of bank cards, a
+floating tab bar). `ui/design` holds the blocks every screen draws from in the
+active family; screens with a layout of their own per family (home,
+transactions, people, a person, reports) pick it with `family`.
+
 ## Language
 
 Persian by default, English from Settings → Language — strings in
