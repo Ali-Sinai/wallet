@@ -8,6 +8,8 @@ import app.wallet.data.ServerStore
 import app.wallet.data.WalletRepository
 import app.wallet.sms.SmsSettings
 import app.wallet.ui.theme.ThemeStore
+import app.wallet.notify.Notifications
+import app.wallet.notify.Push
 import app.wallet.util.Lang
 
 class WalletApp : Application() {
@@ -18,6 +20,8 @@ class WalletApp : Application() {
         super.onCreate()
         Lang.load(this)
         container = AppContainer(this)
+        Notifications.createChannels(this)
+        Push.init(this)
     }
 }
 

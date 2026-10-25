@@ -45,7 +45,7 @@ import app.wallet.util.Fmt
 import java.time.Instant
 
 @Composable
-fun SmsSettingsScreen(vm: SmsSettingsViewModel, onClose: () -> Unit) {
+fun SmsSettingsScreen(vm: SmsSettingsViewModel, onPatterns: () -> Unit, onClose: () -> Unit) {
     val context = LocalContext.current
     var permissionDenied by remember { mutableStateOf(false) }
     var confirmRotate by remember { mutableStateOf(false) }
@@ -116,8 +116,11 @@ fun SmsSettingsScreen(vm: SmsSettingsViewModel, onClose: () -> Unit) {
             for (sender in vm.senders) {
                 Text("• $sender", style = MaterialTheme.typography.bodyMedium.copy(textDirection = TextDirection.Ltr))
             }
-            TextButton(onClick = vm::refreshSenders, enabled = !vm.loadingSenders) {
-                Text(stringResource(R.string.sms_senders_refresh))
+            Row {
+                TextButton(onClick = vm::refreshSenders, enabled = !vm.loadingSenders) {
+                    Text(stringResource(R.string.sms_senders_refresh))
+                }
+                TextButton(onClick = onPatterns) { Text(stringResource(R.string.sms_patterns)) }
             }
 
             vm.lastStatus?.let { status ->

@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonElement
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -137,6 +138,21 @@ interface WalletApi {
     @GET("api/reports/by-account")
     suspend fun byAccount(@Query("period") period: String): List<AccountBreakdown>
 
+    @GET("api/push/status")
+    suspend fun pushStatus(): PushStatus
+
+    @POST("api/push/subscribe")
+    suspend fun pushSubscribe(@Body body: PushToken)
+
+    @HTTP(method = "DELETE", path = "api/push/subscribe", hasBody = true)
+    suspend fun pushUnsubscribe(@Body body: PushToken)
+
+    @GET("api/settings/notifications")
+    suspend fun notificationSettings(): NotificationSettings
+
+    @PATCH("api/settings/notifications")
+    suspend fun updateNotificationSettings(@Body body: NotificationSettings): NotificationSettings
+
     @GET("api/sms/pending")
     suspend fun smsPending(): List<SmsAttempt>
 
@@ -157,6 +173,18 @@ interface WalletApi {
 
     @GET("api/sms-patterns")
     suspend fun smsPatterns(): List<SmsPattern>
+
+    @POST("api/sms-patterns")
+    suspend fun createPattern(@Body body: SmsPatternIn): SmsPattern
+
+    @PATCH("api/sms-patterns/{id}")
+    suspend fun updatePattern(@Path("id") id: Long, @Body body: SmsPatternIn): SmsPattern
+
+    @DELETE("api/sms-patterns/{id}")
+    suspend fun deletePattern(@Path("id") id: Long)
+
+    @POST("api/sms-patterns/{id}/test")
+    suspend fun testPattern(@Path("id") id: Long, @Body body: PatternTest): PatternTestResult
 
     @POST("api/settings/webhook-token/rotate")
     suspend fun rotateWebhookToken(): WebhookToken
@@ -295,8 +323,34 @@ data class SmsPattern(
     val id: Long,
     val name: String,
     val senderMatch: String,
+    val bodyRegex: String = "",
+    /** "rial" or "toman": what the message's amount is written in. */
+    val amountUnit: String = "rial",
+    /** "transaction", or "otp" for a purchase-code message that names the seller. */
     val kind: String = "transaction",
     val enabled: Boolean = true,
+)
+
+@Serializable
+data class SmsPatternIn(
+    val name: String,
+    val senderMatch: String,
+    val bodyRegex: String,
+    val amountUnit: String,
+    val kind: String,
+    val enabled: Boolean,
+)
+
+@Serializable
+data class PatternTest(val sampleText: String)
+
+@Serializable
+data class PatternTestResult(
+    val matched: Boolean,
+    val kind: String? = null,
+    val groups: Map<String, String?> = emptyMap(),
+    val amountCents: Long? = null,
+    val warning: String? = null,
 )
 
 @Serializable
@@ -394,3 +448,13 @@ data class MonthCategoryDelta(
 
 @Serializable
 data class AccountBreakdown(val accountId: Long, val label: String, val totalInCents: Long, val totalOutCents: Long)
+
+@Serializable
+data class PushStatus(val enabled: Boolean)
+
+@Serializable
+data class PushToken(val fcmToken: String)
+
+/** When the server pushes: a summary ("off", "weekly", "monthly"), and after this many uncategorized transactions. */
+@Serializable
+data class NotificationSettings(val uncategorizedThreshold: Int, val summaryFrequency: String)

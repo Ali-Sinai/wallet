@@ -189,4 +189,40 @@
     <string name="next">بعدی</string>
     <string name="edit_transaction">ویرایش تراکنش</string>
     <string name="queued_offline">آفلاین هستید؛ تراکنش ذخیره شد و با وصل شدن اینترنت ارسال می‌شود.</string>
+
+    <string name="sms_patterns">الگوهای پیامک</string>
+    <string name="sms_patterns_empty">الگویی تعریف نشده</string>
+    <string name="any_sender">هر فرستنده</string>
+    <string name="kind_transaction">تراکنش</string>
+    <string name="kind_otp">رمز پویا</string>
+    <string name="new_pattern">الگوی جدید</string>
+    <string name="edit_pattern">ویرایش الگو</string>
+    <string name="pattern_name">نام الگو</string>
+    <string name="pattern_sender">فرستنده</string>
+    <string name="pattern_sender_hint">بخشی از شمارهٔ فرستنده، مثلاً 9810002؛ خالی یعنی هر فرستنده.</string>
+    <string name="pattern_regex">عبارت باقاعده</string>
+    <string name="pattern_regex_hint">با گروه‌های (?P&lt;amount&gt;…)، (?P&lt;type&gt;…)، (?P&lt;account&gt;…)، (?P&lt;datetime&gt;…)، (?P&lt;merchant&gt;…) — به سبک پایتون.</string>
+    <string name="unit_rial">ریال</string>
+    <string name="pattern_test">آزمایش روی یک پیامک</string>
+    <string name="pattern_test_hint">متن یک پیامک بانکی</string>
+    <string name="pattern_run_test">ذخیره و آزمایش</string>
+    <string name="pattern_no_match">الگو با این پیامک جور نشد</string>
+    <string name="pattern_matched">جور شد</string>
+
+    <string name="notifications">اعلان‌ها</string>
+    <string name="channel_sms">پیامک‌های بانکی</string>
+    <string name="channel_server">اعلان‌های سرور</string>
+    <string name="notify_sms_title">پیامک بانکی جدید</string>
+    <string name="notify_sms_body">برای تأیید و دسته‌بندی، صندوق پیامک را باز کنید.</string>
+    <string name="notify_allow">اجازهٔ اعلان</string>
+    <string name="notify_allow_hint">برای خبر دادن از پیامک‌های بانکی تازه و اعلان‌های سرور.</string>
+    <string name="notify_push">اعلان از سرور</string>
+    <string name="notify_push_hint">خلاصهٔ دوره‌ای و یادآوری تراکنش‌های دسته‌بندی‌نشده.</string>
+    <string name="notify_push_not_built">این نسخهٔ اپ بدون تنظیمات Firebase ساخته شده است.</string>
+    <string name="notify_push_server_off">Firebase روی سرور تنظیم نشده است.</string>
+    <string name="notify_summary">خلاصه</string>
+    <string name="summary_off">خاموش</string>
+    <string name="summary_weekly">هفتگی</string>
+    <string name="summary_monthly">ماهانه</string>
+    <string name="notify_threshold">یادآوری پس از این تعداد دسته‌بندی‌نشده</string>
 </resources>

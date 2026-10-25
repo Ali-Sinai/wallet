@@ -10,6 +10,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.wallet.WalletApp
+import app.wallet.notify.Notifications
 import java.io.IOException
 import java.time.Instant
 import java.util.concurrent.TimeUnit
@@ -63,6 +64,8 @@ class SmsUploadWorker(context: Context, params: WorkerParameters) : CoroutineWor
                             }.getOrNull()
                             settings.recordStatus(status ?: "parsed")
                             container.wallet.notifyChanged()
+                            // Only messages that land in the inbox need you; an OTP or an unknown card doesn't.
+                            if (status == "parsed" || status == "unparsed") Notifications.smsArrived(applicationContext)
                             Result.success()
                         }
                         response.code == 401 -> {

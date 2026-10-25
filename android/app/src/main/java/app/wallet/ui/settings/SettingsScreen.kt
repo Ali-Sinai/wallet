@@ -42,6 +42,7 @@ import app.wallet.R
 import app.wallet.data.Account
 import app.wallet.data.Budget
 import app.wallet.data.Category
+import app.wallet.ui.appViewModel
 import app.wallet.ui.components.ErrorBox
 import app.wallet.ui.components.Load
 import app.wallet.ui.components.LoadingBox
@@ -68,6 +69,7 @@ fun SettingsScreen(
     username: String,
     serverUrl: String,
     onSmsSettings: () -> Unit,
+    onSmsPatterns: () -> Unit,
     onLogout: () -> Unit,
     onClose: () -> Unit,
 ) {
@@ -90,6 +92,11 @@ fun SettingsScreen(
                 ) {
                     for (id in ThemeId.entries) ThemeSwatch(id, selected = id == theme, onClick = { onTheme(id) })
                 }
+            }
+
+            item {
+                SectionTitle(R.string.notifications)
+                NotificationsSection(appViewModel { NotificationsViewModel(it.app, it.wallet) })
             }
 
             when (val s = vm.state) {
@@ -131,6 +138,7 @@ fun SettingsScreen(
                     item {
                         SectionTitle(R.string.more)
                         Line(title = stringResource(R.string.sms_settings), onClick = onSmsSettings)
+                        Line(title = stringResource(R.string.sms_patterns), onClick = onSmsPatterns)
                         Line(
                             title = stringResource(R.string.logout),
                             sub = "$username · ${serverUrl.trimEnd('/')}",

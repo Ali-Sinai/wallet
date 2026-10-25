@@ -5,6 +5,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+/** A build-time setting from -P, gradle.properties or the environment (CI secrets); "" when unset. */
+fun setting(name: String): String = (project.findProperty(name) as String?) ?: System.getenv(name) ?: ""
+
 android {
     namespace = "app.wallet"
     compileSdk = 35
@@ -13,8 +16,14 @@ android {
         applicationId = "app.wallet"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.5.0"
+        versionCode = 6
+        versionName = "0.6.0"
+
+        // Push (Firebase Cloud Messaging) is optional: blank values build an app with push off.
+        buildConfigField("String", "FIREBASE_APP_ID", "\"${setting("WALLET_FIREBASE_APP_ID")}\"")
+        buildConfigField("String", "FIREBASE_API_KEY", "\"${setting("WALLET_FIREBASE_API_KEY")}\"")
+        buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${setting("WALLET_FIREBASE_PROJECT_ID")}\"")
+        buildConfigField("String", "FIREBASE_SENDER_ID", "\"${setting("WALLET_FIREBASE_SENDER_ID")}\"")
     }
 
     buildTypes {
@@ -34,6 +43,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -50,6 +60,7 @@ dependencies {
     implementation(libs.compose.material.icons.core)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.work.runtime)
+    implementation(libs.firebase.messaging)
     debugImplementation(libs.compose.ui.tooling)
 
     implementation(libs.kotlinx.serialization.json)

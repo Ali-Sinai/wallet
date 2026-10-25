@@ -142,6 +142,17 @@ class WalletRepository(private val auth: AuthRepository, private val client: Api
 
     suspend fun byAccount(period: String) = client.call { api.byAccount(period) }
 
+    suspend fun pushEnabledOnServer() = client.call { api.pushStatus() }.enabled
+
+    suspend fun pushSubscribe(token: String) = client.call { api.pushSubscribe(PushToken(token)) }
+
+    suspend fun pushUnsubscribe(token: String) = client.call { api.pushUnsubscribe(PushToken(token)) }
+
+    suspend fun notificationSettings() = client.call { api.notificationSettings() }
+
+    suspend fun saveNotificationSettings(body: NotificationSettings) =
+        client.call { api.updateNotificationSettings(body) }
+
     /** Something outside the repository (the SMS worker) changed server data. */
     fun notifyChanged() = _changes.update { it + 1 }
 
@@ -167,6 +178,13 @@ class WalletRepository(private val auth: AuthRepository, private val client: Api
         client.call { api.pasteSms(PasteSms(text)) }.also { notifyChanged() }
 
     suspend fun smsPatterns() = client.call { api.smsPatterns() }
+
+    suspend fun savePattern(id: Long?, body: SmsPatternIn): SmsPattern =
+        client.call { if (id == null) api.createPattern(body) else api.updatePattern(id, body) }
+
+    suspend fun deletePattern(id: Long) = client.call { api.deletePattern(id) }
+
+    suspend fun testPattern(id: Long, sample: String) = client.call { api.testPattern(id, PatternTest(sample)) }
 
     suspend fun rotateWebhookToken(): String = client.call { api.rotateWebhookToken() }.token
 

@@ -1,5 +1,7 @@
 package app.wallet
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +20,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,15 +30,29 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import app.wallet.notify.Notifications
 import app.wallet.ui.SignedInApp
 import app.wallet.ui.login.LoginScreen
 import app.wallet.ui.login.LoginViewModel
 import app.wallet.ui.theme.WalletTheme
 import app.wallet.ui.theme.paletteFor
+import app.wallet.util.Lang
 
 class MainActivity : ComponentActivity() {
+    /** The screen a tapped notification asked for; consumed by SignedInApp. */
+    private var openRequest by mutableStateOf<String?>(null)
+
+    // Resources in the language chosen in settings, not the phone's.
+    override fun attachBaseContext(newBase: Context) = super.attachBaseContext(Lang.wrap(newBase))
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        openRequest = intent.getStringExtra(Notifications.EXTRA_OPEN)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        openRequest = intent?.getStringExtra(Notifications.EXTRA_OPEN)
         enableEdgeToEdge()
         val container = (application as WalletApp).container
         setContent {
@@ -62,6 +80,8 @@ class MainActivity : ComponentActivity() {
                         LoginScreen(login, onLoggedIn = session::loggedIn)
                     }
                     is SessionState.LoggedIn -> SignedInApp(
+                        openRequest = openRequest,
+                        onOpenHandled = { openRequest = null },
                         username = s.username,
                         serverUrl = session.serverUrl.orEmpty(),
                         onLogout = session::logout,

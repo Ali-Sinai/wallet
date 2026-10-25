@@ -21,6 +21,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -34,6 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.wallet.R
+import app.wallet.notify.Notifications
 import app.wallet.ui.activity.ActivityScreen
 import app.wallet.ui.activity.ActivityViewModel
 import app.wallet.ui.add.AddTransactionScreen
@@ -42,6 +44,10 @@ import app.wallet.ui.home.HomeScreen
 import app.wallet.ui.home.HomeViewModel
 import app.wallet.ui.inbox.InboxScreen
 import app.wallet.ui.inbox.InboxViewModel
+import app.wallet.ui.inbox.SmsPatternScreen
+import app.wallet.ui.inbox.SmsPatternViewModel
+import app.wallet.ui.inbox.SmsPatternsScreen
+import app.wallet.ui.inbox.SmsPatternsViewModel
 import app.wallet.ui.inbox.SmsSettingsScreen
 import app.wallet.ui.inbox.SmsSettingsViewModel
 import app.wallet.ui.people.PeopleScreen
@@ -63,6 +69,10 @@ private object Routes {
     const val INBOX = "inbox"
     const val SMS_SETTINGS = "sms-settings"
     const val SETTINGS = "settings"
+    const val SMS_PATTERNS = "sms-patterns"
+    const val SMS_PATTERN = "sms-pattern/{id}"
+
+    fun smsPattern(id: Long?) = "sms-pattern/${id ?: -1}"
     const val PEOPLE = "people"
     const val PERSON = "person/{id}"
     const val REPORTS = "reports"
@@ -88,7 +98,13 @@ private val tabs = listOf(
 /** Everything behind the login: the bottom tabs and the screens they open. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
+fun SignedInApp(
+    openRequest: String?,
+    onOpenHandled: () -> Unit,
+    username: String,
+    serverUrl: String,
+    onLogout: () -> Unit,
+) {
     val nav = rememberNavController()
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
@@ -135,6 +151,7 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                         username = username,
                         serverUrl = serverUrl,
                         onSmsSettings = { nav.navigate(Routes.SMS_SETTINGS) },
+                        onSmsPatterns = { nav.navigate(Routes.SMS_PATTERNS) },
                         onLogout = onLogout,
                         onClose = { nav.popBackStack() },
                     )
@@ -181,8 +198,23 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                 composable(Routes.SMS_SETTINGS) {
                     SmsSettingsScreen(
                         appViewModel { SmsSettingsViewModel(it.wallet, it.smsSettings) },
+                        onPatterns = { nav.navigate(Routes.SMS_PATTERNS) },
                         onClose = { nav.popBackStack() },
                     )
+                }
+                composable(Routes.SMS_PATTERNS) {
+                    SmsPatternsScreen(
+                        appViewModel { SmsPatternsViewModel(it.wallet, it.smsSettings) },
+                        onOpen = { id -> nav.navigate(Routes.smsPattern(id)) },
+                        onClose = { nav.popBackStack() },
+                    )
+                }
+                composable(
+                    Routes.SMS_PATTERN,
+                    arguments = listOf(navArgument("id") { type = NavType.LongType }),
+                ) { entry ->
+                    val id = entry.arguments?.getLong("id")?.takeIf { it >= 0 }
+                    SmsPatternScreen(appViewModel { SmsPatternViewModel(it.wallet, id) }, onClose = { nav.popBackStack() })
                 }
                 composable(
                     Routes.ADD,
@@ -200,6 +232,12 @@ fun SignedInApp(username: String, serverUrl: String, onLogout: () -> Unit) {
                 }
             }
         }
+    }
+
+    // After the NavHost above, so the graph exists when a notification asks for a tab.
+    LaunchedEffect(openRequest) {
+        if (openRequest == Notifications.OPEN_INBOX) nav.switchTab(Routes.INBOX)
+        if (openRequest != null) onOpenHandled()
     }
 }
 
