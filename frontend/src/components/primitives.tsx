@@ -164,7 +164,7 @@ export function GhostButton({
 /** Thin rounded meter used by the budget and breakdown rows. */
 export function Meter({ width, color, height = 7 }: { width: string; color: string; height?: number }) {
   return (
-    <div className="rounded-pill overflow-hidden" style={{ height, background: "rgba(255,255,255,.07)", marginTop: 7 }}>
+    <div className="rounded-pill overflow-hidden" style={{ height, background: "rgb(var(--ink-rgb) / .07)", marginTop: 7 }}>
       <div style={{ height: "100%", width, background: color }} />
     </div>
   );
@@ -179,7 +179,7 @@ export function Avatar({
   children,
   color,
   size = 36,
-  background = "#161c1a",
+  background = "var(--c-avatar)",
 }: {
   children: ReactNode;
   color: string;
@@ -198,7 +198,7 @@ export function Avatar({
 
 export function EmptyNote({ children, pad = 40 }: { children: ReactNode; pad?: number }) {
   return (
-    <div className="text-center text-[13px]" style={{ padding: `${pad}px 0`, color: "rgba(232,234,236,.35)" }}>
+    <div className="text-center text-[13px]" style={{ padding: `${pad}px 0`, color: "rgb(var(--fg-rgb) / .35)" }}>
       {children}
     </div>
   );
@@ -230,11 +230,11 @@ export function Overlay({
     return (
       <DialogPrimitive.Root open onOpenChange={onOpenChange}>
         <DialogPortal>
-          <DialogBackdrop className="z-40 bg-[rgba(4,6,5,.7)] backdrop-blur-none" />
+          <DialogBackdrop className="z-40 bg-[rgb(var(--scrim-rgb)/.7)] backdrop-blur-none" />
           <DialogViewport className="z-40 flex items-center justify-center p-6">
             <DialogPrimitive.Popup
               className="w-full overflow-y-auto rounded-modal bg-cardAlt fade-in outline-none"
-              style={{ maxWidth, maxHeight: "86vh", padding: 26, border: "1px solid rgba(255,255,255,.09)" }}
+              style={{ maxWidth, maxHeight: "86vh", padding: 26, border: "1px solid rgb(var(--ink-rgb) / .09)" }}
             >
               {children}
             </DialogPrimitive.Popup>
@@ -247,7 +247,7 @@ export function Overlay({
   return (
     <Drawer open onOpenChange={onOpenChange}>
       <DrawerPopup
-        backdropClassName="bg-[rgba(4,6,5,.66)] backdrop-blur-none"
+        backdropClassName="bg-[rgb(var(--scrim-rgb)/.66)] backdrop-blur-none"
         className="max-w-none rounded-t-sheet border-white/9 bg-cardAlt shadow-none before:hidden"
         style={{ maxHeight: sheetMaxHeight }}
       >
@@ -262,7 +262,7 @@ export function Overlay({
 export function OverlayHeader({ title, onClose, closeLabel }: { title: string; onClose: () => void; closeLabel: string }) {
   return (
     <div className="flex items-center justify-between">
-      <div className="text-[11.5px] md:text-xs" style={{ color: "rgba(232,234,236,.4)" }}>
+      <div className="text-[11.5px] md:text-xs" style={{ color: "rgb(var(--fg-rgb) / .4)" }}>
         {title}
       </div>
       <Button variant="plain" size="plain" className="text-[11.5px] md:text-xs text-primary" onClick={onClose}>
@@ -292,9 +292,9 @@ export function Field({
 }) {
   return (
     <label className="flex min-w-0 flex-1 flex-col" style={{ gap: 6 }}>
-      <span style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)" }}>{label}</span>
+      <span style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)" }}>{label}</span>
       {children}
-      {hint && <span style={{ fontSize: 10.5, color: "rgba(232,234,236,.35)" }}>{hint}</span>}
+      {hint && <span style={{ fontSize: 10.5, color: "rgb(var(--fg-rgb) / .35)" }}>{hint}</span>}
     </label>
   );
 }
@@ -361,7 +361,7 @@ export function ListRow({ children, actions }: { children: ReactNode; actions?: 
   return (
     <div
       className="flex items-center"
-      style={{ gap: 11, padding: "11px 13px", borderRadius: 14, background: "rgba(255,255,255,.04)" }}
+      style={{ gap: 11, padding: "11px 13px", borderRadius: 14, background: "rgb(var(--ink-rgb) / .04)" }}
     >
       <div className="min-w-0 flex-1">{children}</div>
       {actions && (

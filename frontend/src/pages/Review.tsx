@@ -66,7 +66,7 @@ export default function Review() {
   return (
     <AppShell sidebar={false}>
       <div className="mx-auto flex w-full flex-col items-center fade-in" style={{ maxWidth: 520, gap: 16, padding: "10px 22px 0" }}>
-        <div style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>
+        <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .45)" }}>
           {digits(index + 1)} / {digits(transactions.length)}
         </div>
 
@@ -78,12 +78,12 @@ export default function Review() {
                 fontSize: 30,
                 fontWeight: 700,
                 marginTop: 10,
-                color: signed < 0 ? "#ff7a6b" : "#3fd39a",
+                color: signed < 0 ? "var(--c-expense)" : "var(--c-income)",
               }}
             >
               {money(signed, true)}
             </div>
-            <div style={{ fontSize: 12, color: "rgba(232,234,236,.45)", marginTop: 8 }}>
+            <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .45)", marginTop: 8 }}>
               {localize(current.occurred_at_jalali)}
             </div>
           </Card>
@@ -102,7 +102,7 @@ export default function Review() {
                 padding: "16px 12px",
                 borderRadius: 16,
                 background: c.color,
-                color: "#04120c",
+                color: "var(--c-on-primary)",
                 fontSize: 13.5,
                 fontWeight: 700,
               }}
@@ -117,11 +117,11 @@ export default function Review() {
           ))}
         </div>
 
-        <div className="text-center" style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+        <div className="text-center" style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>
           {t.reviewHint}
         </div>
 
-        <Button variant="plain" size="plain" onClick={() => navigate("/")} style={{ fontSize: 12, color: "#0f9b6e" }}>
+        <Button variant="plain" size="plain" onClick={() => navigate("/")} style={{ fontSize: 12, color: "var(--c-primary)" }}>
           {t.backToDash}
         </Button>
       </div>

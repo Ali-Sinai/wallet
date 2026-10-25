@@ -22,7 +22,7 @@ function useTotals(balances: PersonBalance[] | undefined) {
 }
 
 function balanceColor(net: number): string {
-  return net > 0 ? "#3fd39a" : net < 0 ? "#ff7a6b" : "rgba(232,234,236,.45)";
+  return net > 0 ? "var(--c-income)" : net < 0 ? "var(--c-expense)" : "rgb(var(--fg-rgb) / .45)";
 }
 
 function useBalanceSub() {
@@ -45,16 +45,16 @@ function DesktopPeople() {
     <div className="flex flex-col fade-in" style={{ gap: 18 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14 }}>
         <div
-          style={{ padding: 20, borderRadius: 20, background: "#0e1110", border: "1px solid rgba(63,211,154,.25)" }}
+          style={{ padding: 20, borderRadius: 20, background: "var(--c-surface)", border: "1px solid rgb(var(--income-rgb) / .25)" }}
         >
-          <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)" }}>{t.owedToMe}</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: "#3fd39a", marginTop: 8 }}>{group(owed)}</div>
+          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)" }}>{t.owedToMe}</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: "var(--c-income)", marginTop: 8 }}>{group(owed)}</div>
         </div>
         <div
-          style={{ padding: 20, borderRadius: 20, background: "#0e1110", border: "1px solid rgba(255,122,107,.25)" }}
+          style={{ padding: 20, borderRadius: 20, background: "var(--c-surface)", border: "1px solid rgb(var(--expense-rgb) / .25)" }}
         >
-          <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)" }}>{t.iOwe}</div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: "#ff7a6b", marginTop: 8 }}>{group(owe)}</div>
+          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)" }}>{t.iOwe}</div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: "var(--c-expense)", marginTop: 8 }}>{group(owe)}</div>
         </div>
       </div>
 
@@ -69,14 +69,14 @@ function DesktopPeople() {
               <div
                 key={p.person_id}
                 className="flex items-center"
-                style={{ gap: 13, padding: "14px 0", borderBottom: "1px solid rgba(255,255,255,.05)" }}
+                style={{ gap: 13, padding: "14px 0", borderBottom: "1px solid rgb(var(--ink-rgb) / .05)" }}
               >
                 <Avatar color={color}>{initials(p.name)}</Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontSize: 14, fontWeight: 700 }}>
                     {p.name}
                   </div>
-                  <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.42)", marginTop: 2 }}>
+                  <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .42)", marginTop: 2 }}>
                     {sub(p.net_cents)}
                   </div>
                 </div>
@@ -91,10 +91,10 @@ function DesktopPeople() {
                     style={{
                       padding: "8px 13px",
                       borderRadius: 10,
-                      border: "1px solid rgba(255,255,255,.14)",
+                      border: "1px solid rgb(var(--ink-rgb) / .14)",
                       fontSize: 12,
                       fontWeight: 700,
-                      color: "rgba(232,234,236,.8)",
+                      color: "rgb(var(--fg-rgb) / .8)",
                     }}
                   >
                     <BusyLabel busy={settling}>{t.settleUp}</BusyLabel>
@@ -130,24 +130,24 @@ function MobilePeople() {
             flex: 1,
             padding: 13,
             borderRadius: 16,
-            background: "#101a16",
-            border: "1px solid rgba(15,155,110,.22)",
+            background: "var(--c-primary-tint)",
+            border: "1px solid rgb(var(--primary-rgb) / .22)",
           }}
         >
-          <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.5)" }}>{t.owedToMe}</div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: "#3fd39a", marginTop: 3 }}>{group(owed)}</div>
+          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .5)" }}>{t.owedToMe}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--c-income)", marginTop: 3 }}>{group(owed)}</div>
         </div>
         <div
           style={{
             flex: 1,
             padding: 13,
             borderRadius: 16,
-            background: "#1a1214",
-            border: "1px solid rgba(255,122,107,.22)",
+            background: "var(--c-expense-tint)",
+            border: "1px solid rgb(var(--expense-rgb) / .22)",
           }}
         >
-          <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.5)" }}>{t.iOwe}</div>
-          <div style={{ fontSize: 17, fontWeight: 700, color: "#ff7a6b", marginTop: 3 }}>{group(owe)}</div>
+          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .5)" }}>{t.iOwe}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--c-expense)", marginTop: 3 }}>{group(owe)}</div>
         </div>
       </div>
 
@@ -159,16 +159,16 @@ function MobilePeople() {
               key={p.person_id}
               onClick={() => navigate(`/people/${p.person_id}`)}
               className="flex cursor-pointer items-center"
-              style={{ gap: 12, padding: 13, borderRadius: 16, background: "#101318" }}
+              style={{ gap: 12, padding: 13, borderRadius: 16, background: "var(--c-surface-2)" }}
             >
-              <Avatar size={34} color={color} background="#1a201e">
+              <Avatar size={34} color={color} background="var(--c-avatar-2)">
                 {initials(p.name)}
               </Avatar>
               <div className="min-w-0 flex-1">
                 <div className="truncate" style={{ fontSize: 13.5, fontWeight: 700 }}>
                   {p.name}
                 </div>
-                <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
                   {sub(p.net_cents)}
                 </div>
               </div>

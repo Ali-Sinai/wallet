@@ -53,9 +53,9 @@ function useS() {
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
-    <div style={{ padding: 22, borderRadius: 20, background: "#0e1110", border: "1px solid rgba(255,255,255,.07)" }}>
+    <div style={{ padding: 22, borderRadius: 20, background: "var(--c-surface)", border: "1px solid rgb(var(--ink-rgb) / .07)" }}>
       <div style={{ fontSize: 15, fontWeight: 700 }}>{title}</div>
-      {hint && <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)", marginTop: 4 }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)", marginTop: 4 }}>{hint}</div>}
       <div className="flex flex-col" style={{ gap: 12, marginTop: 14 }}>
         {children}
       </div>
@@ -66,7 +66,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 function Rows({ children, empty }: { children: ReactNode[]; empty: string }) {
   const rows = children.filter(Boolean);
   if (rows.length === 0) {
-    return <div style={{ fontSize: 12, color: "rgba(232,234,236,.35)", padding: "6px 0" }}>{empty}</div>;
+    return <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .35)", padding: "6px 0" }}>{empty}</div>;
   }
   return (
     <div className="flex flex-col" style={{ gap: 8 }}>
@@ -99,8 +99,8 @@ function SaveRow({
           textAlign: "center",
           padding: "10px 0",
           borderRadius: 12,
-          background: "#0f9b6e",
-          color: "#04120c",
+          background: "var(--c-primary)",
+          color: "var(--c-on-primary)",
           fontSize: 12.5,
           fontWeight: 700,
         }}
@@ -113,8 +113,8 @@ function SaveRow({
           style={{
             padding: "10px 16px",
             borderRadius: 12,
-            border: "1px solid rgba(255,255,255,.14)",
-            color: "rgba(232,234,236,.7)",
+            border: "1px solid rgb(var(--ink-rgb) / .14)",
+            color: "rgb(var(--fg-rgb) / .7)",
             fontSize: 12.5,
             fontWeight: 700,
           }}
@@ -163,9 +163,9 @@ export default function Settings() {
 /** Flaticon's free license requires attribution for the tab bar icons. */
 function IconCredit() {
   const s = useS();
-  const link = { color: "rgba(232,234,236,.55)", textDecoration: "underline" };
+  const link = { color: "rgb(var(--fg-rgb) / .55)", textDecoration: "underline" };
   return (
-    <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+    <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>
       {s.iconCredit}{" "}
       <a href="https://www.flaticon.com/authors/rajan-pyakurel" target="_blank" rel="noreferrer" style={link}>
         Rajan Pyakurel
@@ -198,8 +198,8 @@ function LogoutRow() {
       style={{
         padding: "10px 16px",
         borderRadius: 12,
-        border: "1px solid rgba(255,122,107,.35)",
-        color: "#ff7a6b",
+        border: "1px solid rgb(var(--expense-rgb) / .35)",
+        color: "var(--c-expense)",
         fontSize: 13,
         fontWeight: 700,
       }}
@@ -340,7 +340,7 @@ function AccountsSection() {
             <div className="truncate" style={{ fontSize: 13, fontWeight: 700 }}>
               {(fa ? a.name_fa : a.name_en) || a.bank_name}
             </div>
-            <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
               {a.bank_name} ····{digits(a.last4)} · {a.is_active ? s.active : s.inactive}
             </div>
           </ListRow>
@@ -382,7 +382,7 @@ const EMPTY_CATEGORY = {
   name_fa: "",
   name_en: "",
   icon: "💰",
-  color: "#0f9b6e",
+  color: "var(--c-primary)",
   parent_id: null as number | null,
   sort_order: 0,
 };
@@ -473,8 +473,8 @@ function CategoriesSection() {
               width: "100%",
               height: 38,
               borderRadius: 12,
-              background: "rgba(255,255,255,.05)",
-              border: "1px solid rgba(255,255,255,.09)",
+              background: "rgb(var(--ink-rgb) / .05)",
+              border: "1px solid rgb(var(--ink-rgb) / .09)",
               padding: 4,
             }}
           />
@@ -580,7 +580,7 @@ function BudgetsSection() {
               <div className="truncate" style={{ fontSize: 13, fontWeight: 700 }}>
                 {categoryName(category, fa, "—")}
               </div>
-              <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
                 {group(b.limit_cents)} · {b.month_jalali || s.everyMonth}
               </div>
             </ListRow>
@@ -672,7 +672,7 @@ function PeopleSection() {
               {p.name}
             </div>
             {p.contact_note && (
-              <div className="truncate" style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+              <div className="truncate" style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
                 {p.contact_note}
               </div>
             )}
@@ -751,8 +751,8 @@ function PushSection() {
           textAlign: "center",
           padding: "11px 0",
           borderRadius: 12,
-          background: "#0f9b6e",
-          color: "#04120c",
+          background: "var(--c-primary)",
+          color: "var(--c-on-primary)",
           fontSize: 12.5,
           fontWeight: 700,
           opacity: canEnable ? 1 : 0.4,
@@ -761,11 +761,11 @@ function PushSection() {
         <BusyLabel busy={enabling}>{s.enablePush}</BusyLabel>
       </Button>
       {!isFirebaseConfigured && (
-        <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)" }}>{s.firebaseIncomplete}</div>
+        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .45)" }}>{s.firebaseIncomplete}</div>
       )}
-      {message && <div style={{ fontSize: 11.5, color: "#0f9b6e" }}>{message}</div>}
+      {message && <div style={{ fontSize: 11.5, color: "var(--c-primary)" }}>{message}</div>}
 
-      <div style={{ height: 1, background: "rgba(255,255,255,.07)" }} />
+      <div style={{ height: 1, background: "rgb(var(--ink-rgb) / .07)" }} />
 
       <div className="flex" style={{ gap: 10 }}>
         <Field label={s.thresholdLabel}>
@@ -821,10 +821,10 @@ function WebhookSection() {
           textAlign: "center",
           padding: "11px 0",
           borderRadius: 12,
-          border: "1px solid rgba(255,255,255,.14)",
+          border: "1px solid rgb(var(--ink-rgb) / .14)",
           fontSize: 12.5,
           fontWeight: 700,
-          color: "rgba(232,234,236,.8)",
+          color: "rgb(var(--fg-rgb) / .8)",
         }}
       >
         <BusyLabel busy={rotate.isPending}>{s.generateToken}</BusyLabel>
@@ -833,10 +833,10 @@ function WebhookSection() {
         <div
           className="select-all break-all font-mono"
           dir="ltr"
-          style={{ padding: 12, borderRadius: 12, background: "rgba(255,255,255,.05)", fontSize: 11 }}
+          style={{ padding: 12, borderRadius: 12, background: "rgb(var(--ink-rgb) / .05)", fontSize: 11 }}
         >
           {token}
-          <div dir="auto" style={{ fontSize: 10.5, color: "#ff7a6b", marginTop: 8 }}>
+          <div dir="auto" style={{ fontSize: 10.5, color: "var(--c-expense)", marginTop: 8 }}>
             {s.tokenOnce}
           </div>
         </div>
@@ -851,11 +851,11 @@ function WebhookSection() {
 
 const TEXTAREA_STYLE = {
   fontSize: 11,
-  background: "rgba(0,0,0,.3)",
+  background: "var(--c-well)",
   borderRadius: 10,
   padding: 8,
-  color: "#e8eaec",
-  border: "1px solid rgba(255,255,255,.07)",
+  color: "var(--c-fg)",
+  border: "1px solid rgb(var(--ink-rgb) / .07)",
   outline: "none",
 } as const;
 
@@ -884,7 +884,7 @@ function SmsPatternsSection() {
           <div
             key={p.id}
             className="flex flex-col"
-            style={{ gap: 8, padding: 12, borderRadius: 14, background: "rgba(255,255,255,.04)" }}
+            style={{ gap: 8, padding: 12, borderRadius: 14, background: "rgb(var(--ink-rgb) / .04)" }}
           >
             <div className="flex items-center justify-between" style={{ gap: 8 }}>
               <div className="min-w-0 truncate" style={{ fontSize: 13, fontWeight: 700 }}>
@@ -901,7 +901,7 @@ function SmsPatternsSection() {
               </div>
             </div>
             <div className="flex items-center" style={{ gap: 6 }}>
-              <div dir="ltr" className="min-w-0 truncate" style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+              <div dir="ltr" className="min-w-0 truncate" style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>
                 sender: {p.sender_match}
               </div>
               {p.kind === "otp" && (
@@ -960,7 +960,7 @@ function SmsPatternsSection() {
                   <pre
                     dir="ltr"
                     className="overflow-x-auto"
-                    style={{ fontSize: 10, background: "rgba(0,0,0,.4)", borderRadius: 10, padding: 8 }}
+                    style={{ fontSize: 10, background: "var(--c-well)", borderRadius: 10, padding: 8 }}
                   >
                     {testResult}
                   </pre>
@@ -971,8 +971,8 @@ function SmsPatternsSection() {
         ))}
       </Rows>
 
-      <div style={{ height: 1, background: "rgba(255,255,255,.07)" }} />
-      <div style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>{s.addPatternLabel}</div>
+      <div style={{ height: 1, background: "rgb(var(--ink-rgb) / .07)" }} />
+      <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .45)" }}>{s.addPatternLabel}</div>
       <Select
         value={form.kind}
         onChange={(v) => setForm({ ...form, kind: v as PatternKind })}
@@ -981,7 +981,7 @@ function SmsPatternsSection() {
           { value: "otp", label: s.otpKind },
         ]}
       />
-      <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)" }}>
+      <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)" }}>
         {form.kind === "otp" ? s.otpKindHint : s.transactionKindHint}
       </div>
       <Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder={s.namePlaceholder} />
@@ -998,7 +998,7 @@ function SmsPatternsSection() {
         value={form.body_regex}
         onChange={(e) => setForm({ ...form, body_regex: e.target.value })}
         className="inline-block min-h-0 field-sizing-fixed font-mono leading-[1.5] md:text-[11px]"
-        style={{ ...TEXTAREA_STYLE, background: "rgba(255,255,255,.05)", borderRadius: 12, padding: 10 }}
+        style={{ ...TEXTAREA_STYLE, background: "rgb(var(--ink-rgb) / .05)", borderRadius: 12, padding: 10 }}
       />
       <SaveRow
         saveLabel={s.addPattern}

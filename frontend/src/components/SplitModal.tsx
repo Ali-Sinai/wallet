@@ -112,7 +112,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
     (method !== "percentages" || percentRemaining === 0) &&
     (method !== "items" || (items.length > 0 && itemsRemaining === 0));
 
-  const shareColor = mode === "i_paid" ? "#3fd39a" : "#ff7a6b";
+  const shareColor = mode === "i_paid" ? "var(--c-income)" : "var(--c-expense)";
   const shareSub = mode === "i_paid" ? t.owes : t.youOwe;
 
   return (
@@ -122,7 +122,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
       <div style={{ fontSize: 16, fontWeight: 700, marginTop: 10 }}>{txTitle(tx, t.transaction)}</div>
       <div className="flex items-baseline" style={{ gap: 6 }}>
         <span style={{ fontSize: 30, fontWeight: 700 }}>{group(total)}</span>
-        <span style={{ fontSize: 13, color: "rgba(232,234,236,.45)" }}>{t.tomanShort}</span>
+        <span style={{ fontSize: 13, color: "rgb(var(--fg-rgb) / .45)" }}>{t.tomanShort}</span>
       </div>
 
       <div className="flex flex-col" style={{ gap: 7, marginTop: 16 }}>
@@ -142,9 +142,9 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
               fontSize: 13,
               fontWeight: 700,
               textAlign: "start",
-              background: mode === m ? "#0f9b6e" : "transparent",
-              color: mode === m ? "#04120c" : "rgba(232,234,236,.7)",
-              border: `1px solid ${mode === m ? "#0f9b6e" : "rgba(255,255,255,.14)"}`,
+              background: mode === m ? "var(--c-primary)" : "transparent",
+              color: mode === m ? "var(--c-on-primary)" : "rgb(var(--fg-rgb) / .7)",
+              border: `1px solid ${mode === m ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .14)"}`,
             }}
           >
             {label}
@@ -169,7 +169,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
 
       <label
         className="flex cursor-pointer items-center"
-        style={{ gap: 8, marginTop: 12, fontSize: 12, color: "rgba(232,234,236,.6)" }}
+        style={{ gap: 8, marginTop: 12, fontSize: 12, color: "rgb(var(--fg-rgb) / .6)" }}
       >
         <Checkbox checked={includeMe} onCheckedChange={(checked) => setIncludeMe(checked)} />
         {t.includeMe}
@@ -177,7 +177,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
 
       {method === "equal" && (
         <>
-          <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.quick}</div>
+          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 18 }}>{t.quick}</div>
           <div className="flex" style={{ gap: 8, marginTop: 9 }}>
             {[2, 3, 4].map((n) => (
               <Button variant="plain" size="plain"
@@ -189,12 +189,12 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
                   padding: "13px 0",
                   textAlign: "center",
                   borderRadius: 15,
-                  background: ways === n ? "#12241d" : "#141820",
-                  border: `1px solid ${ways === n ? "#0f9b6e" : "rgba(255,255,255,.07)"}`,
+                  background: ways === n ? "var(--c-primary-tint-2)" : "var(--c-surface-3)",
+                  border: `1px solid ${ways === n ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .07)"}`,
                 }}
               >
                 <div style={{ fontSize: 17, fontWeight: 700 }}>÷{digits(n)}</div>
-                <div style={{ fontSize: 10.5, color: "rgba(232,234,236,.45)", marginTop: 3 }}>
+                <div style={{ fontSize: 10.5, color: "rgb(var(--fg-rgb) / .45)", marginTop: 3 }}>
                   {short(Math.floor(total / n))}
                 </div>
               </Button>
@@ -203,7 +203,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
         </>
       )}
 
-      <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.who}</div>
+      <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 18 }}>{t.who}</div>
       <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
         {people?.map((p) => (
           <Chip
@@ -221,8 +221,8 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
       {method === "equal" && (
         <>
           <div className="flex items-baseline justify-between" style={{ marginTop: 18 }}>
-            <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)" }}>{t.perPerson}</div>
-            <div style={{ fontSize: 12, color: "rgba(232,234,236,.5)" }}>
+            <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)" }}>{t.perPerson}</div>
+            <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .5)" }}>
               ÷ {digits(ways)} · {group(perPerson)}
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
                 name={nameOf(key)}
                 sub={key === "me" ? t.settled : shareSub}
                 amount={money(amount)}
-                color={key === "me" ? "rgba(232,234,236,.6)" : shareColor}
+                color={key === "me" ? "rgb(var(--fg-rgb) / .6)" : shareColor}
               />
             ))}
           </div>
@@ -289,7 +289,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
             <div
               key={item.id}
               className="flex items-center"
-              style={{ gap: 6, padding: "10px 12px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+              style={{ gap: 6, padding: "10px 12px", borderRadius: 15, background: "rgb(var(--ink-rgb) / .04)" }}
             >
               <InputPrimitive
                 value={item.label}
@@ -329,7 +329,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
               </NativeSelect>
               <Button variant="plain" size="plain"
                 onClick={() => setItems((prev) => prev.filter((i) => i.id !== item.id))}
-                style={{ color: "#ff7a6b", fontSize: 13, padding: "0 4px" }}
+                style={{ color: "var(--c-expense)", fontSize: 13, padding: "0 4px" }}
               >
                 ×
               </Button>
@@ -348,7 +348,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
               ])
             }
             className="self-start"
-            style={{ fontSize: 12, color: "#0f9b6e" }}
+            style={{ fontSize: 12, color: "var(--c-primary)" }}
           >
             {t.addItem}
           </Button>
@@ -364,8 +364,8 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
           textAlign: "center",
           padding: "13px 0",
           borderRadius: 14,
-          background: "#0f9b6e",
-          color: "#04120c",
+          background: "var(--c-primary)",
+          color: "var(--c-on-primary)",
           fontSize: 13.5,
           fontWeight: 700,
           marginTop: 20,
@@ -376,7 +376,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
       </Button>
 
       {splitMutation.isError && (
-        <div className="text-center" style={{ color: "#ff7a6b", fontSize: 12, marginTop: 8 }}>
+        <div className="text-center" style={{ color: "var(--c-expense)", fontSize: 12, marginTop: 8 }}>
           {(splitMutation.error as Error).message}
         </div>
       )}
@@ -398,16 +398,16 @@ function ShareRow({
   return (
     <div
       className="flex items-center"
-      style={{ gap: 11, padding: "12px 14px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+      style={{ gap: 11, padding: "12px 14px", borderRadius: 15, background: "rgb(var(--ink-rgb) / .04)" }}
     >
-      <Avatar size={32} color={color} background="#1a201e">
+      <Avatar size={32} color={color} background="var(--c-avatar-2)">
         {initials(name)}
       </Avatar>
       <div className="min-w-0 flex-1">
         <div className="truncate" style={{ fontSize: 13, fontWeight: 700 }}>
           {name}
         </div>
-        <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>{sub}</div>
+        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>{sub}</div>
       </div>
       <div style={{ fontSize: 13.5, fontWeight: 700, color }}>{amount}</div>
     </div>
@@ -429,12 +429,12 @@ function EditorList({
 }) {
   return (
     <>
-      <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{label}</div>
+      <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 18 }}>{label}</div>
       <div className="flex flex-col" style={{ gap: 8, marginTop: 9 }}>
         {children}
         <div className="flex justify-between" style={{ fontSize: 12, marginTop: 2 }}>
-          <span style={{ color: "rgba(232,234,236,.4)" }}>{remainingLabel}</span>
-          <span style={{ color: ok ? "#3fd39a" : "#ff7a6b", fontWeight: 700 }}>{remainingText}</span>
+          <span style={{ color: "rgb(var(--fg-rgb) / .4)" }}>{remainingLabel}</span>
+          <span style={{ color: ok ? "var(--c-income)" : "var(--c-expense)", fontWeight: 700 }}>{remainingText}</span>
         </div>
       </div>
     </>
@@ -455,7 +455,7 @@ function AmountRow({
   return (
     <div
       className="flex items-center"
-      style={{ gap: 11, padding: "10px 14px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+      style={{ gap: 11, padding: "10px 14px", borderRadius: 15, background: "rgb(var(--ink-rgb) / .04)" }}
     >
       <div className="min-w-0 flex-1 truncate" style={{ fontSize: 13, fontWeight: 700 }}>
         {label}
@@ -469,7 +469,7 @@ function AmountRow({
         className="bg-transparent font-bold outline-hidden"
         style={{ width: 96, fontSize: 13.5, textAlign: "end" }}
       />
-      <span style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>{unit}</span>
+      <span style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .45)" }}>{unit}</span>
     </div>
   );
 }

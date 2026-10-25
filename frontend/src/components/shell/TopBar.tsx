@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "../../lib/i18n";
 import { useModals } from "../../lib/modals";
 import { useUncategorized } from "../../lib/queries";
+import ThemePicker from "./ThemePicker";
 
 const NAV = [
   { to: "/", key: "dash", end: true },
@@ -36,7 +37,7 @@ export default function TopBar() {
   return (
     <div
       className="sticky top-0 z-20 border-b border-line"
-      style={{ backdropFilter: "blur(14px)", background: "rgba(8,9,10,.82)" }}
+      style={{ backdropFilter: "blur(14px)", background: "rgb(var(--bg-rgb) / .82)" }}
     >
       <div
         className="mx-auto flex flex-wrap items-center"
@@ -54,8 +55,8 @@ export default function TopBar() {
                     borderRadius: 10,
                     fontSize: 13.5,
                     fontWeight: 700,
-                    color: isActive ? "#04120c" : "rgba(232,234,236,.62)",
-                    background: isActive ? "#0f9b6e" : "transparent",
+                    color: isActive ? "var(--c-on-primary)" : "rgb(var(--fg-rgb) / .62)",
+                    background: isActive ? "var(--c-primary)" : "transparent",
                   }}
                 >
                   {t[item.key]}
@@ -76,14 +77,14 @@ export default function TopBar() {
                 gap: 7,
                 padding: "7px 12px",
                 borderRadius: 99,
-                background: "#101a16",
-                border: "1px solid rgba(15,155,110,.35)",
+                background: "var(--c-primary-tint)",
+                border: "1px solid rgb(var(--primary-rgb) / .35)",
                 fontSize: 12,
                 fontWeight: 700,
-                color: "#3fd39a",
+                color: "var(--c-income)",
               }}
             >
-              <span style={{ width: 6, height: 6, borderRadius: 99, background: "#0f9b6e" }} />
+              <span style={{ width: 6, height: 6, borderRadius: 99, background: "var(--c-primary)" }} />
               {t.uncategorized} {digits(pendingCount)}
             </Button>
           )}
@@ -93,8 +94,8 @@ export default function TopBar() {
             style={{
               padding: "8px 13px",
               borderRadius: 10,
-              background: "#0f9b6e",
-              color: "#04120c",
+              background: "var(--c-primary)",
+              color: "var(--c-on-primary)",
               fontSize: 13,
               fontWeight: 700,
             }}
@@ -102,13 +103,15 @@ export default function TopBar() {
             {t.add}
           </Button>
 
+          <ThemePicker />
+
           <Button variant="plain" size="plain"
             onClick={toggle}
             style={{
               padding: "7px 11px",
-              border: "1px solid rgba(232,234,236,.16)",
+              border: "1px solid rgb(var(--fg-rgb) / .16)",
               borderRadius: 99,
-              color: "rgba(232,234,236,.65)",
+              color: "rgb(var(--fg-rgb) / .65)",
               fontSize: 12,
               fontWeight: 700,
             }}
@@ -121,9 +124,9 @@ export default function TopBar() {
             title={t.settings}
             style={{
               padding: "7px 11px",
-              border: "1px solid rgba(232,234,236,.16)",
+              border: "1px solid rgb(var(--fg-rgb) / .16)",
               borderRadius: 99,
-              color: "rgba(232,234,236,.65)",
+              color: "rgb(var(--fg-rgb) / .65)",
               fontSize: 12,
               fontWeight: 700,
               lineHeight: 1,

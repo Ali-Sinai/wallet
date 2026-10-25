@@ -90,7 +90,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
 
       {noAccounts ? (
         <div className="flex flex-col items-center" style={{ gap: 12, padding: "28px 0 8px" }}>
-          <div style={{ fontSize: 13, color: "rgba(232,234,236,.6)", textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: "rgb(var(--fg-rgb) / .6)", textAlign: "center" }}>
             {t.noAccounts}
           </div>
           <Link
@@ -99,8 +99,8 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
             style={{
               padding: "11px 18px",
               borderRadius: 13,
-              background: "#0f9b6e",
-              color: "#04120c",
+              background: "var(--c-primary)",
+              color: "var(--c-on-primary)",
               fontSize: 13,
               fontWeight: 700,
             }}
@@ -114,7 +114,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
             <span style={{ fontSize: 34, fontWeight: 700 }}>
               {amount ? group(Number(amount) * 100) : digits(0)}
             </span>
-            <span style={{ fontSize: 13, color: "rgba(232,234,236,.45)" }}>{t.tomanShort}</span>
+            <span style={{ fontSize: 13, color: "rgb(var(--fg-rgb) / .45)" }}>{t.tomanShort}</span>
           </div>
 
           <div className="flex" style={{ gap: 6, marginTop: 10 }}>
@@ -130,9 +130,9 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
                   borderRadius: 12,
                   fontSize: 13,
                   fontWeight: 700,
-                  background: direction === d ? "#0f9b6e" : "transparent",
-                  color: direction === d ? "#04120c" : "rgba(232,234,236,.7)",
-                  border: `1px solid ${direction === d ? "#0f9b6e" : "rgba(255,255,255,.14)"}`,
+                  background: direction === d ? "var(--c-primary)" : "transparent",
+                  color: direction === d ? "var(--c-on-primary)" : "rgb(var(--fg-rgb) / .7)",
+                  border: `1px solid ${direction === d ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .14)"}`,
                 }}
               >
                 {d === "withdrawal" ? t.withdraw : t.deposit}
@@ -151,7 +151,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
                   textAlign: "center",
                   padding: "14px 0",
                   borderRadius: 14,
-                  background: "rgba(255,255,255,.05)",
+                  background: "rgb(var(--ink-rgb) / .05)",
                   fontSize: 17,
                   fontWeight: 700,
                 }}
@@ -178,7 +178,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
 
           {(accounts?.length ?? 0) > 1 && (
             <>
-              <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 16 }}>{t.account}</div>
+              <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 16 }}>{t.account}</div>
               <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
                 {accounts?.map((a) => (
                   <Chip key={a.id} active={effectiveAccountId === a.id} onClick={() => setAccountId(a.id)}>
@@ -189,7 +189,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
             </>
           )}
 
-          <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 16 }}>{t.category}</div>
+          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 16 }}>{t.category}</div>
           <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
             {categories?.map((c) => (
               <Chip
@@ -214,8 +214,8 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
               textAlign: "center",
               padding: "13px 0",
               borderRadius: 14,
-              background: "#0f9b6e",
-              color: "#04120c",
+              background: "var(--c-primary)",
+              color: "var(--c-on-primary)",
               fontSize: 13.5,
               fontWeight: 700,
               marginTop: 20,
@@ -226,7 +226,7 @@ export default function AddTransactionModal({ onClose }: { onClose: () => void }
           </Button>
 
           {error && (
-            <div className="text-center" style={{ color: "#ff7a6b", fontSize: 12, marginTop: 8 }}>
+            <div className="text-center" style={{ color: "var(--c-expense)", fontSize: 12, marginTop: 8 }}>
               {error}
             </div>
           )}

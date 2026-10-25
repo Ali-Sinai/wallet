@@ -131,8 +131,8 @@ export default function TransactionDetailModal({
                 textAlign: "center",
                 padding: "12px 0",
                 borderRadius: 14,
-                background: "#0f9b6e",
-                color: "#04120c",
+                background: "var(--c-primary)",
+                color: "var(--c-on-primary)",
                 fontSize: 13,
                 fontWeight: 700,
               }}
@@ -144,8 +144,8 @@ export default function TransactionDetailModal({
               style={{
                 padding: "12px 16px",
                 borderRadius: 14,
-                border: "1px solid rgba(255,255,255,.14)",
-                color: "rgba(232,234,236,.7)",
+                border: "1px solid rgb(var(--ink-rgb) / .14)",
+                color: "rgb(var(--fg-rgb) / .7)",
                 fontSize: 13,
                 fontWeight: 700,
               }}
@@ -157,7 +157,7 @@ export default function TransactionDetailModal({
       ) : (
         <>
           <div style={{ fontSize: 18, fontWeight: 700, marginTop: 12 }}>{txTitle(tx, t.transaction)}</div>
-          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 4, color: signed < 0 ? "#ff7a6b" : "#3fd39a" }}>
+          <div style={{ fontSize: 32, fontWeight: 700, marginTop: 4, color: signed < 0 ? "var(--c-expense)" : "var(--c-income)" }}>
             {money(signed, true)}
           </div>
 
@@ -172,7 +172,7 @@ export default function TransactionDetailModal({
             </div>
           )}
 
-          <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.category}</div>
+          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 18 }}>{t.category}</div>
           <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
             {categories?.map((c) => (
               <Chip
@@ -194,8 +194,8 @@ export default function TransactionDetailModal({
                   textAlign: "center",
                   padding: "12px 0",
                   borderRadius: 14,
-                  background: "#0f9b6e",
-                  color: "#04120c",
+                  background: "var(--c-primary)",
+                  color: "var(--c-on-primary)",
                   fontSize: 13,
                   fontWeight: 700,
                 }}
@@ -214,8 +214,8 @@ export default function TransactionDetailModal({
                   textAlign: "center",
                   padding: "12px 0",
                   borderRadius: 14,
-                  border: "1px solid rgba(255,255,255,.14)",
-                  color: "rgba(232,234,236,.8)",
+                  border: "1px solid rgb(var(--ink-rgb) / .14)",
+                  color: "rgb(var(--fg-rgb) / .8)",
                   fontSize: 13,
                   fontWeight: 700,
                 }}
@@ -232,8 +232,8 @@ export default function TransactionDetailModal({
               style={{
                 padding: "12px 16px",
                 borderRadius: 14,
-                border: "1px solid rgba(255,255,255,.14)",
-                color: "rgba(232,234,236,.8)",
+                border: "1px solid rgb(var(--ink-rgb) / .14)",
+                color: "rgb(var(--fg-rgb) / .8)",
                 fontSize: 13,
                 fontWeight: 700,
               }}
@@ -248,8 +248,8 @@ export default function TransactionDetailModal({
               style={{
                 padding: "12px 16px",
                 borderRadius: 14,
-                border: "1px solid rgba(255,122,107,.35)",
-                color: "#ff7a6b",
+                border: "1px solid rgb(var(--expense-rgb) / .35)",
+                color: "var(--c-expense)",
                 fontSize: 13,
                 fontWeight: 700,
               }}
@@ -259,7 +259,7 @@ export default function TransactionDetailModal({
           </div>
 
           {deleteSplit.isError && (
-            <div className="text-center" style={{ color: "#ff7a6b", fontSize: 12, marginTop: 10 }}>
+            <div className="text-center" style={{ color: "var(--c-expense)", fontSize: 12, marginTop: 10 }}>
               {(deleteSplit.error as Error).message}
             </div>
           )}
@@ -271,8 +271,8 @@ export default function TransactionDetailModal({
 
 function InfoBox({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ flex: 1, padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,.04)" }}>
-      <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)" }}>{label}</div>
+    <div style={{ flex: 1, padding: "12px 14px", borderRadius: 14, background: "rgb(var(--ink-rgb) / .04)" }}>
+      <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .45)" }}>{label}</div>
       <div className="truncate" style={{ fontSize: 13, fontWeight: 700, marginTop: 3 }}>
         {value}
       </div>

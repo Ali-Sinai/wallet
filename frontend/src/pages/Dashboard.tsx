@@ -42,7 +42,7 @@ function DesktopDashboard() {
   const navigate = useNavigate();
 
   if (isLoading || !dashboard) {
-    return <div className="py-10 text-center text-sm" style={{ color: "rgba(232,234,236,.45)" }}>{t.loading}</div>;
+    return <div className="py-10 text-center text-sm" style={{ color: "rgb(var(--fg-rgb) / .45)" }}>{t.loading}</div>;
   }
 
   const bars = dashboard.daily_spend;
@@ -54,23 +54,24 @@ function DesktopDashboard() {
     <div className="flex flex-col fade-in" style={{ gap: 18 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14 }}>
         <div
+          className="hero"
           style={{
             padding: 20,
             borderRadius: 20,
-            background: "linear-gradient(155deg,#12241d,#0b120f)",
-            border: "1px solid rgba(15,155,110,.3)",
+            background: "var(--hero-bg)",
+            border: "1px solid rgb(var(--primary-rgb) / .3)",
           }}
         >
-          <div style={{ fontSize: 11.5, letterSpacing: ".6px", color: "rgba(232,234,236,.45)" }}>
+          <div style={{ fontSize: 11.5, letterSpacing: ".6px", color: "rgb(var(--fg-rgb) / .45)" }}>
             {t.balance}
           </div>
           <div className="flex items-baseline" style={{ gap: 6, marginTop: 8 }}>
             <span style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-1px", lineHeight: 1 }}>
               {money(dashboard.net_cents)}
             </span>
-            <span style={{ fontSize: 13, color: "rgba(232,234,236,.45)" }}>{t.tomanShort}</span>
+            <span style={{ fontSize: 13, color: "rgb(var(--fg-rgb) / .45)" }}>{t.tomanShort}</span>
           </div>
-          <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.42)", marginTop: 8 }}>
+          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .42)", marginTop: 8 }}>
             {(dashboard.net_cents >= 0 ? "+" : "−") + short(dashboard.net_cents)} {t.netThisMonth}
           </div>
         </div>
@@ -78,13 +79,13 @@ function DesktopDashboard() {
         <StatCard
           label={t.in}
           value={group(dashboard.total_in_cents)}
-          color="#3fd39a"
+          color="var(--c-income)"
           sub={`${digits(dashboard.deposit_count)} ${t.deposits}`}
         />
         <StatCard
           label={t.out}
           value={group(dashboard.total_out_cents)}
-          color="#ff7a6b"
+          color="var(--c-expense)"
           sub={`${digits(dashboard.withdrawal_count)} ${t.withdrawals}`}
         />
       </div>
@@ -92,7 +93,7 @@ function DesktopDashboard() {
       <Card style={{ padding: 22 }}>
         <div className="flex items-baseline justify-between">
           <CardTitle>{t.dailySpend}</CardTitle>
-          <div style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>{t.avgPrefix + short(avg)}</div>
+          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .45)" }}>{t.avgPrefix + short(avg)}</div>
         </div>
         <div className="flex items-end" style={{ gap: 7, height: 150, marginTop: 18 }}>
           {bars.map((b, i) => (
@@ -106,11 +107,11 @@ function DesktopDashboard() {
                 style={{
                   width: "100%",
                   borderRadius: "5px 5px 0 0",
-                  background: b.amount_cents > maxBar * 0.7 ? "#0f9b6e" : "#1f2b27",
+                  background: b.amount_cents > maxBar * 0.7 ? "var(--c-primary)" : "var(--c-bar-idle)",
                   height: `${Math.max(6, (b.amount_cents / maxBar) * 100)}%`,
                 }}
               />
-              <div style={{ fontSize: 9.5, color: "rgba(232,234,236,.3)" }}>{localize(dayTick(b.label))}</div>
+              <div style={{ fontSize: 9.5, color: "rgb(var(--fg-rgb) / .3)" }}>{localize(dayTick(b.label))}</div>
             </div>
           ))}
         </div>
@@ -119,7 +120,7 @@ function DesktopDashboard() {
       <Card style={{ padding: 22 }}>
         <div className="flex items-baseline justify-between">
           <CardTitle>{t.breakdown}</CardTitle>
-          <Button variant="plain" size="plain" onClick={() => navigate("/reports")} style={{ fontSize: 12, color: "#0f9b6e" }}>
+          <Button variant="plain" size="plain" onClick={() => navigate("/reports")} style={{ fontSize: 12, color: "var(--c-primary)" }}>
             {t.reportsLink}
           </Button>
         </div>
@@ -142,11 +143,11 @@ function DesktopDashboard() {
                 className="flex-none"
                 style={{ width: 9, height: 9, borderRadius: 3, background: c.color }}
               />
-              <span className="flex-1 truncate" style={{ color: "rgba(232,234,236,.75)" }}>
+              <span className="flex-1 truncate" style={{ color: "rgb(var(--fg-rgb) / .75)" }}>
                 {sliceLabel(c, categories, fa, t.uncategorized)}
               </span>
-              <span style={{ color: "rgba(232,234,236,.5)" }}>{percent(c.percentage)}</span>
-              <span style={{ color: "rgba(232,234,236,.35)" }}>{short(c.amount_cents)}</span>
+              <span style={{ color: "rgb(var(--fg-rgb) / .5)" }}>{percent(c.percentage)}</span>
+              <span style={{ color: "rgb(var(--fg-rgb) / .35)" }}>{short(c.amount_cents)}</span>
             </div>
           ))}
         </div>
@@ -160,9 +161,9 @@ function DesktopDashboard() {
 function StatCard({ label, value, color, sub }: { label: string; value: string; color: string; sub: string }) {
   return (
     <Card style={{ padding: 20 }}>
-      <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)" }}>{label}</div>
+      <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)" }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 700, color, marginTop: 8 }}>{value}</div>
-      <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.35)", marginTop: 8 }}>{sub}</div>
+      <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .35)", marginTop: 8 }}>{sub}</div>
     </Card>
   );
 }
@@ -192,7 +193,7 @@ export function BudgetsCard({
       label: categoryName(category, fa, "—"),
       text: `${short(used)} / ${short(b.limit_cents)}`,
       width: `${Math.min(100, pct)}%`,
-      color: pct > 100 ? "#ff7a6b" : categoryColor(category),
+      color: pct > 100 ? "var(--c-expense)" : categoryColor(category),
     };
   });
 
@@ -215,7 +216,7 @@ export function BudgetsCard({
         <div key={r.id}>
           <div
             className="flex justify-between"
-            style={{ fontSize: bare ? 12 : 12.5, color: "rgba(232,234,236,.72)" }}
+            style={{ fontSize: bare ? 12 : 12.5, color: "rgb(var(--fg-rgb) / .72)" }}
           >
             <span>{r.label}</span>
             <span>{r.text}</span>
@@ -229,7 +230,7 @@ export function BudgetsCard({
   if (bare) {
     return (
       <>
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.budgets}</div>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.budgets}</div>
         {list}
       </>
     );
@@ -255,7 +256,7 @@ function MobileHome() {
   const hasSms = (pending?.length ?? 0) > 0;
 
   if (isLoading || !dashboard) {
-    return <div className="py-10 text-center text-sm" style={{ color: "rgba(232,234,236,.45)" }}>{t.loading}</div>;
+    return <div className="py-10 text-center text-sm" style={{ color: "rgb(var(--fg-rgb) / .45)" }}>{t.loading}</div>;
   }
 
   const bars = dashboard.daily_spend;
@@ -267,30 +268,31 @@ function MobileHome() {
     <div className="fade-in">
       <div style={{ padding: "8px 22px 0" }}>
         <Wordmark size={22} />
-        <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)", marginTop: 3 }}>
+        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .45)", marginTop: 3 }}>
           {jalaliMonthLabel(lang)}
         </div>
       </div>
 
       <div
+        className="hero"
         style={{
           margin: "14px 22px 0",
           padding: 18,
           borderRadius: 22,
-          background: "linear-gradient(155deg,#12241d 0%,#0b120f 70%)",
-          border: "1px solid rgba(15,155,110,.28)",
+          background: "var(--hero-bg)",
+          border: "1px solid rgb(var(--primary-rgb) / .28)",
         }}
       >
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)" }}>{t.balance}</div>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)" }}>{t.balance}</div>
         <div className="flex items-baseline" style={{ gap: 7, marginTop: 6 }}>
           <span style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-.5px", lineHeight: 1.05 }}>
             {money(dashboard.net_cents)}
           </span>
-          <span style={{ fontSize: 14, color: "rgba(232,234,236,.45)" }}>{t.tomanShort}</span>
+          <span style={{ fontSize: 14, color: "rgb(var(--fg-rgb) / .45)" }}>{t.tomanShort}</span>
         </div>
         <div className="flex" style={{ gap: 10, marginTop: 14 }}>
-          <MiniStat label={t.in} value={short(dashboard.total_in_cents)} color="#3fd39a" />
-          <MiniStat label={t.out} value={short(dashboard.total_out_cents)} color="#ff7a6b" />
+          <MiniStat label={t.in} value={short(dashboard.total_in_cents)} color="var(--c-income)" />
+          <MiniStat label={t.out} value={short(dashboard.total_out_cents)} color="var(--c-expense)" />
         </div>
       </div>
 
@@ -302,8 +304,8 @@ function MobileHome() {
         <>
           <MobileSection>
             <div className="flex items-baseline justify-between">
-              <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.dailySpend}</div>
-              <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.55)" }}>{t.avgPrefix + short(avg)}</div>
+              <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.dailySpend}</div>
+              <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .55)" }}>{t.avgPrefix + short(avg)}</div>
             </div>
             <div className="flex items-end" style={{ gap: 5, height: 62, marginTop: 11 }}>
               {bars.map((b, i) => (
@@ -313,7 +315,7 @@ function MobileHome() {
                     flex: 1,
                     borderRadius: "3px 3px 0 0",
                     height: `${Math.max(6, (b.amount_cents / maxBar) * 100)}%`,
-                    background: b.amount_cents > maxBar * 0.7 ? "#0f9b6e" : "#1f2b27",
+                    background: b.amount_cents > maxBar * 0.7 ? "var(--c-primary)" : "var(--c-bar-idle)",
                   }}
                 />
               ))}
@@ -322,8 +324,8 @@ function MobileHome() {
 
           <MobileSection>
             <div className="flex items-baseline justify-between">
-              <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.categories}</div>
-              <Link to="/reports" style={{ fontSize: 11.5, color: "#0f9b6e" }}>
+              <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.categories}</div>
+              <Link to="/reports" style={{ fontSize: 11.5, color: "var(--c-primary)" }}>
                 {t.reportsLink}
               </Link>
             </div>
@@ -334,7 +336,7 @@ function MobileHome() {
             </div>
             <div
               className="flex flex-wrap"
-              style={{ gap: "5px 14px", marginTop: 9, fontSize: 11.5, color: "rgba(232,234,236,.65)" }}
+              style={{ gap: "5px 14px", marginTop: 9, fontSize: 11.5, color: "rgb(var(--fg-rgb) / .65)" }}
             >
               {slices.map((c) => (
                 <span key={c.category_id ?? "none"}>{sliceLabel(c, categories, fa, t.uncategorized)}</span>
@@ -351,8 +353,8 @@ function MobileHome() {
 
 function MiniStat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div style={{ flex: 1, background: "rgba(255,255,255,.04)", borderRadius: 13, padding: "10px 12px" }}>
-      <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.5)" }}>{label}</div>
+    <div style={{ flex: 1, background: "rgb(var(--ink-rgb) / .04)", borderRadius: 13, padding: "10px 12px" }}>
+      <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .5)" }}>{label}</div>
       <div style={{ fontSize: 15.5, fontWeight: 700, color, marginTop: 2 }}>{value}</div>
     </div>
   );
@@ -364,7 +366,7 @@ function MobileSection({ children }: { children: ReactNode }) {
       style={{
         margin: "16px 22px 0",
         paddingTop: 13,
-        borderTop: "1px solid rgba(255,255,255,.08)",
+        borderTop: "1px solid rgb(var(--ink-rgb) / .08)",
       }}
     >
       {children}
@@ -380,8 +382,8 @@ function RecentList() {
   return (
     <MobileSection>
       <div className="flex items-baseline justify-between">
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.recent}</div>
-        <Link to="/activity" style={{ fontSize: 11.5, color: "#0f9b6e" }}>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.recent}</div>
+        <Link to="/activity" style={{ fontSize: 11.5, color: "var(--c-primary)" }}>
           {t.all}
         </Link>
       </div>

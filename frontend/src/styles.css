@@ -5,48 +5,234 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ------------------------------------------------------------------ *
- * Theme. The app is dark-only, so shadcn's semantic tokens are mapped
- * straight onto the design bundle's palette — shadcn / Persian Labs
- * components pick up the app's look without per-component overrides.
+ * Themes. Every colour the app paints comes from the raw palette below;
+ * shadcn's semantic tokens are derived from it, so shadcn / Persian Labs
+ * components follow the active theme without per-component overrides.
+ *
+ * `*-rgb` tokens are space-separated channels for `rgb(var(--x) / a)`:
+ *   fg    text colour, at varying alpha for secondary text
+ *   ink   overlay tint for hairlines and wells (white on dark, black on light)
+ *
+ * <html data-theme="…"> picks the palette (see lib/theme.tsx); no attribute
+ * is the original "classic" look.
  * ------------------------------------------------------------------ */
 
 :root {
-  --background: #08090a;
-  --foreground: #e8eaec;
-  --card: #0e1110;
-  --card-foreground: #e8eaec;
-  --popover: #101318;
-  --popover-foreground: #e8eaec;
-  --primary: #0f9b6e;
-  --primary-foreground: #04120c;
-  --secondary: #161c1a;
-  --secondary-foreground: #e8eaec;
-  --muted: rgba(255, 255, 255, 0.05);
-  --muted-foreground: rgba(232, 234, 236, 0.45);
-  --accent: rgba(255, 255, 255, 0.07);
-  --accent-foreground: #e8eaec;
-  --destructive: #ff7a6b;
-  --border: rgba(255, 255, 255, 0.07);
-  --input: rgba(255, 255, 255, 0.09);
-  --ring: #0f9b6e;
-  --chart-1: #0f9b6e;
-  --chart-2: #3fd39a;
-  --chart-3: #ff7a6b;
-  --chart-4: #1f2b27;
-  --chart-5: #e8eaec;
+  --app-font: Rooyin, Vazirmatn, system-ui, sans-serif;
+
+  --fg-rgb: 232 234 236;
+  --ink-rgb: 255 255 255;
+  --bg-rgb: 8 9 10;
+  --scrim-rgb: 4 6 5;
+  --primary-rgb: 15 155 110;
+  --income-rgb: 63 211 154;
+  --expense-rgb: 255 122 107;
+
+  --c-fg: #e8eaec;
+  --c-bg: #08090a;
+  --c-glow: #0f2a20;
+  --c-tabbar: #0a0c0b;
+  --c-surface: #0e1110;
+  --c-surface-2: #101318;
+  --c-surface-3: #141820;
+  --c-avatar: #161c1a;
+  --c-avatar-2: #1a201e;
+  --c-bar-idle: #1f2b27;
+  --c-well: rgba(0, 0, 0, 0.3);
+  --c-primary: #0f9b6e;
+  --c-primary-hover: #12b17e;
+  --c-on-primary: #04120c;
+  --c-primary-tint: #101a16;
+  --c-primary-tint-2: #12241d;
+  --c-hero-to: #0b120f;
+  --c-income: #3fd39a;
+  --c-expense: #ff7a6b;
+  --c-expense-tint: #1a1214;
+  --hero-bg: linear-gradient(155deg, var(--c-primary-tint-2), var(--c-hero-to));
+  --card-shadow: none;
+
+  --background: var(--c-bg);
+  --foreground: var(--c-fg);
+  --card: var(--c-surface);
+  --card-foreground: var(--c-fg);
+  --popover: var(--c-surface-2);
+  --popover-foreground: var(--c-fg);
+  --primary: var(--c-primary);
+  --primary-foreground: var(--c-on-primary);
+  --secondary: var(--c-avatar);
+  --secondary-foreground: var(--c-fg);
+  --muted: rgb(var(--ink-rgb) / 0.05);
+  --muted-foreground: rgb(var(--fg-rgb) / 0.45);
+  --accent: rgb(var(--ink-rgb) / 0.07);
+  --accent-foreground: var(--c-fg);
+  --destructive: var(--c-expense);
+  --border: rgb(var(--ink-rgb) / 0.07);
+  --input: rgb(var(--ink-rgb) / 0.09);
+  --ring: var(--c-primary);
+  --chart-1: var(--c-primary);
+  --chart-2: var(--c-income);
+  --chart-3: var(--c-expense);
+  --chart-4: var(--c-bar-idle);
+  --chart-5: var(--c-fg);
   --radius: 0.75rem;
-  --sidebar: #0e1110;
-  --sidebar-foreground: #e8eaec;
-  --sidebar-primary: #0f9b6e;
-  --sidebar-primary-foreground: #04120c;
-  --sidebar-accent: rgba(255, 255, 255, 0.07);
-  --sidebar-accent-foreground: #e8eaec;
-  --sidebar-border: rgba(255, 255, 255, 0.07);
-  --sidebar-ring: #0f9b6e;
+  --sidebar: var(--c-surface);
+  --sidebar-foreground: var(--c-fg);
+  --sidebar-primary: var(--c-primary);
+  --sidebar-primary-foreground: var(--c-on-primary);
+  --sidebar-accent: rgb(var(--ink-rgb) / 0.07);
+  --sidebar-accent-foreground: var(--c-fg);
+  --sidebar-border: rgb(var(--ink-rgb) / 0.07);
+  --sidebar-ring: var(--c-primary);
+}
+
+/* Wallet Dark.dc.html — pure black, one accent, Geist. */
+:root[data-theme^="dark-"] {
+  --app-font: Geist, Rooyin, Vazirmatn, system-ui, sans-serif;
+
+  --fg-rgb: 255 255 255;
+  --ink-rgb: 255 255 255;
+  --bg-rgb: 0 0 0;
+  --scrim-rgb: 0 0 0;
+  --income-rgb: 255 255 255;
+
+  --c-fg: #ffffff;
+  --c-bg: #000000;
+  --c-glow: #000000;
+  --c-tabbar: #000000;
+  --c-surface: #0a0a0a;
+  --c-surface-2: #111111;
+  --c-surface-3: #161616;
+  --c-avatar: #1a1a1a;
+  --c-avatar-2: #1a1a1a;
+  --c-bar-idle: #222222;
+  --c-well: #0f0f0f;
+  --c-income: #ffffff;
+  --c-hero-to: #000000;
+  --hero-bg: #0a0a0a;
+}
+:root[data-theme="dark-red"] {
+  --primary-rgb: 255 42 26;
+  --expense-rgb: 255 42 26;
+  --c-primary: #ff2a1a;
+  --c-primary-hover: #ff4a3c;
+  --c-on-primary: #000000;
+  --c-primary-tint: #1a0705;
+  --c-primary-tint-2: #1f0806;
+  --c-expense: #ff2a1a;
+  --c-expense-tint: #1a0705;
+}
+:root[data-theme="dark-purple"] {
+  --primary-rgb: 157 92 255;
+  --expense-rgb: 157 92 255;
+  --c-primary: #8a3ffc;
+  --c-primary-hover: #9d5cff;
+  --c-on-primary: #ffffff;
+  --c-primary-tint: #120a1f;
+  --c-primary-tint-2: #170d27;
+  --c-expense: #9d5cff;
+  --c-expense-tint: #120a1f;
+}
+/* Dark green: green marks money in, so money out stays the design's red. */
+:root[data-theme="dark-green"] {
+  --primary-rgb: 31 138 76;
+  --income-rgb: 52 176 106;
+  --expense-rgb: 255 42 26;
+  --c-primary: #1f8a4c;
+  --c-primary-hover: #25a05a;
+  --c-on-primary: #ffffff;
+  --c-primary-tint: #07140c;
+  --c-primary-tint-2: #0a1c11;
+  --c-income: #34b06a;
+  --c-expense: #ff2a1a;
+  --c-expense-tint: #1a0705;
+}
+
+/* Wallet Soft.dc.html — light grey canvas, white cards, Poppins. */
+:root[data-theme^="soft-"] {
+  --app-font: Poppins, Rooyin, Vazirmatn, system-ui, sans-serif;
+
+  --fg-rgb: 17 17 17;
+  --ink-rgb: 0 0 0;
+  --bg-rgb: 243 243 243;
+  --scrim-rgb: 17 17 17;
+  --income-rgb: 34 164 71;
+  --expense-rgb: 224 38 58;
+
+  --c-fg: #111111;
+  --c-bg: #f3f3f3;
+  --c-glow: #f3f3f3;
+  --c-tabbar: #ffffff;
+  --c-surface: #ffffff;
+  --c-surface-2: #ffffff;
+  --c-surface-3: #f3f3f3;
+  --c-avatar: #eeeeee;
+  --c-avatar-2: #eeeeee;
+  --c-bar-idle: #e2e2e2;
+  --c-well: #f6f6f6;
+  --c-on-primary: #ffffff;
+  --c-income: #22a447;
+  --c-expense: #e0263a;
+  --c-expense-tint: #fde8ea;
+  --c-hero-to: #ffffff;
+  --card-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+:root[data-theme="soft-mono"] {
+  --primary-rgb: 17 17 17;
+  --c-primary: #111111;
+  --c-primary-hover: #333333;
+  --c-primary-tint: #ececec;
+  --c-primary-tint-2: #e6e6e6;
+  --hero-bg: #1b1b1d;
+}
+:root[data-theme="soft-purple"] {
+  --primary-rgb: 138 63 252;
+  --c-primary: #8a3ffc;
+  --c-primary-hover: #7a2ff0;
+  --c-primary-tint: #f1e9ff;
+  --c-primary-tint-2: #ebdfff;
+  --hero-bg: linear-gradient(155deg, #4c1d95, #8a3ffc);
+}
+:root[data-theme="soft-green"] {
+  --primary-rgb: 20 83 45;
+  --c-primary: #14532d;
+  --c-primary-hover: #1a6b3a;
+  --c-primary-tint: #e5f2ea;
+  --c-primary-tint-2: #dcede2;
+  --hero-bg: linear-gradient(155deg, #0f3d22, #1f7a4d);
+}
+
+/* Soft draws its balance on a dark bank card, so the hero flips to light text. */
+:root[data-theme^="soft-"] .hero {
+  --fg-rgb: 255 255 255;
+  --ink-rgb: 255 255 255;
+  --c-income: #7ee2a0;
+  --c-expense: #ffb0a8;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border-color: transparent !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
+}
+:root[data-theme^="soft-"] .hero::before {
+  content: "";
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  inset-inline-end: -60px;
+  top: -70px;
+  border-radius: 50%;
+  border: 34px solid rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+}
+:root[data-theme^="soft-"] .bg-card {
+  box-shadow: var(--card-shadow);
+}
+:root[data-theme^="dark-"] .hero {
+  border-color: rgb(var(--ink-rgb) / 0.08) !important;
 }
 
 @theme inline {
-  --font-sans: Rooyin, Vazirmatn, system-ui, sans-serif;
+  --font-sans: var(--app-font);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -88,21 +274,21 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Design-bundle literals that have no shadcn equivalent. */
-@theme {
-  --color-bgApp: #0a0c0b;
-  --color-cardAlt: #101318;
-  --color-cardGreen: #101a16;
-  --color-cardRed: #1a1214;
-  --color-avatar: #161c1a;
-  --color-avatarAlt: #1a201e;
-  --color-line: rgba(255, 255, 255, 0.07);
-  --color-lineSoft: rgba(255, 255, 255, 0.05);
-  --color-hair: rgba(255, 255, 255, 0.08);
-  --color-primaryHover: #12b17e;
-  --color-income: #3fd39a;
-  --color-expense: #ff7a6b;
-  --color-barIdle: #1f2b27;
+/* Design-bundle literals that have no shadcn equivalent; they follow the theme. */
+@theme inline {
+  --color-bgApp: var(--c-tabbar);
+  --color-cardAlt: var(--c-surface-2);
+  --color-cardGreen: var(--c-primary-tint);
+  --color-cardRed: var(--c-expense-tint);
+  --color-avatar: var(--c-avatar);
+  --color-avatarAlt: var(--c-avatar-2);
+  --color-line: rgb(var(--ink-rgb) / 0.07);
+  --color-lineSoft: rgb(var(--ink-rgb) / 0.05);
+  --color-hair: rgb(var(--ink-rgb) / 0.08);
+  --color-primaryHover: var(--c-primary-hover);
+  --color-income: var(--c-income);
+  --color-expense: var(--c-expense);
+  --color-barIdle: var(--c-bar-idle);
 
   --radius-card: 20px;
   --radius-modal: 22px;
@@ -158,7 +344,7 @@ a {
   text-decoration: none;
 }
 a:hover {
-  color: #12b17e;
+  color: var(--c-primary-hover);
 }
 
 ::-webkit-scrollbar {
@@ -166,7 +352,7 @@ a:hover {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgb(var(--ink-rgb) / 0.12);
   border-radius: 6px;
 }
 

@@ -67,7 +67,7 @@ function RangeFilters({ f }: { f: ReturnType<typeof useFilters> }) {
   return (
     <div
       className="flex flex-col"
-      style={{ gap: 10, marginTop: 12, padding: 14, borderRadius: 16, background: "rgba(255,255,255,.04)" }}
+      style={{ gap: 10, marginTop: 12, padding: 14, borderRadius: 16, background: "rgb(var(--ink-rgb) / .04)" }}
     >
       <div className="flex flex-wrap" style={{ gap: 10 }}>
         <Field label={t.fromDate}>
@@ -108,7 +108,7 @@ function RangeFilters({ f }: { f: ReturnType<typeof useFilters> }) {
       <Button variant="plain" size="plain"
         onClick={f.clearRange}
         className="self-start"
-        style={{ fontSize: 12, color: "#0f9b6e", fontWeight: 700 }}
+        style={{ fontSize: 12, color: "var(--c-primary)", fontWeight: 700 }}
       >
         {t.clearFilters}
       </Button>
@@ -162,8 +162,8 @@ function DesktopActivity() {
               padding: "7px 13px",
               borderRadius: 99,
               background: "transparent",
-              border: "1px solid rgba(255,255,255,.14)",
-              color: "#e8eaec",
+              border: "1px solid rgb(var(--ink-rgb) / .14)",
+              color: "var(--c-fg)",
               fontSize: 12,
               outline: "none",
               width: 170,
@@ -229,12 +229,12 @@ function MobileActivity() {
             gap: 7,
             padding: "6px 11px",
             borderRadius: 99,
-            background: "#101a16",
-            border: "1px solid rgba(15,155,110,.35)",
+            background: "var(--c-primary-tint)",
+            border: "1px solid rgb(var(--primary-rgb) / .35)",
           }}
         >
-          <span style={{ width: 6, height: 6, borderRadius: 99, background: "#0f9b6e" }} />
-          <span style={{ fontSize: 11.5, color: "#3fd39a", fontWeight: 700 }}>
+          <span style={{ width: 6, height: 6, borderRadius: 99, background: "var(--c-primary)" }} />
+          <span style={{ fontSize: 11.5, color: "var(--c-income)", fontWeight: 700 }}>
             {t.inbox} {pending?.length ? digits(pending.length) : ""}
           </span>
         </Link>
@@ -253,9 +253,9 @@ function MobileActivity() {
               borderRadius: 11,
               fontSize: 12.5,
               fontWeight: 700,
-              background: f.direction === c.key ? "#0f9b6e" : "transparent",
-              color: f.direction === c.key ? "#04120c" : "rgba(232,234,236,.7)",
-              border: `1px solid ${f.direction === c.key ? "#0f9b6e" : "rgba(255,255,255,.14)"}`,
+              background: f.direction === c.key ? "var(--c-primary)" : "transparent",
+              color: f.direction === c.key ? "var(--c-on-primary)" : "rgb(var(--fg-rgb) / .7)",
+              border: `1px solid ${f.direction === c.key ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .14)"}`,
             }}
           >
             {c.label}
@@ -277,9 +277,9 @@ function MobileActivity() {
               padding: "7px 12px",
               borderRadius: 99,
               fontSize: 11.5,
-              background: f.categoryId === c.key ? "#0f9b6e" : "transparent",
-              color: f.categoryId === c.key ? "#04120c" : "rgba(232,234,236,.7)",
-              border: `1px solid ${f.categoryId === c.key ? "#0f9b6e" : "rgba(255,255,255,.14)"}`,
+              background: f.categoryId === c.key ? "var(--c-primary)" : "transparent",
+              color: f.categoryId === c.key ? "var(--c-on-primary)" : "rgb(var(--fg-rgb) / .7)",
+              border: `1px solid ${f.categoryId === c.key ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .14)"}`,
               whiteSpace: "nowrap",
             }}
           >
@@ -296,7 +296,7 @@ function MobileActivity() {
       </div>
 
       <div style={{ padding: "14px 22px 0" }}>
-        <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>
           {digits(rows.length)} {t.of} {t.activity}
         </div>
         {rows.length === 0 && !f.query.isLoading && <EmptyNote>{t.empty}</EmptyNote>}

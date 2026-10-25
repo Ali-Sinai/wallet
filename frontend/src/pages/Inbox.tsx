@@ -40,7 +40,7 @@ export default function Inbox() {
     <>
       <div className="flex items-center justify-between">
         <div style={{ fontSize: 19, fontWeight: 700 }}>{t.inbox}</div>
-        <Link to="/activity" style={{ fontSize: 11.5, color: "#0f9b6e" }}>
+        <Link to="/activity" style={{ fontSize: 11.5, color: "var(--c-primary)" }}>
           {t.activity}
         </Link>
       </div>
@@ -56,10 +56,10 @@ export default function Inbox() {
       </div>
 
       {(hints?.length ?? 0) > 0 && (
-        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
           <div className="flex items-baseline justify-between">
-            <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.sellerHints}</div>
-            <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>{t.sellerHintsHint}</div>
+            <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.sellerHints}</div>
+            <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>{t.sellerHintsHint}</div>
           </div>
           <div className="flex flex-col" style={{ gap: 8, marginTop: 12 }}>
             {(hints ?? []).map((h) => (
@@ -70,10 +70,10 @@ export default function Inbox() {
       )}
 
       {(unparsed?.length ?? 0) > 0 && (
-        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+        <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
           <div className="flex items-baseline justify-between">
-            <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.unparsed}</div>
-            <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>{t.unparsedHint}</div>
+            <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.unparsed}</div>
+            <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>{t.unparsedHint}</div>
           </div>
           <div className="flex flex-col" style={{ gap: 10, marginTop: 12 }}>
             {(unparsed ?? []).map((m) => (
@@ -83,10 +83,10 @@ export default function Inbox() {
         </div>
       )}
 
-      <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
         <div className="flex items-baseline justify-between">
-          <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.rules}</div>
-          <Link to="/settings" style={{ fontSize: 11, color: "#0f9b6e" }}>
+          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.rules}</div>
+          <Link to="/settings" style={{ fontSize: 11, color: "var(--c-primary)" }}>
             {t.settings}
           </Link>
         </div>
@@ -95,7 +95,7 @@ export default function Inbox() {
             <div
               key={p.id}
               className="flex items-center"
-              style={{ gap: 11, padding: "12px 13px", borderRadius: 14, background: "#101318" }}
+              style={{ gap: 11, padding: "12px 13px", borderRadius: 14, background: "var(--c-surface-2)" }}
             >
               <span
                 className="flex-none"
@@ -103,18 +103,18 @@ export default function Inbox() {
                   width: 8,
                   height: 8,
                   borderRadius: 99,
-                  background: p.enabled ? "#0f9b6e" : "rgba(232,234,236,.25)",
+                  background: p.enabled ? "var(--c-primary)" : "rgb(var(--fg-rgb) / .25)",
                 }}
               />
               <div className="min-w-0 flex-1">
                 <div className="truncate" style={{ fontSize: 12.5, fontWeight: 700 }}>
                   {p.name}
                 </div>
-                <div className="truncate" style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+                <div className="truncate" style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
                   {p.sender_match}
                 </div>
               </div>
-              <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.5)" }}>{p.enabled ? t.on : t.off}</div>
+              <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .5)" }}>{p.enabled ? t.on : t.off}</div>
             </div>
           ))}
         </div>
@@ -147,10 +147,10 @@ function PasteBox() {
 
   return (
     <div
-      style={{ marginTop: 14, padding: 14, borderRadius: 16, background: "rgba(255,255,255,.04)" }}
+      style={{ marginTop: 14, padding: 14, borderRadius: 16, background: "rgb(var(--ink-rgb) / .04)" }}
     >
       <div style={{ fontSize: 12, fontWeight: 700 }}>{t.pasteSms}</div>
-      <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 3 }}>{t.pasteHint}</div>
+      <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 3 }}>{t.pasteHint}</div>
       <Textarea
         className="inline-block min-h-0 field-sizing-fixed leading-[1.5] md:text-xs"
         value={text}
@@ -160,11 +160,11 @@ function PasteBox() {
           width: "100%",
           marginTop: 10,
           fontSize: 12,
-          background: "rgba(0,0,0,.3)",
+          background: "var(--c-well)",
           borderRadius: 12,
           padding: 10,
-          color: "#e8eaec",
-          border: "1px solid rgba(255,255,255,.07)",
+          color: "var(--c-fg)",
+          border: "1px solid rgb(var(--ink-rgb) / .07)",
           outline: "none",
         }}
       />
@@ -185,8 +185,8 @@ function PasteBox() {
             flex: "none",
             padding: "10px 16px",
             borderRadius: 12,
-            background: "#0f9b6e",
-            color: "#04120c",
+            background: "var(--c-primary)",
+            color: "var(--c-on-primary)",
             fontSize: 12.5,
             fontWeight: 700,
           }}
@@ -195,7 +195,7 @@ function PasteBox() {
         </Button>
       </div>
       {result !== null && (
-        <div style={{ fontSize: 11.5, color: "#3fd39a", marginTop: 8 }}>
+        <div style={{ fontSize: 11.5, color: "var(--c-income)", marginTop: 8 }}>
           {result} · {t.detected}
         </div>
       )}
@@ -221,15 +221,15 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
   const effectiveAccount = accountId || String(accounts?.[0]?.id ?? "");
 
   return (
-    <div style={{ padding: 14, borderRadius: 16, background: "#101318", border: "1px solid rgba(255,255,255,.07)" }}>
-      <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>{attempt.sender}</div>
+    <div style={{ padding: 14, borderRadius: 16, background: "var(--c-surface-2)", border: "1px solid rgb(var(--ink-rgb) / .07)" }}>
+      <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>{attempt.sender}</div>
       <div
         style={{
           fontSize: 12,
-          color: "rgba(232,234,236,.55)",
+          color: "rgb(var(--fg-rgb) / .55)",
           lineHeight: 1.5,
           marginTop: 6,
-          borderInlineStart: "2px solid rgba(255,122,107,.4)",
+          borderInlineStart: "2px solid rgb(var(--expense-rgb) / .4)",
           paddingInlineStart: 10,
           // The message no pattern could read, exactly as it arrived — line
           // breaks and all, since that shape is half of what a new regex
@@ -311,8 +311,8 @@ function UnparsedRow({ attempt }: { attempt: SmsAttempt }) {
               textAlign: "center",
               padding: "11px 0",
               borderRadius: 12,
-              background: "#0f9b6e",
-              color: "#04120c",
+              background: "var(--c-primary)",
+              color: "var(--c-on-primary)",
               fontSize: 12.5,
               fontWeight: 700,
             }}
@@ -337,13 +337,13 @@ function SellerHintRow({ hint }: { hint: SellerHint }) {
   return (
     <div
       className="flex items-center"
-      style={{ gap: 11, padding: "11px 13px", borderRadius: 14, background: "#101318" }}
+      style={{ gap: 11, padding: "11px 13px", borderRadius: 14, background: "var(--c-surface-2)" }}
     >
       <div className="min-w-0 flex-1">
         <div className="truncate" style={{ fontSize: 12.5, fontWeight: 700 }}>
           {hint.seller}
         </div>
-        <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
           {hint.amount_cents !== null ? money(hint.amount_cents, true) : hint.sender}
         </div>
       </div>

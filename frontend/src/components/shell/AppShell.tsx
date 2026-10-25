@@ -27,7 +27,7 @@ export default function AppShell({
       <div
         style={{
           minHeight: "100vh",
-          background: "radial-gradient(120% 70% at 8% -10%,#0f2a20 0%,#08090a 60%)",
+          background: "radial-gradient(120% 70% at 8% -10%,var(--c-glow) 0%,var(--c-bg) 60%)",
           padding: "0 0 60px",
         }}
       >
@@ -35,7 +35,7 @@ export default function AppShell({
         {!online && (
           <div
             className="mx-auto text-center"
-            style={{ maxWidth: 1240, padding: "8px 28px 0", fontSize: 11.5, color: "#ff7a6b" }}
+            style={{ maxWidth: 1240, padding: "8px 28px 0", fontSize: 11.5, color: "var(--c-expense)" }}
           >
             {t.offline}
           </div>
@@ -60,7 +60,7 @@ export default function AppShell({
 
   return (
     // Fixed to the viewport so only the middle scrolls and the tab bar stays put.
-    <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", background: "#08090a" }}>
+    <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", background: "var(--c-bg)" }}>
       <MobileStatusBar />
       <div
         className="min-h-0 flex-1 overflow-y-auto no-scrollbar"

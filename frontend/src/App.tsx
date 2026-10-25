@@ -20,7 +20,7 @@ export default function App() {
     return (
       <div
         className="flex min-h-screen items-center justify-center text-sm"
-        style={{ color: "rgba(232,234,236,.45)" }}
+        style={{ color: "rgb(var(--fg-rgb) / .45)" }}
       >
         {t.loading}
       </div>

@@ -99,7 +99,7 @@ function DesktopReports({
           <div className="flex items-center" style={{ gap: 6 }}>
             <a
               href={`${import.meta.env.VITE_API_BASE_URL ?? ""}/api/transactions/export.csv`}
-              style={{ fontSize: 12, color: "#0f9b6e", fontWeight: 700, marginInlineEnd: 6 }}
+              style={{ fontSize: 12, color: "var(--c-primary)", fontWeight: 700, marginInlineEnd: 6 }}
             >
               {t.exportCsv}
             </a>
@@ -126,16 +126,16 @@ function DesktopReports({
               className="flex flex-col items-center justify-end"
               style={{ flex: 1, gap: 7, height: "100%" }}
             >
-              <div style={{ fontSize: 10, color: "rgba(232,234,236,.4)" }}>{short(b.amount_cents)}</div>
+              <div style={{ fontSize: 10, color: "rgb(var(--fg-rgb) / .4)" }}>{short(b.amount_cents)}</div>
               <div
                 style={{
                   width: "100%",
                   borderRadius: "6px 6px 0 0",
-                  background: b.amount_cents === data.max ? "#0f9b6e" : "#1f2b27",
+                  background: b.amount_cents === data.max ? "var(--c-primary)" : "var(--c-bar-idle)",
                   height: `${Math.max(8, (b.amount_cents / data.max) * 100)}%`,
                 }}
               />
-              <div style={{ fontSize: 10.5, color: "rgba(232,234,236,.35)" }}>{localize(b.label)}</div>
+              <div style={{ fontSize: 10.5, color: "rgb(var(--fg-rgb) / .35)" }}>{localize(b.label)}</div>
             </div>
           ))}
         </div>
@@ -147,7 +147,7 @@ function DesktopReports({
           <div className="flex flex-col" style={{ gap: 11, marginTop: 16 }}>
             {data.slices.map((c) => (
               <div key={c.category_id ?? "none"}>
-                <div className="flex justify-between" style={{ fontSize: 12.5, color: "rgba(232,234,236,.75)" }}>
+                <div className="flex justify-between" style={{ fontSize: 12.5, color: "rgb(var(--fg-rgb) / .75)" }}>
                   <span>{sliceLabel(c, categories, fa, t.uncategorized)}</span>
                   <span>{short(c.amount_cents)}</span>
                 </div>
@@ -200,9 +200,9 @@ function MobileReports({
               borderRadius: 11,
               fontSize: 12.5,
               fontWeight: 700,
-              background: bucket === c.key ? "#0f9b6e" : "transparent",
-              color: bucket === c.key ? "#04120c" : "rgba(232,234,236,.7)",
-              border: `1px solid ${bucket === c.key ? "#0f9b6e" : "rgba(255,255,255,.14)"}`,
+              background: bucket === c.key ? "var(--c-primary)" : "transparent",
+              color: bucket === c.key ? "var(--c-on-primary)" : "rgb(var(--fg-rgb) / .7)",
+              border: `1px solid ${bucket === c.key ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .14)"}`,
             }}
           >
             {c.label}
@@ -215,13 +215,13 @@ function MobileReports({
           marginTop: 16,
           padding: 16,
           borderRadius: 20,
-          background: "#101318",
-          border: "1px solid rgba(255,255,255,.06)",
+          background: "var(--c-surface-2)",
+          border: "1px solid rgb(var(--ink-rgb) / .06)",
         }}
       >
         <div className="flex items-baseline justify-between">
           <div style={{ fontSize: 24, fontWeight: 700 }}>{group(data.total)}</div>
-          <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)" }}>{t.avgPrefix + short(data.avg)}</div>
+          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)" }}>{t.avgPrefix + short(data.avg)}</div>
         </div>
         <div className="flex items-end" style={{ gap: 5, height: 76, marginTop: 14 }}>
           {data.bars.map((b, i) => (
@@ -232,15 +232,15 @@ function MobileReports({
                 flex: 1,
                 borderRadius: "3px 3px 0 0",
                 height: `${Math.max(8, (b.amount_cents / data.max) * 100)}%`,
-                background: b.amount_cents === data.max ? "#0f9b6e" : "#1f2b27",
+                background: b.amount_cents === data.max ? "var(--c-primary)" : "var(--c-bar-idle)",
               }}
             />
           ))}
         </div>
       </div>
 
-      <div style={{ marginTop: 16, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.08)" }}>
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.breakdown}</div>
+      <div style={{ marginTop: 16, paddingTop: 13, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.breakdown}</div>
         <div className="flex flex-col" style={{ gap: 12, marginTop: 12 }}>
           {data.slices.map((c) => (
             <div key={c.category_id ?? "none"}>
@@ -249,7 +249,7 @@ function MobileReports({
                   <span style={{ width: 8, height: 8, borderRadius: 3, background: c.color }} />
                   {sliceLabel(c, categories, fa, t.uncategorized)}
                 </span>
-                <span style={{ color: "rgba(232,234,236,.7)", fontWeight: 700 }}>{short(c.amount_cents)}</span>
+                <span style={{ color: "rgb(var(--fg-rgb) / .7)", fontWeight: 700 }}>{short(c.amount_cents)}</span>
               </div>
               <Meter width={`${c.percentage}%`} color={c.color} height={6} />
             </div>
@@ -257,19 +257,19 @@ function MobileReports({
         </div>
       </div>
 
-      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
         <IncomeExpenseCard data={data.incomeExpense} bare />
       </div>
 
-      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
         <BudgetsCard slices={data.slices} bare />
       </div>
 
-      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
         <MonthOverMonthCard rows={data.momo} bare />
       </div>
 
-      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.08)" }}>
+      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
         <ByAccountCard rows={data.byAccount} bare />
       </div>
     </div>
@@ -289,31 +289,31 @@ export function IncomeExpenseCard({ data, bare = false }: { data: Data["incomeEx
   const body = (
     <>
       <div className="flex" style={{ gap: 10, marginTop: bare ? 12 : 16 }}>
-        <div style={{ flex: 1, padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,.04)" }}>
-          <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)" }}>{t.income}</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#3fd39a", marginTop: 3 }}>
+        <div style={{ flex: 1, padding: "12px 14px", borderRadius: 14, background: "rgb(var(--ink-rgb) / .04)" }}>
+          <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .45)" }}>{t.income}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--c-income)", marginTop: 3 }}>
             {group(data.income_cents)}
           </div>
         </div>
-        <div style={{ flex: 1, padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,.04)" }}>
-          <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)" }}>{t.expense}</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#ff7a6b", marginTop: 3 }}>
+        <div style={{ flex: 1, padding: "12px 14px", borderRadius: 14, background: "rgb(var(--ink-rgb) / .04)" }}>
+          <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .45)" }}>{t.expense}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--c-expense)", marginTop: 3 }}>
             {group(data.expense_cents)}
           </div>
         </div>
       </div>
-      <div className="flex justify-between" style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)", marginTop: 14 }}>
+      <div className="flex justify-between" style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)", marginTop: 14 }}>
         <span>{t.expense} / {t.income}</span>
         <span>{percent(ratio)}</span>
       </div>
-      <Meter width={`${Math.min(100, ratio)}%`} color={ratio > 100 ? "#ff7a6b" : "#0f9b6e"} height={bare ? 6 : 7} />
+      <Meter width={`${Math.min(100, ratio)}%`} color={ratio > 100 ? "var(--c-expense)" : "var(--c-primary)"} height={bare ? 6 : 7} />
     </>
   );
 
   if (bare) {
     return (
       <>
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.incomeVsExpense}</div>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.incomeVsExpense}</div>
         {body}
       </>
     );
@@ -336,10 +336,10 @@ export function MonthOverMonthCard({ rows, bare = false }: { rows: Data["momo"];
     <div className="flex flex-col" style={{ gap: 9, marginTop: bare ? 12 : 16 }}>
       {rows.map((m) => (
         <div key={m.category_id ?? "none"} className="flex items-center" style={{ gap: 10, fontSize: 12.5 }}>
-          <span className="min-w-0 flex-1 truncate" style={{ color: "rgba(232,234,236,.75)" }}>
+          <span className="min-w-0 flex-1 truncate" style={{ color: "rgb(var(--fg-rgb) / .75)" }}>
             {sliceLabel(m, categories, fa, t.uncategorized)}
           </span>
-          <span style={{ color: "rgba(232,234,236,.5)" }}>{short(m.current_cents)}</span>
+          <span style={{ color: "rgb(var(--fg-rgb) / .5)" }}>{short(m.current_cents)}</span>
           <span
             style={{
               minWidth: 52,
@@ -347,10 +347,10 @@ export function MonthOverMonthCard({ rows, bare = false }: { rows: Data["momo"];
               fontWeight: 700,
               color:
                 m.delta_percentage === null
-                  ? "rgba(232,234,236,.35)"
+                  ? "rgb(var(--fg-rgb) / .35)"
                   : m.delta_percentage > 0
-                    ? "#ff7a6b"
-                    : "#3fd39a",
+                    ? "var(--c-expense)"
+                    : "var(--c-income)",
             }}
           >
             {m.delta_percentage === null
@@ -365,7 +365,7 @@ export function MonthOverMonthCard({ rows, bare = false }: { rows: Data["momo"];
   if (bare) {
     return (
       <>
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.vsLastMonth}</div>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.vsLastMonth}</div>
         {body}
       </>
     );
@@ -387,12 +387,12 @@ export function ByAccountCard({ rows, bare = false }: { rows: Data["byAccount"];
     <div className="flex flex-col" style={{ gap: 11, marginTop: bare ? 12 : 16 }}>
       {rows.map((a) => (
         <div key={a.account_id}>
-          <div className="flex justify-between" style={{ fontSize: 12.5, color: "rgba(232,234,236,.75)" }}>
+          <div className="flex justify-between" style={{ fontSize: 12.5, color: "rgb(var(--fg-rgb) / .75)" }}>
             <span className="truncate">{a.label}</span>
             <span>
-              <span style={{ color: "#3fd39a" }}>{group(a.total_in_cents)}</span>
-              <span style={{ color: "rgba(232,234,236,.3)" }}> · </span>
-              <span style={{ color: "#ff7a6b" }}>{group(a.total_out_cents)}</span>
+              <span style={{ color: "var(--c-income)" }}>{group(a.total_in_cents)}</span>
+              <span style={{ color: "rgb(var(--fg-rgb) / .3)" }}> · </span>
+              <span style={{ color: "var(--c-expense)" }}>{group(a.total_out_cents)}</span>
             </span>
           </div>
           <Meter
@@ -401,7 +401,7 @@ export function ByAccountCard({ rows, bare = false }: { rows: Data["byAccount"];
                 ? (a.total_out_cents / (a.total_in_cents + a.total_out_cents)) * 100
                 : 0
             }%`}
-            color="#ff7a6b"
+            color="var(--c-expense)"
             height={bare ? 6 : 7}
           />
         </div>
@@ -412,7 +412,7 @@ export function ByAccountCard({ rows, bare = false }: { rows: Data["byAccount"];
   if (bare) {
     return (
       <>
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.byAccount}</div>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.byAccount}</div>
         {body}
       </>
     );
