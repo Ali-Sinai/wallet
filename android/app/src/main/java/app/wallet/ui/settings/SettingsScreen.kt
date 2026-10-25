@@ -41,6 +41,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.wallet.R
+import app.wallet.ui.design.LineIcons
+import app.wallet.ui.design.ScreenTitle
+import app.wallet.ui.design.TitleButton
+import app.wallet.ui.design.family
+import app.wallet.ui.theme.Family
 import app.wallet.data.Account
 import app.wallet.data.Budget
 import app.wallet.data.Category
@@ -80,9 +85,16 @@ fun SettingsScreen(
     var confirmLogout by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onClose) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close)) }
-            Text(stringResource(R.string.settings), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        if (family == Family.CLASSIC) {
+            Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onClose) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close)) }
+                Text(stringResource(R.string.settings), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        } else {
+            ScreenTitle(
+                stringResource(R.string.settings),
+                left = { TitleButton(LineIcons.Back, stringResource(R.string.close), onClose, mirrored = true) },
+            )
         }
 
         LazyColumn(Modifier.fillMaxSize()) {
