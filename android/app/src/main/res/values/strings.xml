@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">کیف پول</string>
+    <string name="app_tagline">ردیاب مالی شخصی</string>
+
+    <string name="login_title">ورود</string>
+    <string name="login_server">آدرس سرور</string>
+    <string name="login_server_hint">مثلاً wallet.example.com یا 192.168.1.10:8000</string>
+    <string name="login_username">نام کاربری</string>
+    <string name="login_password">رمز عبور</string>
+    <string name="login_submit">ورود</string>
+
+    <string name="error_invalid_credentials">نام کاربری یا رمز عبور اشتباه است</string>
+    <string name="error_network">اتصال به سرور برقرار نشد</string>
+    <string name="error_bad_server">آدرس سرور معتبر نیست</string>
+    <string name="error_server">خطای سرور: %1$s</string>
+    <string name="error_fields_required">همهٔ فیلدها را پر کنید</string>
+
+    <string name="startup_unreachable">سرور در دسترس نیست</string>
+    <string name="retry">تلاش دوباره</string>
+    <string name="change_server">تغییر سرور</string>
+
+    <string name="home_greeting">سلام %1$s</string>
+    <string name="home_connected_to">متصل به %1$s</string>
+    <string name="home_placeholder">داشبورد در مرحلهٔ بعد اضافه می‌شود.</string>
+    <string name="logout">خروج</string>
+</resources>
