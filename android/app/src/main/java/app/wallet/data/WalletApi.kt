@@ -39,6 +39,7 @@ interface WalletApi {
         @Query("direction") direction: Direction? = null,
         @Query("search") search: String? = null,
         @Query("person_id") personId: Long? = null,
+        @Query("category_id") categoryId: Long? = null,
     ): List<Transaction>
 
     @GET("api/transactions/{id}")

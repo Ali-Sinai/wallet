@@ -22,6 +22,8 @@ class ActivityViewModel(repo: WalletRepository) : TxListViewModel<ActivityData>(
         private set
     var search by mutableStateOf("")
         private set
+    var categoryId by mutableStateOf<Long?>(null)
+        private set
 
     private var searchJob: Job? = null
 
@@ -31,6 +33,11 @@ class ActivityViewModel(repo: WalletRepository) : TxListViewModel<ActivityData>(
 
     fun selectDirection(value: Direction?) {
         direction = value
+        reload()
+    }
+
+    fun selectCategory(value: Long?) {
+        categoryId = value
         reload()
     }
 
@@ -45,7 +52,7 @@ class ActivityViewModel(repo: WalletRepository) : TxListViewModel<ActivityData>(
     }
 
     override suspend fun fetch(force: Boolean) = coroutineScope {
-        val txs = async { repo.transactions(limit = 200, direction = direction, search = search.trim()) }
+        val txs = async { repo.transactions(limit = 200, direction = direction, search = search.trim(), categoryId = categoryId) }
         val lookups = async { repo.lookups(force) }
         ActivityData(txs.await(), lookups.await())
     }

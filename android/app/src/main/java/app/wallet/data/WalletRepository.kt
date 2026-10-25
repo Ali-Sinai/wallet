@@ -41,8 +41,12 @@ class WalletRepository(private val auth: AuthRepository, private val client: Api
 
     suspend fun categoryBreakdown(period: String = "month") = client.call { api.categoryBreakdown(period) }
 
-    suspend fun transactions(limit: Int? = null, direction: Direction? = null, search: String? = null) =
-        client.call { api.transactions(limit, direction, search?.takeIf { it.isNotBlank() }) }
+    suspend fun transactions(
+        limit: Int? = null,
+        direction: Direction? = null,
+        search: String? = null,
+        categoryId: Long? = null,
+    ) = client.call { api.transactions(limit, direction, search?.takeIf { it.isNotBlank() }, categoryId = categoryId) }
 
     suspend fun transaction(id: Long) = client.call { api.transaction(id) }
 

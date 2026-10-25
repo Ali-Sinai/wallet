@@ -191,12 +191,17 @@ fun SignedInApp(
                 composable(Routes.ACTIVITY) {
                     ActivityScreen(
                         appViewModel { ActivityViewModel(it.wallet) },
+                        onAdd = { nav.navigate(Routes.add()) },
                         onSplit = { nav.navigate(Routes.split(it)) },
                         onEdit = { nav.navigate(Routes.add(txId = it)) },
                     )
                 }
                 composable(Routes.PEOPLE) {
-                    PeopleScreen(appViewModel { PeopleViewModel(it.wallet) }, onOpen = { nav.navigate(Routes.person(it)) })
+                    PeopleScreen(
+                        appViewModel { PeopleViewModel(it.wallet) },
+                        onOpen = { nav.navigate(Routes.person(it)) },
+                        onSplit = { nav.navigate(Routes.split(it)) },
+                    )
                 }
                 composable(
                     Routes.PERSON,

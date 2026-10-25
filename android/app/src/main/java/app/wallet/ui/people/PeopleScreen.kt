@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +37,25 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.wallet.R
+import app.wallet.data.PersonBalance
+import app.wallet.ui.design.BigNumber
+import app.wallet.ui.design.DarkLabel
+import app.wallet.ui.design.DirIcon
+import app.wallet.ui.design.LineIcons
+import app.wallet.ui.design.Mono
+import app.wallet.ui.design.PrimaryAction
+import app.wallet.ui.design.ScreenTitle
+import app.wallet.ui.design.SectionHeader
+import app.wallet.ui.design.SoftAvatar
+import app.wallet.ui.design.SoftExpenseChip
+import app.wallet.ui.design.StatChip
+import app.wallet.ui.design.TitleButton
+import app.wallet.ui.design.faint
+import app.wallet.ui.design.family
+import app.wallet.ui.design.gutter
+import app.wallet.ui.design.softCard
+import app.wallet.ui.split.SplitPickerDialog
+import app.wallet.ui.theme.Family
 import app.wallet.ui.components.EmptyBox
 import app.wallet.ui.components.ErrorBox
 import app.wallet.ui.components.Load
@@ -73,44 +93,77 @@ fun Avatar(name: String, color: Color, size: Dp = 40.dp) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PeopleScreen(vm: PeopleViewModel, onOpen: (Long) -> Unit) {
+fun PeopleScreen(vm: PeopleViewModel, onOpen: (Long) -> Unit, onSplit: (Long) -> Unit) {
+    val f = family
     var adding by remember { mutableStateOf(false) }
+    var pickingSplit by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.padding(start = 22.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.tab_people), Modifier.weight(1f), fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            TextButton(onClick = { adding = true }) { Text(stringResource(R.string.add_person)) }
+        if (f == Family.CLASSIC) {
+            Row(Modifier.padding(start = 22.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.tab_people), Modifier.weight(1f), fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                TextButton(onClick = { adding = true }) { Text(stringResource(R.string.add_person)) }
+            }
+        } else {
+            ScreenTitle(
+                stringResource(R.string.tab_people),
+                right = { TitleButton(LineIcons.Plus, stringResource(R.string.add_person), { adding = true }) },
+            )
         }
         PullToRefreshBox(isRefreshing = vm.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
             when (val s = vm.state) {
                 Load.Loading -> LoadingBox()
                 is Load.Failed -> ErrorBox(s.message, onRetry = vm::refresh)
-                is Load.Ready -> LazyColumn(Modifier.fillMaxSize()) {
-                    if (s.data.isEmpty()) item { EmptyBox(stringResource(R.string.no_people)) }
-                    items(s.data, key = { it.personId }) { person ->
-                        Column(Modifier.clickable { onOpen(person.personId) }) {
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 22.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                val color = balanceColor(person.netCents)
-                                Avatar(person.name, color)
-                                Column(Modifier.weight(1f)) {
-                                    Text(person.name, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                    Text(balanceText(person.netCents), fontSize = 11.5.sp, color = color)
+                is Load.Ready -> {
+                    val people = s.data
+                    val owed = people.filter { it.netCents > 0 }.sumOf { it.netCents }
+                    val owe = people.filter { it.netCents < 0 }.sumOf { -it.netCents }
+                    LazyColumn(Modifier.fillMaxSize()) {
+                        when (f) {
+                            Family.DARK -> item {
+                                Row(Modifier.padding(horizontal = gutter).padding(top = 40.dp)) {
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        DarkLabel(stringResource(R.string.owed_to_me_short))
+                                        BigNumber(Fmt.group(owed), size = 32.sp)
+                                    }
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        DarkLabel(stringResource(R.string.i_owe_short))
+                                        BigNumber(Fmt.group(owe), size = 32.sp, color = WalletColors.expense)
+                                    }
                                 }
-                                if (person.openDebtCount > 0) {
-                                    Text(
-                                        stringResource(R.string.open_debts, Fmt.digits(person.openDebtCount)),
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            }
+                            Family.SOFT -> item {
+                                Row(
+                                    Modifier.padding(horizontal = gutter).padding(top = 22.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    StatChip(stringResource(R.string.owed_to_me_short), Fmt.short(owed), WalletColors.income, LineIcons.Up, Modifier.weight(1f))
+                                    StatChip(stringResource(R.string.i_owe_short), Fmt.short(owe), SoftExpenseChip, LineIcons.Down, Modifier.weight(1f))
+                                }
+                            }
+                            Family.CLASSIC -> Unit
+                        }
+                        if (f != Family.CLASSIC) {
+                            item {
+                                SectionHeader(
+                                    stringResource(R.string.ledger),
+                                    Modifier.padding(horizontal = gutter).padding(top = if (f == Family.DARK) 48.dp else 22.dp, bottom = 8.dp),
+                                )
+                            }
+                        }
+                        if (people.isEmpty()) item { EmptyBox(stringResource(R.string.no_people)) }
+                        items(people, key = { it.personId }) { person -> PersonRow(person) { onOpen(person.personId) } }
+                        if (f != Family.CLASSIC) {
+                            item {
+                                Box(Modifier.padding(horizontal = gutter).padding(top = 28.dp, bottom = 16.dp)) {
+                                    PrimaryAction(
+                                        stringResource(R.string.split_bill),
+                                        onClick = { pickingSplit = true },
+                                        label = stringResource(R.string.balance),
+                                        value = Fmt.money(owed - owe, signed = true),
                                     )
                                 }
                             }
-                            HorizontalDivider(Modifier.padding(horizontal = 22.dp), color = WalletColors.border)
                         }
                     }
                 }
@@ -129,7 +182,95 @@ fun PeopleScreen(vm: PeopleViewModel, onOpen: (Long) -> Unit) {
             onDismiss = { adding = false },
         )
     }
+    if (pickingSplit) {
+        SplitPickerDialog(
+            onPick = {
+                pickingSplit = false
+                onSplit(it)
+            },
+            onDismiss = { pickingSplit = false },
+        )
+    }
 }
+
+/** One person and what's outstanding between you, in the active design. */
+@Composable
+private fun PersonRow(person: PersonBalance, onClick: () -> Unit) {
+    val color = balanceColor(person.netCents)
+    when (family) {
+        Family.CLASSIC -> Column(Modifier.clickable(onClick = onClick)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 22.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Avatar(person.name, color)
+                Column(Modifier.weight(1f)) {
+                    Text(person.name, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text(balanceText(person.netCents), fontSize = 11.5.sp, color = color)
+                }
+                if (person.openDebtCount > 0) {
+                    Text(
+                        stringResource(R.string.open_debts, Fmt.digits(person.openDebtCount)),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            HorizontalDivider(Modifier.padding(horizontal = 22.dp), color = WalletColors.border)
+        }
+        Family.DARK -> Row(
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = gutter, vertical = 17.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Text(Fmt.initials(person.name), Modifier.width(28.dp), fontFamily = Mono, fontSize = 13.sp, color = faint)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(person.name, fontSize = 15.sp, maxLines = 1)
+                Text(balanceSub(person.netCents), fontSize = 12.sp, color = faint)
+            }
+            Text(if (person.netCents == 0L) Fmt.digits(0) else Fmt.money(person.netCents, signed = true), fontFamily = Mono, fontSize = 14.sp, color = color)
+            DirIcon(LineIcons.Chevron, 16.dp, WalletColors.foreground.copy(alpha = 0.27f))
+        }
+        Family.SOFT -> Row(
+            Modifier
+                .padding(horizontal = gutter, vertical = 5.dp)
+                .fillMaxWidth()
+                .softCard(WalletColors.surface)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            SoftAvatar(Fmt.initials(person.name), color, 44.dp)
+            Column(Modifier.weight(1f)) {
+                Text(person.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(balanceSub(person.netCents), fontSize = 12.sp, color = faint)
+            }
+            Text(
+                if (person.netCents == 0L) stringResource(R.string.settled) else Fmt.money(person.netCents, signed = true),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = color,
+            )
+        }
+    }
+}
+
+/** "Owes you" / "You owe" / "Settled", without the amount (the row shows it). */
+@Composable
+fun balanceSub(net: Long): String = stringResource(
+    when {
+        net > 0 -> R.string.owes_you_short
+        net < 0 -> R.string.you_owe_short
+        else -> R.string.settled
+    },
+)
 
 @Composable
 fun PersonDialog(

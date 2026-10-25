@@ -254,4 +254,7 @@
     <string name="spent">Spent</string>
     <string name="top_spending">Top spending</string>
     <string name="results_count">%1$s transactions</string>
+    <string name="all_categories">All categories</string>
+    <string name="owes_you_short">Owes you</string>
+    <string name="you_owe_short">You owe</string>
 </resources>

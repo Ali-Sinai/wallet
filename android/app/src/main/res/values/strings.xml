@@ -253,4 +253,7 @@
     <string name="spent">هزینه شده</string>
     <string name="top_spending">بیشترین هزینه‌ها</string>
     <string name="results_count">%1$s تراکنش</string>
+    <string name="all_categories">همه دسته‌ها</string>
+    <string name="owes_you_short">بدهکار شماست</string>
+    <string name="you_owe_short">شما بدهکارید</string>
 </resources>

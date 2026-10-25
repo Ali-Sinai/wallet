@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.wallet.data.AccountBreakdown
+import app.wallet.data.Budget
 import app.wallet.data.CategorySlice
 import app.wallet.data.IncomeExpense
 import app.wallet.data.Lookups
@@ -27,7 +28,12 @@ data class ReportsData(
     /** Only for the month view: this month against last, per category. */
     val monthOverMonth: List<MonthCategoryDelta>,
     val lookups: Lookups,
-)
+    val budgets: List<Budget>,
+) {
+    /** What the period's points add up to, and their average — the new designs' headline. */
+    val total: Long get() = spend.sumOf { it.amountCents }
+    val average: Long get() = if (spend.isEmpty()) 0 else total / spend.size
+}
 
 /** frontend/src/pages/Reports.tsx. */
 class ReportsViewModel(repo: WalletRepository) : TxListViewModel<ReportsData>(repo) {
@@ -53,6 +59,7 @@ class ReportsViewModel(repo: WalletRepository) : TxListViewModel<ReportsData>(re
         val accounts = async { repo.byAccount(p.api) }
         val mom = async { if (p == ReportPeriod.MONTH) repo.monthOverMonth() else emptyList() }
         val lookups = async { repo.lookups(force) }
+        val budgets = async { runCatching { repo.budgets() }.getOrDefault(emptyList()) }
         val points = spend.await().let { raw ->
             if (byMonth) {
                 raw.sortedBy { it.label }.map { it.copy(label = Fmt.monthKeyLabel(it.label)) }
@@ -60,6 +67,6 @@ class ReportsViewModel(repo: WalletRepository) : TxListViewModel<ReportsData>(re
                 raw.sortedBy { Fmt.dayLabelOrder(it.label) }
             }
         }
-        ReportsData(totals.await(), points, slices.await(), accounts.await(), mom.await(), lookups.await())
+        ReportsData(totals.await(), points, slices.await(), accounts.await(), mom.await(), lookups.await(), budgets.await())
     }
 }
