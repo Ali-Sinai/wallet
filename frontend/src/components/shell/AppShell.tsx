@@ -5,13 +5,24 @@ import { useI18n } from "../../lib/i18n";
 import TopBar from "./TopBar";
 import Sidebar from "./Sidebar";
 import { MobileStatusBar, MobileTabBar } from "./MobileChrome";
+import { useFamily } from "../../lib/theme";
+import DarkShell from "../../designs/dark/DarkShell";
+import SoftShell from "../../designs/soft/SoftShell";
 
 /**
  * Two layouts, one per design file:
  *  - >=1000px  Wallet Web.dc.html — sticky top bar, 1240px shell, 330px rail
  *  - <1000px   Toman Tracker App.dc.html — status strip, scroller, tab bar
+ * The Wallet Dark / Wallet Soft themes bring their own shells.
  */
-export default function AppShell({
+export default function AppShell(props: { children: ReactNode; sidebar?: boolean }) {
+  const family = useFamily();
+  if (family === "dark") return <DarkShell>{props.children}</DarkShell>;
+  if (family === "soft") return <SoftShell>{props.children}</SoftShell>;
+  return <ClassicShell {...props} />;
+}
+
+function ClassicShell({
   children,
   sidebar = true,
 }: {
@@ -27,7 +38,7 @@ export default function AppShell({
       <div
         style={{
           minHeight: "100vh",
-          background: "radial-gradient(120% 70% at 8% -10%,#0f2a20 0%,#08090a 60%)",
+          background: "radial-gradient(120% 70% at 8% -10%,var(--c-glow) 0%,var(--c-bg) 60%)",
           padding: "0 0 60px",
         }}
       >
@@ -35,7 +46,7 @@ export default function AppShell({
         {!online && (
           <div
             className="mx-auto text-center"
-            style={{ maxWidth: 1240, padding: "8px 28px 0", fontSize: 11.5, color: "#ff7a6b" }}
+            style={{ maxWidth: 1240, padding: "8px 28px 0", fontSize: 11.5, color: "var(--c-expense)" }}
           >
             {t.offline}
           </div>
@@ -60,7 +71,7 @@ export default function AppShell({
 
   return (
     // Fixed to the viewport so only the middle scrolls and the tab bar stays put.
-    <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", background: "#08090a" }}>
+    <div className="flex flex-col overflow-hidden" style={{ height: "100dvh", background: "var(--c-bg)" }}>
       <MobileStatusBar />
       <div
         className="min-h-0 flex-1 overflow-y-auto no-scrollbar"

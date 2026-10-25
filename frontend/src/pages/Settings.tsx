@@ -1,9 +1,11 @@
 import { useState, type ReactNode } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input as UiInput } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import AppShell from "../components/shell/AppShell";
-import { BusyLabel, DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "@/components/primitives";
+import { ActionButton, DARK_LABEL, DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "@/components/primitives";
+import { PageBody, PageTitle } from "../designs/Page";
+import { useFamily } from "../lib/theme";
+import { useIsDesktop } from "@/hooks/use-media-query";
 import { useI18n } from "../lib/i18n";
 import { useAuth } from "../lib/auth";
 import { S } from "../lib/settingsStrings";
@@ -52,10 +54,34 @@ function useS() {
 }
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  const family = useFamily();
+  if (family === "dark") {
+    // Wallet Dark: no box — a hairline, a small-caps label, the rows.
+    return (
+      <div style={{ paddingTop: 22, borderTop: "1px solid rgb(var(--ink-rgb) / .12)" }}>
+        <div style={DARK_LABEL}>{title}</div>
+        {hint && <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 8 }}>{hint}</div>}
+        <div className="flex flex-col" style={{ gap: 14, marginTop: 14 }}>
+          {children}
+        </div>
+      </div>
+    );
+  }
+  if (family === "soft") {
+    return (
+      <div className="soft-card" style={{ padding: 20, borderRadius: 22, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }}>
+        <div style={{ fontSize: 17, fontWeight: 600 }}>{title}</div>
+        {hint && <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .55)", marginTop: 4 }}>{hint}</div>}
+        <div className="flex flex-col" style={{ gap: 12, marginTop: 16 }}>
+          {children}
+        </div>
+      </div>
+    );
+  }
   return (
-    <div style={{ padding: 22, borderRadius: 20, background: "#0e1110", border: "1px solid rgba(255,255,255,.07)" }}>
+    <div style={{ padding: 22, borderRadius: 20, background: "var(--c-surface)", border: "1px solid rgb(var(--ink-rgb) / .07)" }}>
       <div style={{ fontSize: 15, fontWeight: 700 }}>{title}</div>
-      {hint && <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)", marginTop: 4 }}>{hint}</div>}
+      {hint && <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)", marginTop: 4 }}>{hint}</div>}
       <div className="flex flex-col" style={{ gap: 12, marginTop: 14 }}>
         {children}
       </div>
@@ -66,7 +92,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 function Rows({ children, empty }: { children: ReactNode[]; empty: string }) {
   const rows = children.filter(Boolean);
   if (rows.length === 0) {
-    return <div style={{ fontSize: 12, color: "rgba(232,234,236,.35)", padding: "6px 0" }}>{empty}</div>;
+    return <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .35)", padding: "6px 0" }}>{empty}</div>;
   }
   return (
     <div className="flex flex-col" style={{ gap: 8 }}>
@@ -90,37 +116,13 @@ function SaveRow({
 }) {
   return (
     <div className="flex" style={{ gap: 8 }}>
-      <Button variant="plain" size="plain"
-        onClick={onSave}
-        disabled={busy}
-        aria-busy={busy}
-        style={{
-          flex: 1,
-          textAlign: "center",
-          padding: "10px 0",
-          borderRadius: 12,
-          background: "#0f9b6e",
-          color: "#04120c",
-          fontSize: 12.5,
-          fontWeight: 700,
-        }}
-      >
-        <BusyLabel busy={busy}>{saveLabel}</BusyLabel>
-      </Button>
+      <ActionButton onClick={onSave} busy={busy} grow>
+        {saveLabel}
+      </ActionButton>
       {onCancel && (
-        <Button variant="plain" size="plain"
-          onClick={onCancel}
-          style={{
-            padding: "10px 16px",
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,.14)",
-            color: "rgba(232,234,236,.7)",
-            fontSize: 12.5,
-            fontWeight: 700,
-          }}
-        >
+        <ActionButton tone="outline" onClick={onCancel}>
           {cancelLabel}
-        </Button>
+        </ActionButton>
       )}
     </div>
   );
@@ -128,6 +130,34 @@ function SaveRow({
 
 export default function Settings() {
   const s = useS();
+  const family = useFamily();
+  const wide = useIsDesktop();
+
+  if (family !== "classic") {
+    return (
+      <AppShell sidebar={false}>
+        <PageBody maxWidth={1100}>
+          <PageTitle title={s.title} />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: wide ? "repeat(auto-fit,minmax(340px,1fr))" : "minmax(0,1fr)",
+              gap: family === "dark" ? "40px 56px" : 16,
+              alignItems: "start",
+              marginTop: family === "dark" ? 36 : 22,
+            }}
+          >
+            <SettingsSections />
+          </div>
+          <div className="flex flex-col" style={{ gap: 18, marginTop: 32 }}>
+            <LogoutRow />
+            <IconCredit />
+          </div>
+        </PageBody>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell sidebar={false}>
       <div
@@ -143,15 +173,7 @@ export default function Settings() {
             alignItems: "start",
           }}
         >
-          <GeneralSection />
-          <AccountsSection />
-          <CategoriesSection />
-          <BudgetsSection />
-          <PeopleSection />
-          <PushSection />
-          <WebhookSection />
-          <SmsPatternsSection />
-          <KeywordRulesSection />
+          <SettingsSections />
         </div>
         <LogoutRow />
         <IconCredit />
@@ -160,12 +182,28 @@ export default function Settings() {
   );
 }
 
+function SettingsSections() {
+  return (
+    <>
+      <GeneralSection />
+      <AccountsSection />
+      <CategoriesSection />
+      <BudgetsSection />
+      <PeopleSection />
+      <PushSection />
+      <WebhookSection />
+      <SmsPatternsSection />
+      <KeywordRulesSection />
+    </>
+  );
+}
+
 /** Flaticon's free license requires attribution for the tab bar icons. */
 function IconCredit() {
   const s = useS();
-  const link = { color: "rgba(232,234,236,.55)", textDecoration: "underline" };
+  const link = { color: "rgb(var(--fg-rgb) / .55)", textDecoration: "underline" };
   return (
-    <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+    <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>
       {s.iconCredit}{" "}
       <a href="https://www.flaticon.com/authors/rajan-pyakurel" target="_blank" rel="noreferrer" style={link}>
         Rajan Pyakurel
@@ -183,29 +221,22 @@ function LogoutRow() {
   const { logout } = useAuth();
   const [busy, setBusy] = useState(false);
   return (
-    <Button variant="plain" size="plain"
-      onClick={async () => {
-        setBusy(true);
-        try {
-          await logout();
-        } finally {
-          setBusy(false);
-        }
-      }}
-      disabled={busy}
-      aria-busy={busy}
-      className="self-start"
-      style={{
-        padding: "10px 16px",
-        borderRadius: 12,
-        border: "1px solid rgba(255,122,107,.35)",
-        color: "#ff7a6b",
-        fontSize: 13,
-        fontWeight: 700,
-      }}
-    >
-      <BusyLabel busy={busy}>{s.logout}</BusyLabel>
-    </Button>
+    <div className="flex">
+      <ActionButton
+        tone="danger"
+        busy={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await logout();
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {s.logout}
+      </ActionButton>
+    </div>
   );
 }
 
@@ -340,7 +371,7 @@ function AccountsSection() {
             <div className="truncate" style={{ fontSize: 13, fontWeight: 700 }}>
               {(fa ? a.name_fa : a.name_en) || a.bank_name}
             </div>
-            <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
               {a.bank_name} ····{digits(a.last4)} · {a.is_active ? s.active : s.inactive}
             </div>
           </ListRow>
@@ -382,7 +413,7 @@ const EMPTY_CATEGORY = {
   name_fa: "",
   name_en: "",
   icon: "💰",
-  color: "#0f9b6e",
+  color: "var(--c-primary)",
   parent_id: null as number | null,
   sort_order: 0,
 };
@@ -473,8 +504,8 @@ function CategoriesSection() {
               width: "100%",
               height: 38,
               borderRadius: 12,
-              background: "rgba(255,255,255,.05)",
-              border: "1px solid rgba(255,255,255,.09)",
+              background: "rgb(var(--ink-rgb) / .05)",
+              border: "1px solid rgb(var(--ink-rgb) / .09)",
               padding: 4,
             }}
           />
@@ -580,7 +611,7 @@ function BudgetsSection() {
               <div className="truncate" style={{ fontSize: 13, fontWeight: 700 }}>
                 {categoryName(category, fa, "—")}
               </div>
-              <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+              <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
                 {group(b.limit_cents)} · {b.month_jalali || s.everyMonth}
               </div>
             </ListRow>
@@ -672,7 +703,7 @@ function PeopleSection() {
               {p.name}
             </div>
             {p.contact_note && (
-              <div className="truncate" style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
+              <div className="truncate" style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>
                 {p.contact_note}
               </div>
             )}
@@ -742,30 +773,15 @@ function PushSection() {
 
   return (
     <Section title={s.notifications} hint={status?.enabled ? s.pushReady : s.pushNotReady}>
-      <Button variant="plain" size="plain"
-        onClick={onEnable}
-        disabled={!canEnable || enabling}
-        aria-busy={enabling}
-        style={{
-          width: "100%",
-          textAlign: "center",
-          padding: "11px 0",
-          borderRadius: 12,
-          background: "#0f9b6e",
-          color: "#04120c",
-          fontSize: 12.5,
-          fontWeight: 700,
-          opacity: canEnable ? 1 : 0.4,
-        }}
-      >
-        <BusyLabel busy={enabling}>{s.enablePush}</BusyLabel>
-      </Button>
+      <ActionButton onClick={onEnable} disabled={!canEnable} busy={enabling}>
+        {s.enablePush}
+      </ActionButton>
       {!isFirebaseConfigured && (
-        <div style={{ fontSize: 11, color: "rgba(232,234,236,.45)" }}>{s.firebaseIncomplete}</div>
+        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .45)" }}>{s.firebaseIncomplete}</div>
       )}
-      {message && <div style={{ fontSize: 11.5, color: "#0f9b6e" }}>{message}</div>}
+      {message && <div style={{ fontSize: 11.5, color: "var(--c-primary)" }}>{message}</div>}
 
-      <div style={{ height: 1, background: "rgba(255,255,255,.07)" }} />
+      <div style={{ height: 1, background: "rgb(var(--ink-rgb) / .07)" }} />
 
       <div className="flex" style={{ gap: 10 }}>
         <Field label={s.thresholdLabel}>
@@ -809,34 +825,27 @@ function WebhookSection() {
 
   return (
     <Section title={s.webhookTitle} hint={s.webhookHint}>
-      <Button variant="plain" size="plain"
-        onClick={async () => {
-          const res = await rotate.mutateAsync();
-          setToken(res.token);
-        }}
-        disabled={rotate.isPending}
-        aria-busy={rotate.isPending}
-        style={{
-          width: "100%",
-          textAlign: "center",
-          padding: "11px 0",
-          borderRadius: 12,
-          border: "1px solid rgba(255,255,255,.14)",
-          fontSize: 12.5,
-          fontWeight: 700,
-          color: "rgba(232,234,236,.8)",
-        }}
-      >
-        <BusyLabel busy={rotate.isPending}>{s.generateToken}</BusyLabel>
-      </Button>
+      <div className="flex">
+        <ActionButton
+          tone="outline"
+          grow
+          busy={rotate.isPending}
+          onClick={async () => {
+            const res = await rotate.mutateAsync();
+            setToken(res.token);
+          }}
+        >
+          {s.generateToken}
+        </ActionButton>
+      </div>
       {token && (
         <div
           className="select-all break-all font-mono"
           dir="ltr"
-          style={{ padding: 12, borderRadius: 12, background: "rgba(255,255,255,.05)", fontSize: 11 }}
+          style={{ padding: 12, borderRadius: 12, background: "rgb(var(--ink-rgb) / .05)", fontSize: 11 }}
         >
           {token}
-          <div dir="auto" style={{ fontSize: 10.5, color: "#ff7a6b", marginTop: 8 }}>
+          <div dir="auto" style={{ fontSize: 10.5, color: "var(--c-expense)", marginTop: 8 }}>
             {s.tokenOnce}
           </div>
         </div>
@@ -851,11 +860,11 @@ function WebhookSection() {
 
 const TEXTAREA_STYLE = {
   fontSize: 11,
-  background: "rgba(0,0,0,.3)",
+  background: "var(--c-well)",
   borderRadius: 10,
   padding: 8,
-  color: "#e8eaec",
-  border: "1px solid rgba(255,255,255,.07)",
+  color: "var(--c-fg)",
+  border: "1px solid rgb(var(--ink-rgb) / .07)",
   outline: "none",
 } as const;
 
@@ -884,7 +893,7 @@ function SmsPatternsSection() {
           <div
             key={p.id}
             className="flex flex-col"
-            style={{ gap: 8, padding: 12, borderRadius: 14, background: "rgba(255,255,255,.04)" }}
+            style={{ gap: 8, padding: 12, borderRadius: 14, background: "rgb(var(--ink-rgb) / .04)" }}
           >
             <div className="flex items-center justify-between" style={{ gap: 8 }}>
               <div className="min-w-0 truncate" style={{ fontSize: 13, fontWeight: 700 }}>
@@ -901,7 +910,7 @@ function SmsPatternsSection() {
               </div>
             </div>
             <div className="flex items-center" style={{ gap: 6 }}>
-              <div dir="ltr" className="min-w-0 truncate" style={{ fontSize: 11, color: "rgba(232,234,236,.35)" }}>
+              <div dir="ltr" className="min-w-0 truncate" style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)" }}>
                 sender: {p.sender_match}
               </div>
               {p.kind === "otp" && (
@@ -960,7 +969,7 @@ function SmsPatternsSection() {
                   <pre
                     dir="ltr"
                     className="overflow-x-auto"
-                    style={{ fontSize: 10, background: "rgba(0,0,0,.4)", borderRadius: 10, padding: 8 }}
+                    style={{ fontSize: 10, background: "var(--c-well)", borderRadius: 10, padding: 8 }}
                   >
                     {testResult}
                   </pre>
@@ -971,8 +980,8 @@ function SmsPatternsSection() {
         ))}
       </Rows>
 
-      <div style={{ height: 1, background: "rgba(255,255,255,.07)" }} />
-      <div style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>{s.addPatternLabel}</div>
+      <div style={{ height: 1, background: "rgb(var(--ink-rgb) / .07)" }} />
+      <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .45)" }}>{s.addPatternLabel}</div>
       <Select
         value={form.kind}
         onChange={(v) => setForm({ ...form, kind: v as PatternKind })}
@@ -981,7 +990,7 @@ function SmsPatternsSection() {
           { value: "otp", label: s.otpKind },
         ]}
       />
-      <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)" }}>
+      <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)" }}>
         {form.kind === "otp" ? s.otpKindHint : s.transactionKindHint}
       </div>
       <Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder={s.namePlaceholder} />
@@ -998,7 +1007,7 @@ function SmsPatternsSection() {
         value={form.body_regex}
         onChange={(e) => setForm({ ...form, body_regex: e.target.value })}
         className="inline-block min-h-0 field-sizing-fixed font-mono leading-[1.5] md:text-[11px]"
-        style={{ ...TEXTAREA_STYLE, background: "rgba(255,255,255,.05)", borderRadius: 12, padding: 10 }}
+        style={{ ...TEXTAREA_STYLE, background: "rgb(var(--ink-rgb) / .05)", borderRadius: 12, padding: 10 }}
       />
       <SaveRow
         saveLabel={s.addPattern}

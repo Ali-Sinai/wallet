@@ -21,7 +21,7 @@ function useRowModel({ tx, categories, accounts, withAccount = true }: RowProps)
     title: txTitle(tx, t.transaction),
     meta: withAccount && account ? `${catLabel} · ${accountLabel(account, fa, digits)}` : catLabel,
     amount: money(signed, true),
-    color: signed < 0 ? "#ff7a6b" : "#3fd39a",
+    color: signed < 0 ? "var(--c-expense)" : "var(--c-income)",
     accent: categoryColor(category),
     date: localize(tx.occurred_at_jalali),
   };
@@ -41,7 +41,7 @@ export function TxRowDesktop(props: RowProps) {
         gridTemplateColumns: "4px minmax(0,1fr) auto",
         gap: 14,
         padding: "13px 0",
-        borderBottom: "1px solid rgba(255,255,255,.05)",
+        borderBottom: "1px solid rgb(var(--ink-rgb) / .05)",
       }}
     >
       <div style={{ width: 4, height: 30, borderRadius: 2, background: m.accent }} />
@@ -49,11 +49,11 @@ export function TxRowDesktop(props: RowProps) {
         <div className="truncate" style={{ fontSize: 14, fontWeight: 700 }}>
           {m.title}
         </div>
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.42)", marginTop: 3 }}>{m.meta}</div>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .42)", marginTop: 3 }}>{m.meta}</div>
       </div>
       <div style={{ textAlign: endAlign }}>
         <div style={{ fontSize: 14.5, fontWeight: 700, color: m.color }}>{m.amount}</div>
-        <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)", marginTop: 3 }}>{m.date}</div>
+        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)", marginTop: 3 }}>{m.date}</div>
       </div>
     </div>
   );
@@ -68,20 +68,20 @@ export function TxRowMobile(props: RowProps) {
     <div
       onClick={() => openDetail(props.tx)}
       className="flex cursor-pointer items-center"
-      style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,.05)" }}
+      style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid rgb(var(--ink-rgb) / .05)" }}
     >
       <div className="flex-none" style={{ width: 3, height: 26, borderRadius: 2, background: m.accent }} />
       <div className="min-w-0 flex-1">
         <div className="truncate" style={{ fontSize: 13.5, fontWeight: 700 }}>
           {m.title}
         </div>
-        <div className="truncate" style={{ fontSize: 11, color: "rgba(232,234,236,.42)", marginTop: 2 }}>
+        <div className="truncate" style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .42)", marginTop: 2 }}>
           {m.meta}
         </div>
       </div>
       <div className="flex-none" style={{ textAlign: "end" }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: m.color }}>{m.amount}</div>
-        <div style={{ fontSize: 10.5, color: "rgba(232,234,236,.35)" }}>{m.date}</div>
+        <div style={{ fontSize: 10.5, color: "rgb(var(--fg-rgb) / .35)" }}>{m.date}</div>
       </div>
     </div>
   );

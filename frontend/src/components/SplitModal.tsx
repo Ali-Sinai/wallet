@@ -4,12 +4,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input as InputPrimitive } from "@base-ui/react/input";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Avatar, BusyLabel, Chip, Overlay, OverlayHeader } from "@/components/primitives";
+import { Avatar, BusyLabel, Chip, Choice, Overlay, OverlayHeader, SubLabel } from "@/components/primitives";
 import { usePeople } from "../lib/queries";
 import { api } from "../lib/api";
 import { useI18n } from "../lib/i18n";
 import { initials, txTitle } from "../lib/domain";
 import type { SplitMode, Transaction } from "../types";
+import { useFamily, type ThemeFamily } from "../lib/theme";
+import { PillButton, TotalBar } from "../designs/buttons";
 
 type Method = "equal" | "amounts" | "percentages" | "items";
 
@@ -24,6 +26,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
   const { t, fa, digits, group, money, short } = useI18n();
   const { data: people } = usePeople();
   const qc = useQueryClient();
+  const family = useFamily();
 
   const [mode, setMode] = useState<SplitMode>("i_paid");
   const [method, setMethod] = useState<Method>("equal");
@@ -112,47 +115,52 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
     (method !== "percentages" || percentRemaining === 0) &&
     (method !== "items" || (items.length > 0 && itemsRemaining === 0));
 
-  const shareColor = mode === "i_paid" ? "#3fd39a" : "#ff7a6b";
+  const shareColor = mode === "i_paid" ? "var(--c-income)" : "var(--c-expense)";
   const shareSub = mode === "i_paid" ? t.owes : t.youOwe;
 
   return (
     <Overlay onClose={onClose} maxWidth={520} sheetMaxHeight="88%">
       <OverlayHeader title={t.splitTitle} onClose={onClose} closeLabel={t.close} />
 
-      <div style={{ fontSize: 16, fontWeight: 700, marginTop: 10 }}>{txTitle(tx, t.transaction)}</div>
-      <div className="flex items-baseline" style={{ gap: 6 }}>
-        <span style={{ fontSize: 30, fontWeight: 700 }}>{group(total)}</span>
-        <span style={{ fontSize: 13, color: "rgba(232,234,236,.45)" }}>{t.tomanShort}</span>
-      </div>
+      {family === "classic" ? (
+        <>
+          <div style={{ fontSize: 16, fontWeight: 700, marginTop: 10 }}>{txTitle(tx, t.transaction)}</div>
+          <div className="flex items-baseline" style={{ gap: 6 }}>
+            <span style={{ fontSize: 30, fontWeight: 700 }}>{group(total)}</span>
+            <span style={{ fontSize: 13, color: "rgb(var(--fg-rgb) / .45)" }}>{t.tomanShort}</span>
+          </div>
+        </>
+      ) : family === "dark" ? (
+        <div style={{ paddingTop: 22 }}>
+          <div style={{ fontSize: 17 }}>{txTitle(tx, t.transaction)}</div>
+          <div style={{ fontSize: "clamp(36px, 12vw, 52px)", fontWeight: 300, letterSpacing: "-.03em", lineHeight: 1, marginTop: 12 }}>
+            {group(total)}
+          </div>
+        </div>
+      ) : (
+        // The split-bill screen's centred header.
+        <div className="flex flex-col items-center text-center" style={{ paddingTop: 22 }}>
+          <span style={{ fontSize: 24, fontWeight: 600 }}>{txTitle(tx, t.transaction)}</span>
+          <span style={{ fontSize: 13, color: "rgb(var(--fg-rgb) / .55)", marginTop: 4 }}>
+            {group(total)} {t.tomanShort}
+          </span>
+        </div>
+      )}
 
-      <div className="flex flex-col" style={{ gap: 7, marginTop: 16 }}>
+      <div className="flex flex-col" style={{ gap: family === "dark" ? 0 : family === "soft" ? 10 : 7, marginTop: family === "dark" ? 22 : 16 }}>
         {(
           [
             ["i_paid", t.iPaid],
             ["they_paid", t.weSplit],
           ] as [SplitMode, string][]
         ).map(([m, label]) => (
-          <Button variant="plain" size="plain"
-            key={m}
-            type="button"
-            onClick={() => setMode(m)}
-            style={{
-              padding: "12px 15px",
-              borderRadius: 13,
-              fontSize: 13,
-              fontWeight: 700,
-              textAlign: "start",
-              background: mode === m ? "#0f9b6e" : "transparent",
-              color: mode === m ? "#04120c" : "rgba(232,234,236,.7)",
-              border: `1px solid ${mode === m ? "#0f9b6e" : "rgba(255,255,255,.14)"}`,
-            }}
-          >
+          <Choice key={m} active={mode === m} onClick={() => setMode(m)}>
             {label}
-          </Button>
+          </Choice>
         ))}
       </div>
 
-      <div className="flex flex-wrap" style={{ gap: 6, marginTop: 12 }}>
+      <div className="flex flex-wrap" style={{ gap: family === "dark" ? "4px 18px" : family === "soft" ? 8 : 6, marginTop: family === "classic" ? 12 : 18 }}>
         {(
           [
             ["equal", t.equal],
@@ -169,7 +177,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
 
       <label
         className="flex cursor-pointer items-center"
-        style={{ gap: 8, marginTop: 12, fontSize: 12, color: "rgba(232,234,236,.6)" }}
+        style={{ gap: 8, marginTop: 12, fontSize: 12, color: "rgb(var(--fg-rgb) / .6)" }}
       >
         <Checkbox checked={includeMe} onCheckedChange={(checked) => setIncludeMe(checked)} />
         {t.includeMe}
@@ -177,24 +185,17 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
 
       {method === "equal" && (
         <>
-          <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.quick}</div>
+          <SubLabel top={18}>{t.quick}</SubLabel>
           <div className="flex" style={{ gap: 8, marginTop: 9 }}>
             {[2, 3, 4].map((n) => (
               <Button variant="plain" size="plain"
                 key={n}
                 type="button"
                 onClick={() => setWays(n)}
-                style={{
-                  flex: 1,
-                  padding: "13px 0",
-                  textAlign: "center",
-                  borderRadius: 15,
-                  background: ways === n ? "#12241d" : "#141820",
-                  border: `1px solid ${ways === n ? "#0f9b6e" : "rgba(255,255,255,.07)"}`,
-                }}
+                style={wayStyle(family, ways === n)}
               >
                 <div style={{ fontSize: 17, fontWeight: 700 }}>÷{digits(n)}</div>
-                <div style={{ fontSize: 10.5, color: "rgba(232,234,236,.45)", marginTop: 3 }}>
+                <div style={{ fontSize: 10.5, color: "rgb(var(--fg-rgb) / .45)", marginTop: 3 }}>
                   {short(Math.floor(total / n))}
                 </div>
               </Button>
@@ -203,8 +204,8 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
         </>
       )}
 
-      <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{t.who}</div>
-      <div className="flex flex-wrap" style={{ gap: 7, marginTop: 9 }}>
+      <SubLabel top={18}>{t.who}</SubLabel>
+      <div className="flex flex-wrap" style={{ gap: family === "dark" ? "4px 18px" : 8, marginTop: 9 }}>
         {people?.map((p) => (
           <Chip
             key={p.id}
@@ -221,8 +222,8 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
       {method === "equal" && (
         <>
           <div className="flex items-baseline justify-between" style={{ marginTop: 18 }}>
-            <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)" }}>{t.perPerson}</div>
-            <div style={{ fontSize: 12, color: "rgba(232,234,236,.5)" }}>
+            <SubLabel top={0}>{t.perPerson}</SubLabel>
+            <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .5)" }}>
               ÷ {digits(ways)} · {group(perPerson)}
             </div>
           </div>
@@ -233,7 +234,8 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
                 name={nameOf(key)}
                 sub={key === "me" ? t.settled : shareSub}
                 amount={money(amount)}
-                color={key === "me" ? "rgba(232,234,236,.6)" : shareColor}
+                color={key === "me" ? "rgb(var(--fg-rgb) / .6)" : shareColor}
+                family={family}
               />
             ))}
           </div>
@@ -289,7 +291,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
             <div
               key={item.id}
               className="flex items-center"
-              style={{ gap: 6, padding: "10px 12px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+              style={{ gap: 6, padding: "10px 12px", borderRadius: 15, background: "rgb(var(--ink-rgb) / .04)" }}
             >
               <InputPrimitive
                 value={item.label}
@@ -319,7 +321,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
                     prev.map((i) => (i.id === item.id ? { ...i, participant: e.target.value } : i)),
                   )
                 }
-                className="h-auto rounded-lg border-0 py-[4px] ps-[6px] pe-6 text-[11px] shadow-none dark:bg-black/30 dark:hover:bg-black/30"
+                className="h-auto rounded-lg border-0 py-[4px] ps-[6px] pe-6 text-[11px] shadow-none dark:bg-[var(--c-well)] dark:hover:bg-[var(--c-well)]"
               >
                 {participants.map((key) => (
                   <NativeSelectOption key={key} value={key} className="bg-cardAlt text-foreground">
@@ -329,7 +331,7 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
               </NativeSelect>
               <Button variant="plain" size="plain"
                 onClick={() => setItems((prev) => prev.filter((i) => i.id !== item.id))}
-                style={{ color: "#ff7a6b", fontSize: 13, padding: "0 4px" }}
+                style={{ color: "var(--c-expense)", fontSize: 13, padding: "0 4px" }}
               >
                 ×
               </Button>
@@ -348,35 +350,58 @@ export default function SplitModal({ tx, onClose }: { tx: Transaction; onClose: 
               ])
             }
             className="self-start"
-            style={{ fontSize: 12, color: "#0f9b6e" }}
+            style={{ fontSize: 12, color: "var(--c-primary)" }}
           >
             {t.addItem}
           </Button>
         </EditorList>
       )}
 
-      <Button variant="plain" size="plain"
-        onClick={() => splitMutation.mutate()}
-        disabled={!canSave || splitMutation.isPending}
-        aria-busy={splitMutation.isPending}
-        style={{
-          width: "100%",
-          textAlign: "center",
-          padding: "13px 0",
-          borderRadius: 14,
-          background: "#0f9b6e",
-          color: "#04120c",
-          fontSize: 13.5,
-          fontWeight: 700,
-          marginTop: 20,
-          opacity: !canSave ? 0.5 : 1,
-        }}
-      >
-        <BusyLabel busy={splitMutation.isPending}>{t.save}</BusyLabel>
-      </Button>
+      {family === "soft" ? (
+        <div style={{ marginTop: 20 }}>
+          <TotalBar
+            label={t.total}
+            value={money(total)}
+            action={t.save}
+            onAction={() => splitMutation.mutate()}
+            busy={splitMutation.isPending}
+            disabled={!canSave}
+          />
+        </div>
+      ) : family === "dark" ? (
+        <div style={{ marginTop: 24 }}>
+          <PillButton
+            onClick={() => splitMutation.mutate()}
+            disabled={!canSave || splitMutation.isPending}
+            busy={splitMutation.isPending}
+          >
+            {t.save}
+          </PillButton>
+        </div>
+      ) : (
+        <Button variant="plain" size="plain"
+          onClick={() => splitMutation.mutate()}
+          disabled={!canSave || splitMutation.isPending}
+          aria-busy={splitMutation.isPending}
+          style={{
+            width: "100%",
+            textAlign: "center",
+            padding: "13px 0",
+            borderRadius: 14,
+            background: "var(--c-primary)",
+            color: "var(--c-on-primary)",
+            fontSize: 13.5,
+            fontWeight: 700,
+            marginTop: 20,
+            opacity: !canSave ? 0.5 : 1,
+          }}
+        >
+          <BusyLabel busy={splitMutation.isPending}>{t.save}</BusyLabel>
+        </Button>
+      )}
 
       {splitMutation.isError && (
-        <div className="text-center" style={{ color: "#ff7a6b", fontSize: 12, marginTop: 8 }}>
+        <div className="text-center" style={{ color: "var(--c-expense)", fontSize: 12, marginTop: 8 }}>
           {(splitMutation.error as Error).message}
         </div>
       )}
@@ -389,25 +414,64 @@ function ShareRow({
   sub,
   amount,
   color,
+  family,
 }: {
   name: string;
   sub: string;
   amount: string;
   color: string;
+  family: ThemeFamily;
 }) {
+  // Wallet Dark: a bare ledger line with mono initials and amount.
+  if (family === "dark") {
+    return (
+      <div className="flex items-center" style={{ gap: 18, padding: "12px 0" }}>
+        <span style={{ width: 28, fontFamily: "var(--app-mono)", fontSize: 13, color: "rgb(var(--fg-rgb) / .4)" }}>
+          {initials(name)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate" style={{ fontSize: 15 }}>
+            {name}
+          </div>
+          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>{sub}</div>
+        </div>
+        <div style={{ fontFamily: "var(--app-mono)", fontSize: 14, color }}>{amount}</div>
+      </div>
+    );
+  }
+  // Wallet Soft: the split-bill screen's white rounded rows.
+  if (family === "soft") {
+    return (
+      <div
+        className="flex items-center"
+        style={{ gap: 14, padding: "14px 16px", borderRadius: 22, background: "var(--c-surface)", boxShadow: "0 6px 18px rgba(0,0,0,.05)" }}
+      >
+        <Avatar size={44} color={color} background={`color-mix(in srgb, ${color} 14%, var(--c-surface))`}>
+          {initials(name)}
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <div className="truncate" style={{ fontSize: 15, fontWeight: 600 }}>
+            {name}
+          </div>
+          <div style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .55)" }}>{sub}</div>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 600 }}>{amount}</div>
+      </div>
+    );
+  }
   return (
     <div
       className="flex items-center"
-      style={{ gap: 11, padding: "12px 14px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+      style={{ gap: 11, padding: "12px 14px", borderRadius: 15, background: "rgb(var(--ink-rgb) / .04)" }}
     >
-      <Avatar size={32} color={color} background="#1a201e">
+      <Avatar size={32} color={color} background="var(--c-avatar-2)">
         {initials(name)}
       </Avatar>
       <div className="min-w-0 flex-1">
         <div className="truncate" style={{ fontSize: 13, fontWeight: 700 }}>
           {name}
         </div>
-        <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>{sub}</div>
+        <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)", marginTop: 2 }}>{sub}</div>
       </div>
       <div style={{ fontSize: 13.5, fontWeight: 700, color }}>{amount}</div>
     </div>
@@ -429,12 +493,12 @@ function EditorList({
 }) {
   return (
     <>
-      <div style={{ fontSize: 12, color: "rgba(232,234,236,.4)", marginTop: 18 }}>{label}</div>
+      <SubLabel top={18}>{label}</SubLabel>
       <div className="flex flex-col" style={{ gap: 8, marginTop: 9 }}>
         {children}
         <div className="flex justify-between" style={{ fontSize: 12, marginTop: 2 }}>
-          <span style={{ color: "rgba(232,234,236,.4)" }}>{remainingLabel}</span>
-          <span style={{ color: ok ? "#3fd39a" : "#ff7a6b", fontWeight: 700 }}>{remainingText}</span>
+          <span style={{ color: "rgb(var(--fg-rgb) / .4)" }}>{remainingLabel}</span>
+          <span style={{ color: ok ? "var(--c-income)" : "var(--c-expense)", fontWeight: 700 }}>{remainingText}</span>
         </div>
       </div>
     </>
@@ -455,7 +519,7 @@ function AmountRow({
   return (
     <div
       className="flex items-center"
-      style={{ gap: 11, padding: "10px 14px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}
+      style={{ gap: 11, padding: "10px 14px", borderRadius: 15, background: "rgb(var(--ink-rgb) / .04)" }}
     >
       <div className="min-w-0 flex-1 truncate" style={{ fontSize: 13, fontWeight: 700 }}>
         {label}
@@ -469,7 +533,40 @@ function AmountRow({
         className="bg-transparent font-bold outline-hidden"
         style={{ width: 96, fontSize: 13.5, textAlign: "end" }}
       />
-      <span style={{ fontSize: 12, color: "rgba(232,234,236,.45)" }}>{unit}</span>
+      <span style={{ fontSize: 12, color: "rgb(var(--fg-rgb) / .45)" }}>{unit}</span>
     </div>
   );
+}
+
+/** Quick-split tiles: tinted blocks (classic), a hairline box (Dark), white tiles (Soft). */
+function wayStyle(family: ThemeFamily, active: boolean): React.CSSProperties {
+  if (family === "dark") {
+    return {
+      flex: 1,
+      padding: "14px 0",
+      textAlign: "center",
+      borderRadius: 18,
+      border: `1px solid ${active ? "var(--c-accent)" : "rgb(var(--ink-rgb) / .14)"}`,
+      fontFamily: "var(--app-mono)",
+    };
+  }
+  if (family === "soft") {
+    return {
+      flex: 1,
+      padding: "14px 0",
+      textAlign: "center",
+      borderRadius: 20,
+      background: active ? "var(--c-primary)" : "var(--c-surface)",
+      color: active ? "var(--c-on-primary)" : "var(--c-fg)",
+      boxShadow: active ? "0 8px 20px rgb(var(--primary-rgb) / .25)" : "0 6px 18px rgba(0,0,0,.05)",
+    };
+  }
+  return {
+    flex: 1,
+    padding: "13px 0",
+    textAlign: "center",
+    borderRadius: 15,
+    background: active ? "var(--c-primary-tint-2)" : "var(--c-surface-3)",
+    border: `1px solid ${active ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .07)"}`,
+  };
 }

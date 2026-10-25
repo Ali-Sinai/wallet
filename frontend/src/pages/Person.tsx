@@ -1,20 +1,16 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/shell/AppShell";
-import { Avatar, BusyLabel, Card, EmptyNote, Input, MiniButton } from "@/components/primitives";
+import { Avatar, BusyLabel, Card, EmptyNote } from "@/components/primitives";
+import DebtRow from "../components/DebtRow";
 import { useI18n } from "../lib/i18n";
 import { useIsDesktop } from "@/hooks/use-media-query";
-import {
-  usePeopleBalances,
-  usePersonDebts,
-  useSettleAllMutation,
-  useSettleDebtMutation,
-  useTransactions,
-} from "../lib/queries";
+import { usePeopleBalances, usePersonDebts, useSettleAllMutation, useTransactions } from "../lib/queries";
 import { initials, signedCents, txTitle } from "../lib/domain";
 import { balanceColor, useBalanceSub } from "./People";
-import type { Debt } from "../types";
+import { useFamily } from "../lib/theme";
+import { DarkPerson } from "../designs/dark/DarkScreens";
+import { SoftPerson } from "../designs/soft/SoftScreens";
 
 export default function Person() {
   const { id } = useParams();
@@ -32,12 +28,18 @@ export default function Person() {
   const person = balances?.find((b) => b.person_id === personId);
   const color = balanceColor(person?.net_cents ?? 0);
   const openDebts = (debts ?? []).filter((d) => d.amount_cents - d.amount_settled_cents > 0);
+  const family = useFamily();
+
+  if (family !== "classic") {
+    const view = { person, openDebts, shared, settleAll };
+    return <AppShell>{family === "dark" ? <DarkPerson {...view} /> : <SoftPerson {...view} />}</AppShell>;
+  }
 
   const body = !person ? (
     <EmptyNote>{t.loading}</EmptyNote>
   ) : (
     <>
-      <Button variant="plain" size="plain" onClick={() => navigate("/people")} style={{ fontSize: 12, color: "#0f9b6e" }}>
+      <Button variant="plain" size="plain" onClick={() => navigate("/people")} style={{ fontSize: 12, color: "var(--c-primary)" }}>
         ‹ {t.people}
       </Button>
 
@@ -47,7 +49,7 @@ export default function Person() {
         </Avatar>
         <div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{person.name}</div>
-          <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)", marginTop: 2 }}>
+          <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)", marginTop: 2 }}>
             {sub(person.net_cents)}
           </div>
         </div>
@@ -58,11 +60,11 @@ export default function Person() {
           marginTop: 16,
           padding: 18,
           borderRadius: 20,
-          background: "linear-gradient(155deg,#12241d 0%,#0b120f 70%)",
-          border: "1px solid rgba(15,155,110,.25)",
+          background: "linear-gradient(155deg,var(--c-primary-tint-2) 0%,var(--c-hero-to) 70%)",
+          border: "1px solid rgb(var(--primary-rgb) / .25)",
         }}
       >
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.45)" }}>{sub(person.net_cents)}</div>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .45)" }}>{sub(person.net_cents)}</div>
         <div style={{ fontSize: 30, fontWeight: 700, marginTop: 4, color }}>
           {person.net_cents === 0 ? t.settled : money(person.net_cents, true)}
         </div>
@@ -76,8 +78,8 @@ export default function Person() {
               textAlign: "center",
               padding: "11px 0",
               borderRadius: 13,
-              background: "#0f9b6e",
-              color: "#04120c",
+              background: "var(--c-primary)",
+              color: "var(--c-on-primary)",
               fontSize: 13,
               fontWeight: 700,
               marginTop: 14,
@@ -88,8 +90,8 @@ export default function Person() {
         )}
       </div>
 
-      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.08)" }}>
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.debts}</div>
+      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.debts}</div>
         <div className="flex flex-col" style={{ gap: 8, marginTop: 10 }}>
           {openDebts.map((debt) => (
             <DebtRow key={debt.id} debt={debt} />
@@ -98,8 +100,8 @@ export default function Person() {
         </div>
       </div>
 
-      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.08)" }}>
-        <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>{t.ledger}</div>
+      <div style={{ marginTop: 18, paddingTop: 13, borderTop: "1px solid rgb(var(--ink-rgb) / .08)" }}>
+        <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>{t.ledger}</div>
         <div className="flex flex-col" style={{ marginTop: 4 }}>
           {(shared ?? []).map((tx) => {
             const signed = signedCents(tx);
@@ -107,17 +109,17 @@ export default function Person() {
               <div
                 key={tx.id}
                 className="flex items-center"
-                style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,.05)" }}
+                style={{ gap: 12, padding: "12px 0", borderBottom: "1px solid rgb(var(--ink-rgb) / .05)" }}
               >
                 <div className="min-w-0 flex-1">
                   <div className="truncate" style={{ fontSize: 13, fontWeight: 700 }}>
                     {txTitle(tx, t.transaction)}
                   </div>
-                  <div style={{ fontSize: 11, color: "rgba(232,234,236,.35)", marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .35)", marginTop: 2 }}>
                     {localize(tx.occurred_at_jalali)}
                   </div>
                 </div>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: signed < 0 ? "#ff7a6b" : "#3fd39a" }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: signed < 0 ? "var(--c-expense)" : "var(--c-income)" }}>
                   {money(signed, true)}
                 </div>
               </div>
@@ -141,81 +143,5 @@ export default function Person() {
         </div>
       )}
     </AppShell>
-  );
-}
-
-/** One open debt, with the API's partial-settlement amount. */
-function DebtRow({ debt }: { debt: Debt }) {
-  const { t, group, money } = useI18n();
-  const settle = useSettleDebtMutation();
-  const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState("");
-
-  const remaining = debt.amount_cents - debt.amount_settled_cents;
-  const owedToMe = debt.direction === "owed_to_me";
-  const color = owedToMe ? "#3fd39a" : "#ff7a6b";
-
-  return (
-    <div style={{ padding: "12px 14px", borderRadius: 15, background: "rgba(255,255,255,.04)" }}>
-      <div className="flex items-center" style={{ gap: 11 }}>
-        <div className="min-w-0 flex-1">
-          <div style={{ fontSize: 13, fontWeight: 700, color }}>
-            {owedToMe ? t.owedToMeShort : t.iOweShort} · {money(remaining)}
-          </div>
-          <div style={{ fontSize: 11, color: "rgba(232,234,236,.4)", marginTop: 2 }}>
-            {t.remainingLabel} {group(remaining)} / {group(debt.amount_cents)}
-          </div>
-        </div>
-        <MiniButton tone="accent" onClick={() => setOpen(!open)}>
-          {t.settle}
-        </MiniButton>
-      </div>
-
-      {open && (
-        <div className="flex items-center" style={{ gap: 8, marginTop: 10 }}>
-          <Input
-            type="number"
-            dir="ltr"
-            value={amount}
-            onChange={setAmount}
-            placeholder={String(Math.round(remaining / 100))}
-          />
-          <Button variant="plain" size="plain"
-            onClick={() => {
-              const cents = amount ? Math.round(Number(amount) * 100) : remaining;
-              if (cents <= 0 || cents > remaining) return;
-              settle.mutate(
-                { debtId: debt.id, amountCents: cents },
-                {
-                  onSuccess: () => {
-                    setAmount("");
-                    setOpen(false);
-                  },
-                },
-              );
-            }}
-            disabled={settle.isPending}
-            aria-busy={settle.isPending}
-            style={{
-              flex: "none",
-              padding: "10px 16px",
-              borderRadius: 12,
-              background: "#0f9b6e",
-              color: "#04120c",
-              fontSize: 12.5,
-              fontWeight: 700,
-            }}
-          >
-            <BusyLabel busy={settle.isPending}>{t.settle}</BusyLabel>
-          </Button>
-        </div>
-      )}
-
-      {settle.isError && (
-        <div style={{ color: "#ff7a6b", fontSize: 11.5, marginTop: 8 }}>
-          {(settle.error as Error).message}
-        </div>
-      )}
-    </div>
   );
 }

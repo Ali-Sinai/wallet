@@ -6,10 +6,20 @@
     <meta name="theme-color" content="#08090a" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&family=Poppins:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <title>کیف پول</title>
+    <script>
+      // Apply the saved theme before first paint (keep in step with src/lib/theme.tsx).
+      try {
+        var theme = localStorage.getItem("wallet.theme");
+        if (theme && theme !== "classic") {
+          document.documentElement.dataset.theme = theme;
+          if (theme.indexOf("soft-") === 0) document.documentElement.classList.remove("dark");
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

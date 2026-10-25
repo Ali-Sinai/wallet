@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useI18n } from "../../lib/i18n";
 import { useModals } from "../../lib/modals";
 import { useOnlineStatus } from "../../lib/useOnlineStatus";
+import ThemePicker from "./ThemePicker";
 
 /** The status strip from the phone design: currency + language chips. */
 export function MobileStatusBar() {
@@ -15,8 +16,8 @@ export function MobileStatusBar() {
     borderRadius: 99,
     fontSize: 10.5,
     fontWeight: 700 as const,
-    background: active ? "#0f9b6e" : "transparent",
-    color: active ? "#04120c" : "rgba(232,234,236,.55)",
+    background: active ? "var(--c-primary)" : "transparent",
+    color: active ? "var(--c-on-primary)" : "rgb(var(--fg-rgb) / .55)",
   });
 
   return (
@@ -25,21 +26,22 @@ export function MobileStatusBar() {
       style={{
         padding: "calc(14px + env(safe-area-inset-top)) 22px 2px",
         fontSize: 12,
-        color: "rgba(232,234,236,.45)",
+        color: "rgb(var(--fg-rgb) / .45)",
       }}
     >
       <Button variant="plain" size="plain" onClick={() => navigate("/settings")} className="flex items-center" style={{ gap: 7 }}>
-        <span style={{ fontSize: 13, lineHeight: 1, color: "rgba(232,234,236,.45)" }}>⚙</span>
+        <span style={{ fontSize: 13, lineHeight: 1, color: "rgb(var(--fg-rgb) / .45)" }}>⚙</span>
         {!online && (
-          <span style={{ fontSize: 11, color: "#ff7a6b" }}>{t.offline}</span>
+          <span style={{ fontSize: 11, color: "var(--c-expense)" }}>{t.offline}</span>
         )}
       </Button>
 
       <div className="flex items-center" style={{ gap: 6 }}>
+        <ThemePicker compact />
         <span>{t.currency}</span>
         <div
           className="flex"
-          style={{ gap: 2, padding: 2, borderRadius: 99, background: "rgba(255,255,255,.07)" }}
+          style={{ gap: 2, padding: 2, borderRadius: 99, background: "rgb(var(--ink-rgb) / .07)" }}
         >
           <Button variant="plain" size="plain" onClick={() => setLang("en")} style={chip(lang === "en")}>
             EN
@@ -95,7 +97,7 @@ export function MobileTabBar() {
         {({ isActive }) => (
           <div
             className="flex flex-col items-center"
-            style={{ gap: 4, color: isActive ? "#0f9b6e" : "rgba(232,234,236,.4)" }}
+            style={{ gap: 4, color: isActive ? "var(--c-primary)" : "rgb(var(--fg-rgb) / .4)" }}
           >
             <TabIcon name={item.icon} size={22} color="currentColor" />
             {t[item.key]}
@@ -110,7 +112,7 @@ export function MobileTabBar() {
       className="z-30 flex flex-none items-center justify-around border-t border-line"
       style={{
         padding: "12px 18px calc(22px + env(safe-area-inset-bottom))",
-        background: "#0a0c0b",
+        background: "var(--c-tabbar)",
         fontSize: 10,
       }}
     >
@@ -124,11 +126,11 @@ export function MobileTabBar() {
           width: 46,
           height: 46,
           borderRadius: 99,
-          background: "#0f9b6e",
+          background: "var(--c-primary)",
           marginTop: -16,
         }}
       >
-        <TabIcon name="add" size={22} color="#04120c" />
+        <TabIcon name="add" size={22} color="var(--c-on-primary)" />
       </Button>
       {tab(TABS[2])}
       {tab(TABS[3])}

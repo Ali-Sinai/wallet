@@ -62,13 +62,13 @@ function SmsInboxCard() {
       style={{
         padding: 18,
         borderRadius: 20,
-        background: "#101a16",
-        border: "1px solid rgba(15,155,110,.32)",
+        background: "var(--c-primary-tint)",
+        border: "1px solid rgb(var(--primary-rgb) / .32)",
       }}
     >
       <div className="flex items-center justify-between">
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#3fd39a" }}>{t.detected}</div>
-        <Button variant="plain" size="plain" onClick={() => navigate("/inbox")} style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--c-income)" }}>{t.detected}</div>
+        <Button variant="plain" size="plain" onClick={() => navigate("/inbox")} style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)" }}>
           {items.length ? `${digits(items.length)} ${t.pending} ` : ""}
           {t.all}
         </Button>
@@ -82,11 +82,11 @@ function SmsInboxCard() {
             marginTop: 12,
             padding: "9px 12px",
             borderRadius: 12,
-            background: "rgba(255,122,107,.08)",
-            border: "1px solid rgba(255,122,107,.3)",
+            background: "rgb(var(--expense-rgb) / .08)",
+            border: "1px solid rgb(var(--expense-rgb) / .3)",
             fontSize: 11.5,
             fontWeight: 700,
-            color: "#ff7a6b",
+            color: "var(--c-expense)",
           }}
         >
           <span>{t.unparsed}</span>
@@ -95,7 +95,7 @@ function SmsInboxCard() {
       )}
 
       {items.length === 0 ? (
-        <div style={{ padding: "20px 0 6px", textAlign: "center", fontSize: 12, color: "rgba(232,234,236,.4)" }}>
+        <div style={{ padding: "20px 0 6px", textAlign: "center", fontSize: 12, color: "rgb(var(--fg-rgb) / .4)" }}>
           {t.inboxEmpty}
         </div>
       ) : (
@@ -107,13 +107,13 @@ function SmsInboxCard() {
             const ignoring = ignore.isPending && ignore.variables === m.id;
             const busy = confirming || splitting || ignoring;
             return (
-              <div key={m.id} style={{ padding: 14, borderRadius: 16, background: "rgba(255,255,255,.035)" }}>
+              <div key={m.id} style={{ padding: 14, borderRadius: 16, background: "rgb(var(--ink-rgb) / .035)" }}>
                 <div
                   style={{
                     fontSize: 11.5,
-                    color: "rgba(232,234,236,.55)",
+                    color: "rgb(var(--fg-rgb) / .55)",
                     lineHeight: 1.5,
-                    borderInlineStart: "2px solid rgba(63,211,154,.4)",
+                    borderInlineStart: "2px solid rgb(var(--income-rgb) / .4)",
                     paddingInlineStart: 10,
                   }}
                 >
@@ -125,12 +125,12 @@ function SmsInboxCard() {
                     style={{
                       fontSize: 20,
                       fontWeight: 700,
-                      color: m.direction === "withdrawal" ? "#ff7a6b" : "#3fd39a",
+                      color: m.direction === "withdrawal" ? "var(--c-expense)" : "var(--c-income)",
                     }}
                   >
                     {m.amount_cents === null ? "—" : money(signed, true)}
                   </span>
-                  <span style={{ fontSize: 11, color: "rgba(232,234,236,.4)" }}>
+                  <span style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .4)" }}>
                     {(m.direction === "withdrawal" ? t.withdraw : t.deposit) +
                       (m.account_last4 ? ` · ····${digits(m.account_last4)}` : "")}
                   </span>
@@ -159,8 +159,8 @@ function SmsInboxCard() {
                       textAlign: "center",
                       padding: "9px 0",
                       borderRadius: 11,
-                      background: "#0f9b6e",
-                      color: "#04120c",
+                      background: "var(--c-primary)",
+                      color: "var(--c-on-primary)",
                       fontSize: 12,
                       fontWeight: 700,
                     }}
@@ -174,9 +174,9 @@ function SmsInboxCard() {
                     style={{
                       padding: "9px 12px",
                       borderRadius: 11,
-                      border: "1px solid rgba(255,255,255,.14)",
+                      border: "1px solid rgb(var(--ink-rgb) / .14)",
                       fontSize: 12,
-                      color: "rgba(232,234,236,.8)",
+                      color: "rgb(var(--fg-rgb) / .8)",
                     }}
                   >
                     <BusyLabel busy={splitting}>{t.split}</BusyLabel>
@@ -188,9 +188,9 @@ function SmsInboxCard() {
                     style={{
                       padding: "9px 12px",
                       borderRadius: 11,
-                      border: "1px solid rgba(255,255,255,.14)",
+                      border: "1px solid rgb(var(--ink-rgb) / .14)",
                       fontSize: 12,
-                      color: "rgba(232,234,236,.5)",
+                      color: "rgb(var(--fg-rgb) / .5)",
                     }}
                   >
                     <BusyLabel busy={ignoring}>{t.ignore}</BusyLabel>
@@ -211,17 +211,17 @@ function PeopleCard() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ padding: 18, borderRadius: 20, background: "#0e1110", border: "1px solid rgba(255,255,255,.07)" }}>
+    <div style={{ padding: 18, borderRadius: 20, background: "var(--c-surface)", border: "1px solid rgb(var(--ink-rgb) / .07)" }}>
       <div className="flex items-baseline justify-between">
         <div style={{ fontSize: 13, fontWeight: 700 }}>{t.people}</div>
-        <Button variant="plain" size="plain" onClick={() => navigate("/people")} style={{ fontSize: 11.5, color: "#0f9b6e" }}>
+        <Button variant="plain" size="plain" onClick={() => navigate("/people")} style={{ fontSize: 11.5, color: "var(--c-primary)" }}>
           {t.all}
         </Button>
       </div>
       <div className="flex flex-col" style={{ gap: 9, marginTop: 12 }}>
         {(balances ?? []).map((p) => {
           const color =
-            p.net_cents > 0 ? "#3fd39a" : p.net_cents < 0 ? "#ff7a6b" : "rgba(232,234,236,.45)";
+            p.net_cents > 0 ? "var(--c-income)" : p.net_cents < 0 ? "var(--c-expense)" : "rgb(var(--fg-rgb) / .45)";
           return (
             <div key={p.person_id} className="flex items-center" style={{ gap: 10 }}>
               <Avatar size={30} color={color}>
@@ -247,9 +247,9 @@ function BankRulesCard() {
   const update = useUpdateSmsPatternMutation();
 
   return (
-    <div style={{ padding: 18, borderRadius: 20, background: "#0e1110", border: "1px solid rgba(255,255,255,.07)" }}>
+    <div style={{ padding: 18, borderRadius: 20, background: "var(--c-surface)", border: "1px solid rgb(var(--ink-rgb) / .07)" }}>
       <div style={{ fontSize: 13, fontWeight: 700 }}>{t.rules}</div>
-      <div style={{ fontSize: 11.5, color: "rgba(232,234,236,.4)", marginTop: 3 }}>{t.rulesHint}</div>
+      <div style={{ fontSize: 11.5, color: "rgb(var(--fg-rgb) / .4)", marginTop: 3 }}>{t.rulesHint}</div>
       <div className="flex flex-col" style={{ gap: 10, marginTop: 13 }}>
         {(patterns ?? []).map((p) => (
           <div key={p.id} className="flex items-center" style={{ gap: 10 }}>
@@ -257,7 +257,7 @@ function BankRulesCard() {
               <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.name}</div>
               <div
                 className="truncate"
-                style={{ fontSize: 11, color: "rgba(232,234,236,.38)", marginTop: 2 }}
+                style={{ fontSize: 11, color: "rgb(var(--fg-rgb) / .38)", marginTop: 2 }}
               >
                 {p.sender_match}
               </div>
