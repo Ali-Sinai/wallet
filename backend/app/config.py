@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     admin_username: str | None = None
     admin_password: str | None = None
 
+    # Whether anyone who can reach the server may create an account
+    # (POST /api/auth/register). Each account sees only its own data. Set
+    # WALLET_ALLOW_SIGNUP=false to close sign-up once everyone is in.
+    allow_signup: bool = True
+
     static_dir: str = "static"
 
     ingest_attempt_retention_days: int = 14

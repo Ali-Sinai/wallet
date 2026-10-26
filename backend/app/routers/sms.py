@@ -10,10 +10,11 @@ from sqlmodel import Session, select
 
 from app.config import get_settings
 from app.db import get_session
-from app.deps import get_current_username
+from app.deps import CurrentUser, check_owned, get_owned, user_id_of
 from app.jalali import utc_now
 from app.models import (
     Account,
+    Category,
     Direction,
     KeywordRule,
     OtpSellerHint,
@@ -22,10 +23,12 @@ from app.models import (
     SmsPattern,
     Transaction,
     TxSource,
+    User,
+    UserSetting,
 )
-from app.security import verify_secret
+from app.security import api_token_digest, verify_secret
 from app.seller_hints import claim_seller, purge_expired_hints, record_hint
-from app.settings_store import KEY_WEBHOOK_TOKEN_HASH, get_setting
+from app.settings_store import KEY_WEBHOOK_TOKEN_DIGEST, KEY_WEBHOOK_TOKEN_HASH
 from app.sms_parser import ParseResult, dedup_hash, parse_sms
 
 settings = get_settings()
@@ -34,32 +37,41 @@ router = APIRouter(prefix="/api", tags=["sms"])
 
 
 def _load_patterns_and_rules(
-    session: Session,
+    session: Session, user_id: int
 ) -> tuple[list[SmsPattern], list[KeywordRule], set[str]]:
-    patterns = list(session.exec(select(SmsPattern).where(SmsPattern.enabled == True)).all())  # noqa: E712
-    rules = list(session.exec(select(KeywordRule)).all())
-    whitelisted = {
-        a.last4
-        for a in session.exec(select(Account).where(Account.is_active == True)).all()  # noqa: E712
-    }
+    patterns = list(
+        session.exec(
+            select(SmsPattern).where(SmsPattern.user_id == user_id, SmsPattern.enabled == True)  # noqa: E712
+        ).all()
+    )
+    rules = list(session.exec(select(KeywordRule).where(KeywordRule.user_id == user_id)).all())
+    whitelisted = {a.last4 for a in _active_accounts(session, user_id)}
     return patterns, rules, whitelisted
 
 
-def _account_for_last4(session: Session, last4: str | None) -> Account | None:
+def _account_for_last4(session: Session, user_id: int, last4: str | None) -> Account | None:
     if last4 is None:
         return None
-    matches = list(session.exec(select(Account).where(Account.last4 == last4)).all())
+    matches = list(
+        session.exec(
+            select(Account).where(Account.user_id == user_id, Account.last4 == last4)
+        ).all()
+    )
     # A replaced card usually keeps the same trailing digits as the old one, so
     # prefer the account still in use when several rows share a last4.
     return next((a for a in matches if a.is_active), matches[0] if matches else None)
 
 
-def _active_accounts(session: Session) -> list[Account]:
-    return list(session.exec(select(Account).where(Account.is_active == True)).all())  # noqa: E712
+def _active_accounts(session: Session, user_id: int) -> list[Account]:
+    return list(
+        session.exec(
+            select(Account).where(Account.user_id == user_id, Account.is_active == True)  # noqa: E712
+        ).all()
+    )
 
 
 def _store_attempt(
-    session: Session, sender: str, body: str, result: ParseResult
+    session: Session, user_id: int, sender: str, body: str, result: ParseResult
 ) -> SmsIngestAttempt | None:
     if result.status == "ignored_account":
         return None  # zero DB footprint, by design — see SmsIngestAttempt docstring
@@ -69,6 +81,7 @@ def _store_attempt(
         if result.seller_hint is not None:
             record_hint(
                 session,
+                user_id=user_id,
                 sender=sender,
                 matched_pattern_id=result.matched_pattern_id,
                 hint=result.seller_hint,
@@ -82,11 +95,13 @@ def _store_attempt(
         # before this one — see app/seller_hints.py.
         merchant = claim_seller(
             session,
+            user_id=user_id,
             direction=result.fields.direction,
             amount_cents=result.fields.amount_cents,
         )
 
     attempt = SmsIngestAttempt(
+        user_id=user_id,
         sender=sender,
         matched_pattern_id=result.matched_pattern_id,
         parse_status=ParseStatus.UNPARSED if unparsed else ParseStatus.PARSED,
@@ -116,20 +131,41 @@ class WebhookIngestBody(BaseModel):
     receivedAt: datetime
 
 
+def _user_for_token(session: Session, token: str) -> int | None:
+    """Whose webhook token this is — the token is all a forwarder sends.
+
+    Tokens rotated since multi-user are stored as a searchable digest. One
+    from before is a salted bcrypt hash that can only be checked, not looked
+    up, so those few rows are tried one by one; rotating replaces it.
+    """
+    row = session.exec(
+        select(UserSetting).where(
+            UserSetting.key == KEY_WEBHOOK_TOKEN_DIGEST,
+            UserSetting.value == api_token_digest(token),
+        )
+    ).first()
+    if row is not None:
+        return row.user_id
+    legacy = session.exec(
+        select(UserSetting).where(UserSetting.key == KEY_WEBHOOK_TOKEN_HASH)
+    ).all()
+    return next((r.user_id for r in legacy if verify_secret(token, r.value)), None)
+
+
 @router.post("/ingest/sms")
 def ingest_webhook(
     body: WebhookIngestBody,
     session: Session = Depends(get_session),
     x_api_token: str | None = Header(default=None),
 ) -> dict[str, object]:
-    token_hash = get_setting(session, KEY_WEBHOOK_TOKEN_HASH)
     # Forwarder apps' header fields happily keep a stray space or newline from
     # a paste; the token itself is URL-safe base64 and never contains either.
     x_api_token = x_api_token.strip() if x_api_token else None
-    if not token_hash or not x_api_token or not verify_secret(x_api_token, token_hash):
+    user_id = _user_for_token(session, x_api_token) if x_api_token else None
+    if user_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid API token")
 
-    patterns, rules, whitelisted = _load_patterns_and_rules(session)
+    patterns, rules, whitelisted = _load_patterns_and_rules(session, user_id)
     result = parse_sms(
         sender=body.sender,
         body=body.body,
@@ -138,7 +174,7 @@ def ingest_webhook(
         keyword_rules=rules,
         whitelisted_last4=whitelisted,
     )
-    attempt = _store_attempt(session, body.sender, body.body, result)
+    attempt = _store_attempt(session, user_id, body.sender, body.body, result)
     return {
         "status": result.status,
         "attempt_id": attempt.id if attempt else None,
@@ -172,15 +208,11 @@ class AttemptOut(BaseModel):
     received_at: datetime
 
 
-@router.post(
-    "/ingest/sms/paste",
-    response_model=list[AttemptOut],
-    dependencies=[Depends(get_current_username)],
-)
+@router.post("/ingest/sms/paste", response_model=list[AttemptOut])
 def ingest_paste(
-    body: PasteBody, session: Session = Depends(get_session)
+    body: PasteBody, session: Session = Depends(get_session), user: User = CurrentUser
 ) -> list[SmsIngestAttempt]:
-    patterns, rules, whitelisted = _load_patterns_and_rules(session)
+    patterns, rules, whitelisted = _load_patterns_and_rules(session, user_id_of(user))
     messages = [m.strip() for m in _MESSAGE_SPLIT_RE.split(body.text) if m.strip()]
     if not messages:
         messages = [body.text.strip()] if body.text.strip() else []
@@ -195,7 +227,7 @@ def ingest_paste(
             keyword_rules=rules,
             whitelisted_last4=whitelisted,
         )
-        attempt = _store_attempt(session, body.sender_hint, message, result)
+        attempt = _store_attempt(session, user_id_of(user), body.sender_hint, message, result)
         if attempt is not None:
             created.append(attempt)
     return created
@@ -204,20 +236,25 @@ def ingest_paste(
 # ---- Pending / unparsed queues ------------------------------------------------
 
 
-@router.get(
-    "/sms/pending", response_model=list[AttemptOut], dependencies=[Depends(get_current_username)]
-)
-def pending(session: Session = Depends(get_session)) -> list[SmsIngestAttempt]:
-    stmt = select(SmsIngestAttempt).where(SmsIngestAttempt.parse_status == ParseStatus.PARSED)
+def _attempts(session: Session, user: User, status: ParseStatus) -> list[SmsIngestAttempt]:
+    stmt = select(SmsIngestAttempt).where(
+        SmsIngestAttempt.user_id == user.id, SmsIngestAttempt.parse_status == status
+    )
     return list(session.exec(stmt).all())
 
 
-@router.get(
-    "/sms/unparsed", response_model=list[AttemptOut], dependencies=[Depends(get_current_username)]
-)
-def unparsed(session: Session = Depends(get_session)) -> list[SmsIngestAttempt]:
-    stmt = select(SmsIngestAttempt).where(SmsIngestAttempt.parse_status == ParseStatus.UNPARSED)
-    return list(session.exec(stmt).all())
+@router.get("/sms/pending", response_model=list[AttemptOut])
+def pending(
+    session: Session = Depends(get_session), user: User = CurrentUser
+) -> list[SmsIngestAttempt]:
+    return _attempts(session, user, ParseStatus.PARSED)
+
+
+@router.get("/sms/unparsed", response_model=list[AttemptOut])
+def unparsed(
+    session: Session = Depends(get_session), user: User = CurrentUser
+) -> list[SmsIngestAttempt]:
+    return _attempts(session, user, ParseStatus.UNPARSED)
 
 
 # ---- Seller hints from OTP messages -------------------------------------------
@@ -232,12 +269,10 @@ class SellerHintOut(BaseModel):
     expires_at: datetime
 
 
-@router.get(
-    "/sms/seller-hints",
-    response_model=list[SellerHintOut],
-    dependencies=[Depends(get_current_username)],
-)
-def seller_hints(session: Session = Depends(get_session)) -> list[OtpSellerHint]:
+@router.get("/sms/seller-hints", response_model=list[SellerHintOut])
+def seller_hints(
+    session: Session = Depends(get_session), user: User = CurrentUser
+) -> list[OtpSellerHint]:
     """Stores named by an OTP message whose purchase hasn't arrived yet.
 
     Read-only, and mostly there so an unexpected merchant on a transaction is
@@ -245,17 +280,17 @@ def seller_hints(session: Session = Depends(get_session)) -> list[OtpSellerHint]
     """
     stmt = (
         select(OtpSellerHint)
-        .where(OtpSellerHint.expires_at > utc_now())
+        .where(OtpSellerHint.user_id == user.id, OtpSellerHint.expires_at > utc_now())
         .order_by(OtpSellerHint.received_at.desc())  # type: ignore[attr-defined]
     )
     return list(session.exec(stmt).all())
 
 
-@router.delete("/sms/seller-hints/{hint_id}", dependencies=[Depends(get_current_username)])
-def delete_seller_hint(hint_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
-    hint = session.get(OtpSellerHint, hint_id)
-    if hint is None:
-        raise HTTPException(status_code=404, detail="hint not found")
+@router.delete("/sms/seller-hints/{hint_id}")
+def delete_seller_hint(
+    hint_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, bool]:
+    hint = get_owned(session, OtpSellerHint, hint_id, user, "hint")
     session.delete(hint)
     session.commit()
     return {"ok": True}
@@ -272,7 +307,7 @@ class ConfirmBody(BaseModel):
 
 
 def _resolve_account(
-    session: Session, attempt: SmsIngestAttempt, account_id: int | None
+    session: Session, user: User, attempt: SmsIngestAttempt, account_id: int | None
 ) -> Account:
     """Which account a confirmed attempt belongs to.
 
@@ -283,12 +318,9 @@ def _resolve_account(
     and a single-account setup (the common case) needs no choice at all.
     """
     if account_id is not None:
-        account = session.get(Account, account_id)
-        if account is None:
-            raise HTTPException(status_code=404, detail="account not found")
-        return account
+        return get_owned(session, Account, account_id, user, "account")
 
-    account = _account_for_last4(session, attempt.account_last4)
+    account = _account_for_last4(session, user_id_of(user), attempt.account_last4)
     if account is not None:
         return account
 
@@ -301,7 +333,7 @@ def _resolve_account(
             ),
         )
 
-    active = _active_accounts(session)
+    active = _active_accounts(session, user_id_of(user))
     if len(active) == 1:
         return active[0]
     if not active:
@@ -314,19 +346,21 @@ def _resolve_account(
     )
 
 
-@router.post("/sms/{attempt_id}/confirm", dependencies=[Depends(get_current_username)])
+@router.post("/sms/{attempt_id}/confirm")
 def confirm(
-    attempt_id: int, body: ConfirmBody, session: Session = Depends(get_session)
+    attempt_id: int,
+    body: ConfirmBody,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> dict[str, object]:
-    attempt = session.get(SmsIngestAttempt, attempt_id)
-    if attempt is None:
-        raise HTTPException(status_code=404, detail="attempt not found")
+    attempt = get_owned(session, SmsIngestAttempt, attempt_id, user, "attempt")
     if attempt.amount_cents is None or attempt.direction is None:
         raise HTTPException(
             status_code=400, detail="attempt is missing required fields; resolve manually instead"
         )
 
-    account = _resolve_account(session, attempt, body.account_id)
+    account = _resolve_account(session, user, attempt, body.account_id)
+    check_owned(session, Category, body.category_id, user, "category")
 
     occurred_at = attempt.occurred_at or attempt.received_at
     h = dedup_hash(
@@ -335,13 +369,16 @@ def confirm(
         occurred_at=occurred_at,
         direction=attempt.direction,
     )
-    existing = session.exec(select(Transaction).where(Transaction.dedup_hash == h)).first()
+    existing = session.exec(
+        select(Transaction).where(Transaction.user_id == user.id, Transaction.dedup_hash == h)
+    ).first()
     if existing is not None:
         session.delete(attempt)
         session.commit()
         return {"duplicate": True, "transaction_id": existing.id}
 
     tx = Transaction(
+        user_id=user.id,
         amount_cents=attempt.amount_cents,
         direction=attempt.direction,
         account_id=account.id,  # type: ignore[arg-type]
@@ -359,11 +396,11 @@ def confirm(
     return {"duplicate": False, "transaction_id": tx.id}
 
 
-@router.post("/sms/{attempt_id}/ignore", dependencies=[Depends(get_current_username)])
-def ignore(attempt_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
-    attempt = session.get(SmsIngestAttempt, attempt_id)
-    if attempt is None:
-        raise HTTPException(status_code=404, detail="attempt not found")
+@router.post("/sms/{attempt_id}/ignore")
+def ignore(
+    attempt_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, bool]:
+    attempt = get_owned(session, SmsIngestAttempt, attempt_id, user, "attempt")
     session.delete(attempt)
     session.commit()
     return {"ok": True}
@@ -378,15 +415,19 @@ class ResolveManuallyBody(BaseModel):
     note: str | None = None
 
 
-@router.post("/sms/{attempt_id}/resolve-manually", dependencies=[Depends(get_current_username)])
+@router.post("/sms/{attempt_id}/resolve-manually")
 def resolve_manually(
-    attempt_id: int, body: ResolveManuallyBody, session: Session = Depends(get_session)
+    attempt_id: int,
+    body: ResolveManuallyBody,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> dict[str, int]:
-    attempt = session.get(SmsIngestAttempt, attempt_id)
-    if attempt is None:
-        raise HTTPException(status_code=404, detail="attempt not found")
+    attempt = get_owned(session, SmsIngestAttempt, attempt_id, user, "attempt")
+    check_owned(session, Account, body.account_id, user, "account")
+    check_owned(session, Category, body.category_id, user, "category")
 
     tx = Transaction(
+        user_id=user.id,
         amount_cents=body.amount_cents,
         direction=body.direction,
         account_id=body.account_id,

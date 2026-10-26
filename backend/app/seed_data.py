@@ -1,7 +1,10 @@
-"""Idempotent seed of base reference data: categories, keyword rules, SMS patterns.
+"""Idempotent seed of a user's base reference data: categories, keyword rules,
+SMS patterns.
 
-Runs once at startup (each function only inserts when the table is empty), so
-it's safe to call on every boot.
+Every user gets their own copy, made when the account is created and checked
+again at startup (each function only inserts when that user has none yet), so
+it's safe to call on every boot. One user editing a pattern or renaming a
+category never touches anyone else's.
 """
 
 from __future__ import annotations
@@ -97,60 +100,64 @@ DEFAULT_OTP_PATTERNS: list[dict[str, object]] = [
 ]
 
 
-def ensure_categories(session: Session) -> None:
-    if session.exec(select(Category)).first() is not None:
+def ensure_categories(session: Session, user_id: int) -> None:
+    if session.exec(select(Category).where(Category.user_id == user_id)).first() is not None:
         return
     for i, c in enumerate(DEFAULT_CATEGORIES):
-        session.add(Category(sort_order=i, **c))
+        session.add(Category(user_id=user_id, sort_order=i, **c))
     session.commit()
-    logger.info("Seeded %d default categories", len(DEFAULT_CATEGORIES))
+    logger.info("Seeded %d default categories for user %d", len(DEFAULT_CATEGORIES), user_id)
 
 
-def ensure_keyword_rules(session: Session) -> None:
-    if session.exec(select(KeywordRule)).first() is not None:
+def ensure_keyword_rules(session: Session, user_id: int) -> None:
+    if session.exec(select(KeywordRule).where(KeywordRule.user_id == user_id)).first() is not None:
         return
     for keyword, direction in DEFAULT_KEYWORD_RULES:
-        session.add(KeywordRule(keyword=keyword, direction=direction))
+        session.add(KeywordRule(user_id=user_id, keyword=keyword, direction=direction))
     session.commit()
-    logger.info("Seeded %d default keyword rules", len(DEFAULT_KEYWORD_RULES))
+    logger.info("Seeded %d default keyword rules for user %d", len(DEFAULT_KEYWORD_RULES), user_id)
 
 
-def ensure_sms_patterns(session: Session) -> None:
-    if session.exec(select(SmsPattern)).first() is not None:
+def ensure_sms_patterns(session: Session, user_id: int) -> None:
+    if session.exec(select(SmsPattern).where(SmsPattern.user_id == user_id)).first() is not None:
         return
     for p in DEFAULT_SMS_PATTERNS:
-        session.add(SmsPattern(amount_unit=AmountUnit.RIAL, enabled=True, **p))
+        session.add(SmsPattern(user_id=user_id, amount_unit=AmountUnit.RIAL, enabled=True, **p))
     session.commit()
-    logger.info("Seeded %d default SMS patterns", len(DEFAULT_SMS_PATTERNS))
+    logger.info("Seeded %d default SMS patterns for user %d", len(DEFAULT_SMS_PATTERNS), user_id)
 
 
-def ensure_otp_patterns(session: Session) -> None:
-    """Seed the OTP patterns once, including on a database that predates them.
+def ensure_otp_patterns(session: Session, user_id: int) -> None:
+    """Seed the OTP patterns once, including for a user who predates them.
 
-    The table-is-empty check the other seeds use would skip an instance that
-    already has bank patterns, which is every existing install — so this one
-    remembers it has run in AppSetting instead, and stays quiet afterwards
-    even if you delete the patterns it added.
+    The none-yet check the other seeds use would skip a user who already has
+    bank patterns, which is everyone from before OTP patterns existed — so
+    this one remembers it has run in the user's settings instead, and stays
+    quiet afterwards even if they delete the patterns it added.
     """
-    if get_setting(session, KEY_OTP_PATTERNS_SEEDED) == "1":
+    if get_setting(session, user_id, KEY_OTP_PATTERNS_SEEDED) == "1":
         return
     existing = {
         (p.sender_match, p.body_regex)
-        for p in session.exec(select(SmsPattern).where(SmsPattern.kind == PatternKind.OTP)).all()
+        for p in session.exec(
+            select(SmsPattern).where(
+                SmsPattern.user_id == user_id, SmsPattern.kind == PatternKind.OTP
+            )
+        ).all()
     }
     added = 0
     for p in DEFAULT_OTP_PATTERNS:
         if (p["sender_match"], p["body_regex"]) in existing:
             continue
-        session.add(SmsPattern(amount_unit=AmountUnit.RIAL, enabled=True, **p))
+        session.add(SmsPattern(user_id=user_id, amount_unit=AmountUnit.RIAL, enabled=True, **p))
         added += 1
-    set_setting(session, KEY_OTP_PATTERNS_SEEDED, "1")  # commits
+    set_setting(session, user_id, KEY_OTP_PATTERNS_SEEDED, "1")  # commits
     if added:
-        logger.info("Seeded %d default OTP patterns", added)
+        logger.info("Seeded %d default OTP patterns for user %d", added, user_id)
 
 
-def ensure_base_data(session: Session) -> None:
-    ensure_categories(session)
-    ensure_keyword_rules(session)
-    ensure_sms_patterns(session)
-    ensure_otp_patterns(session)
+def ensure_base_data(session: Session, user_id: int) -> None:
+    ensure_categories(session, user_id)
+    ensure_keyword_rules(session, user_id)
+    ensure_sms_patterns(session, user_id)
+    ensure_otp_patterns(session, user_id)

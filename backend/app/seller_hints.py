@@ -30,6 +30,7 @@ from app.sms_parser import SellerHintFields
 def record_hint(
     session: Session,
     *,
+    user_id: int,
     sender: str,
     matched_pattern_id: int | None,
     hint: SellerHintFields,
@@ -37,6 +38,7 @@ def record_hint(
 ) -> OtpSellerHint:
     now = received_at or utc_now()
     row = OtpSellerHint(
+        user_id=user_id,
         sender=sender,
         matched_pattern_id=matched_pattern_id,
         seller=hint.seller,
@@ -64,6 +66,7 @@ def _is_candidate(hint: OtpSellerHint, amount_cents: int | None) -> bool:
 def claim_seller(
     session: Session,
     *,
+    user_id: int,
     direction: Direction | None,
     amount_cents: int | None,
     now: datetime | None = None,
@@ -71,7 +74,9 @@ def claim_seller(
     """The store behind a withdrawal, if an OTP message announced it.
 
     Deletes the hint it returns — one OTP, one purchase. Only withdrawals
-    claim: money arriving has nothing to do with a purchase OTP.
+    claim: money arriving has nothing to do with a purchase OTP. Only the
+    user's own hints are candidates: two people buying at once each keep
+    their own store.
     """
     if direction != Direction.WITHDRAWAL:
         return None
@@ -79,7 +84,7 @@ def claim_seller(
     moment = now or utc_now()
     stmt = (
         select(OtpSellerHint)
-        .where(OtpSellerHint.expires_at > moment)
+        .where(OtpSellerHint.user_id == user_id, OtpSellerHint.expires_at > moment)
         .order_by(OtpSellerHint.received_at.desc())  # type: ignore[attr-defined]
     )
     candidates = [h for h in session.exec(stmt).all() if _is_candidate(h, amount_cents)]

@@ -7,13 +7,11 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.db import get_session
-from app.deps import get_current_username
-from app.models import AmountUnit, Direction, KeywordRule, PatternKind, SmsPattern
+from app.deps import CurrentUser, get_owned
+from app.models import AmountUnit, Direction, KeywordRule, PatternKind, SmsPattern, User
 from app.sms_parser import parse_amount
 
-router = APIRouter(
-    prefix="/api", tags=["sms-patterns"], dependencies=[Depends(get_current_username)]
-)
+router = APIRouter(prefix="/api", tags=["sms-patterns"])
 
 
 class SmsPatternIn(BaseModel):
@@ -52,14 +50,18 @@ def _validated_regex(body_regex: str) -> str:
 
 
 @router.get("/sms-patterns", response_model=list[SmsPatternOut])
-def list_patterns(session: Session = Depends(get_session)) -> list[SmsPattern]:
-    return list(session.exec(select(SmsPattern)).all())
+def list_patterns(
+    session: Session = Depends(get_session), user: User = CurrentUser
+) -> list[SmsPattern]:
+    return list(session.exec(select(SmsPattern).where(SmsPattern.user_id == user.id)).all())
 
 
 @router.post("/sms-patterns", response_model=SmsPatternOut)
-def create_pattern(body: SmsPatternIn, session: Session = Depends(get_session)) -> SmsPattern:
+def create_pattern(
+    body: SmsPatternIn, session: Session = Depends(get_session), user: User = CurrentUser
+) -> SmsPattern:
     _validated_regex(body.body_regex)
-    pattern = SmsPattern(**body.model_dump())
+    pattern = SmsPattern(user_id=user.id, **body.model_dump())
     session.add(pattern)
     session.commit()
     session.refresh(pattern)
@@ -68,11 +70,12 @@ def create_pattern(body: SmsPatternIn, session: Session = Depends(get_session)) 
 
 @router.patch("/sms-patterns/{pattern_id}", response_model=SmsPatternOut)
 def update_pattern(
-    pattern_id: int, body: SmsPatternIn, session: Session = Depends(get_session)
+    pattern_id: int,
+    body: SmsPatternIn,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> SmsPattern:
-    pattern = session.get(SmsPattern, pattern_id)
-    if pattern is None:
-        raise HTTPException(status_code=404, detail="pattern not found")
+    pattern = get_owned(session, SmsPattern, pattern_id, user, "pattern")
     _validated_regex(body.body_regex)
     for key, value in body.model_dump().items():
         setattr(pattern, key, value)
@@ -83,10 +86,10 @@ def update_pattern(
 
 
 @router.delete("/sms-patterns/{pattern_id}")
-def delete_pattern(pattern_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
-    pattern = session.get(SmsPattern, pattern_id)
-    if pattern is None:
-        raise HTTPException(status_code=404, detail="pattern not found")
+def delete_pattern(
+    pattern_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, bool]:
+    pattern = get_owned(session, SmsPattern, pattern_id, user, "pattern")
     session.delete(pattern)
     session.commit()
     return {"ok": True}
@@ -94,11 +97,12 @@ def delete_pattern(pattern_id: int, session: Session = Depends(get_session)) -> 
 
 @router.post("/sms-patterns/{pattern_id}/test")
 def test_pattern(
-    pattern_id: int, body: PatternTestBody, session: Session = Depends(get_session)
+    pattern_id: int,
+    body: PatternTestBody,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> dict[str, object]:
-    pattern = session.get(SmsPattern, pattern_id)
-    if pattern is None:
-        raise HTTPException(status_code=404, detail="pattern not found")
+    pattern = get_owned(session, SmsPattern, pattern_id, user, "pattern")
 
     match = re.search(_validated_regex(pattern.body_regex), body.sample_text, re.UNICODE)
     if not match:
@@ -137,15 +141,17 @@ class KeywordRuleOut(KeywordRuleIn):
 
 
 @router.get("/keyword-rules", response_model=list[KeywordRuleOut])
-def list_keyword_rules(session: Session = Depends(get_session)) -> list[KeywordRule]:
-    return list(session.exec(select(KeywordRule)).all())
+def list_keyword_rules(
+    session: Session = Depends(get_session), user: User = CurrentUser
+) -> list[KeywordRule]:
+    return list(session.exec(select(KeywordRule).where(KeywordRule.user_id == user.id)).all())
 
 
 @router.post("/keyword-rules", response_model=KeywordRuleOut)
 def create_keyword_rule(
-    body: KeywordRuleIn, session: Session = Depends(get_session)
+    body: KeywordRuleIn, session: Session = Depends(get_session), user: User = CurrentUser
 ) -> KeywordRule:
-    rule = KeywordRule(**body.model_dump())
+    rule = KeywordRule(user_id=user.id, **body.model_dump())
     session.add(rule)
     session.commit()
     session.refresh(rule)
@@ -154,11 +160,12 @@ def create_keyword_rule(
 
 @router.patch("/keyword-rules/{rule_id}", response_model=KeywordRuleOut)
 def update_keyword_rule(
-    rule_id: int, body: KeywordRuleIn, session: Session = Depends(get_session)
+    rule_id: int,
+    body: KeywordRuleIn,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> KeywordRule:
-    rule = session.get(KeywordRule, rule_id)
-    if rule is None:
-        raise HTTPException(status_code=404, detail="rule not found")
+    rule = get_owned(session, KeywordRule, rule_id, user, "rule")
     for key, value in body.model_dump().items():
         setattr(rule, key, value)
     session.add(rule)
@@ -168,10 +175,10 @@ def update_keyword_rule(
 
 
 @router.delete("/keyword-rules/{rule_id}")
-def delete_keyword_rule(rule_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
-    rule = session.get(KeywordRule, rule_id)
-    if rule is None:
-        raise HTTPException(status_code=404, detail="rule not found")
+def delete_keyword_rule(
+    rule_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, bool]:
+    rule = get_owned(session, KeywordRule, rule_id, user, "rule")
     session.delete(rule)
     session.commit()
     return {"ok": True}

@@ -7,9 +7,9 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.db import get_session
-from app.deps import get_current_username
+from app.deps import CurrentUser, user_id_of
 from app.jalali import format_jalali_day_month, jalali_month_key, month_range_utc, utc_now
-from app.models import Account, Category, Direction
+from app.models import Account, Category, Direction, User
 from app.reporting import (
     Period,
     effective_amounts_by_tx,
@@ -18,16 +18,18 @@ from app.reporting import (
     transactions_in_range,
 )
 
-router = APIRouter(
-    prefix="/api/reports", tags=["reports"], dependencies=[Depends(get_current_username)]
-)
+router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 
 def _common(
-    session: Session, period: Period, date_from: datetime | None, date_to: datetime | None
+    session: Session,
+    user: User,
+    period: Period,
+    date_from: datetime | None,
+    date_to: datetime | None,
 ) -> tuple[list, dict[int, int]]:
     start, end = resolve_period(period, date_from, date_to)
-    txs = transactions_in_range(session, start, end)
+    txs = transactions_in_range(session, user_id_of(user), start, end)
     my_shares = effective_amounts_by_tx(session, [t.id for t in txs if t.id is not None])
     return txs, my_shares
 
@@ -40,13 +42,14 @@ class Point(BaseModel):
 @router.get("/spend-over-time", response_model=list[Point])
 def spend_over_time(
     session: Session = Depends(get_session),
+    user: User = CurrentUser,
     period: Period = "month",
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     gross: bool = False,
     group_by: str = "day",  # "day" | "month"
 ) -> list[Point]:
-    txs, my_shares = _common(session, period, date_from, date_to)
+    txs, my_shares = _common(session, user, period, date_from, date_to)
     buckets: dict[str, int] = {}
     for tx in txs:
         key = (
@@ -69,13 +72,16 @@ class CategorySlice(BaseModel):
 @router.get("/category-breakdown", response_model=list[CategorySlice])
 def category_breakdown(
     session: Session = Depends(get_session),
+    user: User = CurrentUser,
     period: Period = "month",
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     gross: bool = False,
 ) -> list[CategorySlice]:
-    txs, my_shares = _common(session, period, date_from, date_to)
-    categories = {c.id: c for c in session.exec(select(Category)).all()}
+    txs, my_shares = _common(session, user, period, date_from, date_to)
+    categories = {
+        c.id: c for c in session.exec(select(Category).where(Category.user_id == user.id)).all()
+    }
 
     totals: dict[int | None, int] = {}
     for tx in txs:
@@ -108,12 +114,13 @@ class IncomeExpense(BaseModel):
 @router.get("/income-vs-expense", response_model=IncomeExpense)
 def income_vs_expense(
     session: Session = Depends(get_session),
+    user: User = CurrentUser,
     period: Period = "month",
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     gross: bool = False,
 ) -> IncomeExpense:
-    txs, my_shares = _common(session, period, date_from, date_to)
+    txs, my_shares = _common(session, user, period, date_from, date_to)
     income = sum(t.amount_cents for t in txs if t.direction == Direction.DEPOSIT)
     expense = sum(spend_amount(t, my_shares, gross) for t in txs)
     return IncomeExpense(income_cents=income, expense_cents=expense)
@@ -129,17 +136,19 @@ class MonthCategoryDelta(BaseModel):
 
 @router.get("/month-over-month", response_model=list[MonthCategoryDelta])
 def month_over_month(
-    session: Session = Depends(get_session), gross: bool = False
+    session: Session = Depends(get_session), user: User = CurrentUser, gross: bool = False
 ) -> list[MonthCategoryDelta]:
     now = utc_now()
     cur_start, cur_end = month_range_utc(now)
     prev_reference = cur_start - timedelta(days=1)
     prev_start, prev_end = month_range_utc(prev_reference)
 
-    categories = {c.id: c for c in session.exec(select(Category)).all()}
+    categories = {
+        c.id: c for c in session.exec(select(Category).where(Category.user_id == user.id)).all()
+    }
 
     def totals_for(start: datetime, end: datetime) -> dict[int | None, int]:
-        txs = transactions_in_range(session, start, end)
+        txs = transactions_in_range(session, user_id_of(user), start, end)
         my_shares = effective_amounts_by_tx(session, [t.id for t in txs if t.id is not None])
         out: dict[int | None, int] = {}
         for tx in txs:
@@ -182,13 +191,16 @@ class AccountBreakdown(BaseModel):
 @router.get("/by-account", response_model=list[AccountBreakdown])
 def by_account(
     session: Session = Depends(get_session),
+    user: User = CurrentUser,
     period: Period = "month",
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     gross: bool = False,
 ) -> list[AccountBreakdown]:
-    txs, my_shares = _common(session, period, date_from, date_to)
-    accounts = {a.id: a for a in session.exec(select(Account)).all()}
+    txs, my_shares = _common(session, user, period, date_from, date_to)
+    accounts = {
+        a.id: a for a in session.exec(select(Account).where(Account.user_id == user.id)).all()
+    }
 
     totals: dict[int, dict[str, int]] = {}
     for tx in txs:

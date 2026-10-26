@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import secrets
+from dataclasses import dataclass
 
 import bcrypt
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
@@ -30,11 +32,17 @@ def verify_secret(raw: str, hashed: str) -> bool:
         return False
 
 
-def create_session_cookie_value(username: str) -> str:
-    return _serializer.dumps({"u": username})
+@dataclass(frozen=True)
+class SessionIdentity:
+    username: str
+    user_id: int | None  # absent from cookies issued before multi-user
 
 
-def read_session_cookie_value(cookie_value: str | None) -> str | None:
+def create_session_cookie_value(username: str, user_id: int) -> str:
+    return _serializer.dumps({"u": username, "id": user_id})
+
+
+def read_session_cookie_value(cookie_value: str | None) -> SessionIdentity | None:
     if not cookie_value:
         return None
     try:
@@ -42,8 +50,21 @@ def read_session_cookie_value(cookie_value: str | None) -> str | None:
     except (BadSignature, SignatureExpired):
         return None
     username = data.get("u")
-    return username if isinstance(username, str) else None
+    if not isinstance(username, str):
+        return None
+    user_id = data.get("id")
+    return SessionIdentity(username, user_id if isinstance(user_id, int) else None)
 
 
 def generate_api_token() -> str:
     return secrets.token_urlsafe(32)
+
+
+def api_token_digest(token: str) -> str:
+    """Lookup key for a webhook token.
+
+    The webhook names no user, so the token itself has to find its owner — a
+    salted bcrypt hash can't be searched for. A plain SHA-256 is enough here:
+    the token is 32 random bytes, so there's nothing to brute-force.
+    """
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
