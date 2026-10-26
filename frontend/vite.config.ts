@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["icons/**/*.png"],
+      includeAssets: ["icons/**/*.png", "app-icons/**/*.png"],
       manifest: {
         name: "کیف پول",
         short_name: "کیف پول",
@@ -22,13 +22,17 @@ export default defineConfig({
         scope: "/",
         background_color: "#08090a",
         theme_color: "#08090a",
+        // The default set; public/app-icon-sw.js swaps "app-icons/default/" for
+        // the icon picked in Settings when the browser fetches this manifest.
         icons: [
-          { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
-          { src: "icons/icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          { src: "app-icons/default/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "app-icons/default/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "app-icons/default/icon-maskable-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+          { src: "app-icons/default/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
       workbox: {
+        importScripts: ["app-icon-sw.js"],
         // App shell + static assets only. API responses (/api/*) are never
         // cached here — stale financial numbers are worse than a spinner.
         // The dashboard's own "last fetched at" fallback (see useDashboard)

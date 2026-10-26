@@ -1,5 +1,6 @@
 package app.wallet.ui.settings
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -106,6 +108,32 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     for (id in ThemeId.entries) ThemeSwatch(id, selected = id == theme, onClick = { onTheme(id) })
+                }
+            }
+
+            item {
+                SectionTitle(R.string.app_icon)
+                val context = LocalContext.current
+                var icon by remember { mutableStateOf(AppIcon.current(context)) }
+                Text(
+                    stringResource(R.string.app_icon_hint),
+                    Modifier.padding(start = 22.dp, end = 22.dp, bottom = 10.dp),
+                    fontSize = 11.5.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                FlowRow(
+                    Modifier.padding(horizontal = 22.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    for (option in AppIcon.entries) {
+                        AppIconTile(option, selected = option == icon, onClick = {
+                            if (option != icon) {
+                                AppIcon.set(context, option)
+                                icon = option
+                            }
+                        })
+                    }
                 }
             }
 
@@ -277,6 +305,22 @@ private fun ThemeSwatch(id: ThemeId, selected: Boolean, onClick: () -> Unit) {
             Box(Modifier.size(16.dp).clip(CircleShape).background(p.primary))
         }
         Text(stringResource(id.label), fontSize = 11.sp)
+    }
+}
+
+@Composable
+private fun AppIconTile(icon: AppIcon, selected: Boolean, onClick: () -> Unit) {
+    Column(
+        Modifier
+            .clip(RoundedCornerShape(14.dp))
+            .border(2.dp, if (selected) WalletColors.primary else WalletColors.border, RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Image(painterResource(icon.preview), contentDescription = null, Modifier.size(52.dp))
+        Text(stringResource(icon.label), fontSize = 11.sp)
     }
 }
 

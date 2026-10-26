@@ -5,10 +5,11 @@ import AppShell from "../components/shell/AppShell";
 import { ActionButton, DARK_LABEL, DeleteButton, Field, Input, ListRow, MiniButton, Select, Toggle } from "@/components/primitives";
 import { PageBody, PageTitle } from "../designs/Page";
 import { useFamily } from "../lib/theme";
+import { APP_ICONS, appIconUrl, readAppIcon, setAppIcon, type AppIconId } from "../lib/appIcon";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { useI18n } from "../lib/i18n";
 import { useAuth } from "../lib/auth";
-import { S } from "../lib/settingsStrings";
+import { S, type SettingsStrings } from "../lib/settingsStrings";
 import { enablePush } from "../lib/push";
 import { isFirebaseConfigured } from "../lib/firebaseConfig";
 import { categoryName } from "../lib/domain";
@@ -186,6 +187,7 @@ function SettingsSections() {
   return (
     <>
       <GeneralSection />
+      <AppIconSection />
       <AccountsSection />
       <CategoriesSection />
       <BudgetsSection />
@@ -289,6 +291,51 @@ function GeneralSection() {
           if (effectiveLang === "fa" || effectiveLang === "en") setLang(effectiveLang);
         }}
       />
+    </Section>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * App icon — per device, like the theme
+ * ------------------------------------------------------------------ */
+
+const APP_ICON_LABEL = {
+  default: "appIconDefault",
+  dark: "appIconDark",
+  clear: "appIconClear",
+  tinted: "appIconTinted",
+} as const satisfies Record<AppIconId, keyof SettingsStrings>;
+
+function AppIconSection() {
+  const s = useS();
+  const [icon, setIcon] = useState<AppIconId>(readAppIcon);
+
+  return (
+    <Section title={s.appIcon} hint={s.appIconHint}>
+      <div className="flex flex-wrap" style={{ gap: 10 }}>
+        {APP_ICONS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={icon === id}
+            onClick={() => {
+              setIcon(id);
+              void setAppIcon(id);
+            }}
+            className="flex flex-col items-center"
+            style={{
+              gap: 6,
+              padding: 10,
+              borderRadius: 14,
+              border: `2px solid ${icon === id ? "var(--c-primary)" : "rgb(var(--ink-rgb) / .1)"}`,
+              fontSize: 11.5,
+            }}
+          >
+            <img src={appIconUrl(id)} alt="" width={52} height={52} style={{ borderRadius: 12 }} />
+            {s[APP_ICON_LABEL[id]]}
+          </button>
+        ))}
+      </div>
     </Section>
   );
 }
