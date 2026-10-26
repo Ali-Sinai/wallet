@@ -13,8 +13,14 @@ class ServerStore(context: Context) {
         get() = prefs.getString(KEY_BASE_URL, null)
         set(value) = prefs.edit { putString(KEY_BASE_URL, value) }
 
+    /** Who last signed in on this phone, as "<server> <username>" — see AuthRepository.signedIn. */
+    var lastAccount: String?
+        get() = prefs.getString(KEY_LAST_ACCOUNT, null)
+        set(value) = prefs.edit { putString(KEY_LAST_ACCOUNT, value) }
+
     companion object {
         private const val KEY_BASE_URL = "base_url"
+        private const val KEY_LAST_ACCOUNT = "last_account"
 
         /**
          * Turns what someone types into the server field into a base URL, or

@@ -21,6 +21,13 @@ interface WalletApi {
     @POST("api/auth/login")
     suspend fun login(@Body body: LoginRequest): MeResponse
 
+    /** Whether the server takes new accounts. Servers from before sign-up answer 404. */
+    @GET("api/auth/signup")
+    suspend fun signupStatus(): SignupStatus
+
+    @POST("api/auth/register")
+    suspend fun register(@Body body: LoginRequest): MeResponse
+
     @POST("api/auth/logout")
     suspend fun logout()
 
@@ -196,6 +203,9 @@ data class LoginRequest(val username: String, val password: String)
 
 @Serializable
 data class MeResponse(val username: String)
+
+@Serializable
+data class SignupStatus(val enabled: Boolean)
 
 @Serializable
 enum class Direction {

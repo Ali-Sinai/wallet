@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +35,8 @@ import app.wallet.notify.Notifications
 import app.wallet.ui.SignedInApp
 import app.wallet.ui.login.LoginScreen
 import app.wallet.ui.login.LoginViewModel
+import app.wallet.ui.register.RegisterScreen
+import app.wallet.ui.register.RegisterViewModel
 import app.wallet.ui.theme.WalletTheme
 import app.wallet.ui.theme.paletteFor
 import app.wallet.util.Lang
@@ -77,7 +80,22 @@ class MainActivity : ComponentActivity() {
                                 initializer { LoginViewModel(container.auth, session.serverUrl) }
                             },
                         )
-                        LoginScreen(login, onLoggedIn = session::loggedIn)
+                        var registering by rememberSaveable { mutableStateOf(false) }
+                        if (registering) {
+                            val register: RegisterViewModel = viewModel(
+                                factory = viewModelFactory {
+                                    // Whatever is in the login form's server field is the best guess.
+                                    initializer { RegisterViewModel(container.auth, login.server.ifBlank { session.serverUrl }) }
+                                },
+                            )
+                            RegisterScreen(
+                                register,
+                                onRegistered = session::loggedIn,
+                                onBackToLogin = { registering = false },
+                            )
+                        } else {
+                            LoginScreen(login, onLoggedIn = session::loggedIn, onCreateAccount = { registering = true })
+                        }
                     }
                     is SessionState.LoggedIn -> SignedInApp(
                         openRequest = openRequest,

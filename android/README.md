@@ -65,6 +65,14 @@ your home network) — and your username and password. An address without
 `http://`/`https://` gets `https://`, except a bare IP or `localhost`, which
 gets `http://`.
 
+No account yet? "Create one" under the sign-in button asks for the server
+address first, checks that it's reachable and taking sign-ups, and only then
+for a username (3–32 English letters, digits, `.`, `-`, `_`) and password
+(8 or more characters). The new account starts empty, with its own default
+categories and bank rules. Signing in as a different account on the same
+phone forgets the SMS webhook token, since the token decides whose inbox
+messages land in — rotate a new one under SMS settings.
+
 ## Reading bank SMS on the phone
 
 SMS tab → settings (gear): turn on automatic reading, and give it the

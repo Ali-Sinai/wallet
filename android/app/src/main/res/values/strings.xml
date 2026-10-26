@@ -9,6 +9,22 @@
     <string name="login_username">نام کاربری</string>
     <string name="login_password">رمز عبور</string>
     <string name="login_submit">ورود</string>
+    <string name="login_create_account">حساب ندارید؟ ایجاد حساب کاربری</string>
+
+    <string name="register_title">ایجاد حساب کاربری</string>
+    <string name="register_server_intro">اول آدرس سروری را وارد کنید که حسابتان روی آن ساخته می‌شود.</string>
+    <string name="register_account_intro">نام کاربری و رمز عبور حساب تازه را انتخاب کنید.</string>
+    <string name="register_next">ادامه</string>
+    <string name="register_submit">ایجاد حساب</string>
+    <string name="register_have_account">حساب دارید؟ ورود</string>
+    <string name="register_username_hint">۳ تا ۳۲ حرف انگلیسی، عدد، نقطه، خط تیره یا _</string>
+    <string name="register_password_confirm">تکرار رمز عبور</string>
+    <string name="register_closed">این سرور حساب تازه نمی‌پذیرد</string>
+    <string name="register_username_taken">این نام کاربری قبلاً گرفته شده است</string>
+    <string name="register_username_rule">نام کاربری باید ۳ تا ۳۲ حرف انگلیسی، عدد، نقطه، خط تیره یا _ باشد و با حرف یا عدد شروع شود</string>
+    <string name="register_password_short">رمز عبور باید دست‌کم %1$s نویسه باشد</string>
+    <string name="register_password_long">رمز عبور بیش از حد طولانی است</string>
+    <string name="register_password_mismatch">رمز عبور و تکرارش یکی نیستند</string>
 
     <string name="error_invalid_credentials">نام کاربری یا رمز عبور اشتباه است</string>
     <string name="error_network">اتصال به سرور برقرار نشد</string>
