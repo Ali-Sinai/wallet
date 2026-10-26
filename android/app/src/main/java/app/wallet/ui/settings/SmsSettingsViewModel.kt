@@ -1,4 +1,4 @@
-package app.wallet.ui.inbox
+package app.wallet.ui.settings
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
