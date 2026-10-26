@@ -113,6 +113,7 @@
     <string name="app_icon_dark">Dark</string>
     <string name="app_icon_clear">Clear</string>
     <string name="app_icon_tinted">Tinted</string>
+    <string name="app_icon_tinted_red">Tinted red</string>
     <string name="accounts">Accounts</string>
     <string name="budgets">Budgets</string>
     <string name="budget_this_month">Budgets this month</string>

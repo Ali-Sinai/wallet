@@ -1,5 +1,5 @@
 /** The home-screen / PWA icons from the Liquid Glass set, under public/app-icons/. */
-export const APP_ICONS = ["default", "dark", "clear", "tinted"] as const;
+export const APP_ICONS = ["default", "dark", "clear", "tinted", "tinted-red"] as const;
 
 export type AppIconId = (typeof APP_ICONS)[number];
 

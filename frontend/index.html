@@ -24,7 +24,7 @@
       // Same for the app icon (keep in step with src/lib/appIcon.ts).
       try {
         var icon = localStorage.getItem("wallet.appIcon");
-        if (icon && icon !== "default" && /^[a-z]+$/.test(icon)) {
+        if (icon && icon !== "default" && /^[a-z-]+$/.test(icon)) {
           document.getElementById("app-favicon").href = "/app-icons/" + icon + "/favicon-32.png";
           document.getElementById("app-touch-icon").href = "/app-icons/" + icon + "/apple-touch-icon.png";
         }

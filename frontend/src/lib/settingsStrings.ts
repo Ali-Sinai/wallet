@@ -70,6 +70,7 @@ export const S = {
     appIconDark: "تیره",
     appIconClear: "شفاف",
     appIconTinted: "سبز تیره",
+    appIconTintedRed: "قرمز تیره",
 
     accounts: "حساب‌ها",
     accountsHint: "حساب‌هایی که پیامک‌هایشان خوانده می‌شود",
@@ -182,6 +183,7 @@ export const S = {
     appIconDark: "Dark",
     appIconClear: "Clear",
     appIconTinted: "Tinted",
+    appIconTintedRed: "Tinted red",
 
     accounts: "Accounts",
     accountsHint: "The accounts whose messages get read",

@@ -304,6 +304,7 @@ const APP_ICON_LABEL = {
   dark: "appIconDark",
   clear: "appIconClear",
   tinted: "appIconTinted",
+  "tinted-red": "appIconTintedRed",
 } as const satisfies Record<AppIconId, keyof SettingsStrings>;
 
 function AppIconSection() {

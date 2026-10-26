@@ -5,7 +5,7 @@
 // rewrites the manifest's icon paths from app-icons/default/ to the choice.
 const APP_ICON_CACHE = "wallet-app-icon";
 const APP_ICON_KEY = "/__app-icon";
-const APP_ICONS = ["default", "dark", "clear", "tinted"];
+const APP_ICONS = ["default", "dark", "clear", "tinted", "tinted-red"];
 
 async function chosenAppIcon() {
   const cache = await caches.open(APP_ICON_CACHE);
