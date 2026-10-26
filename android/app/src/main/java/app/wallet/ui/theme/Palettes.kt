@@ -7,12 +7,22 @@ import androidx.compose.ui.graphics.Color
 import app.wallet.R
 
 /**
+ * The three design languages the web app's themes come in (ThemeFamily in
+ * frontend/src/lib/theme.tsx): not just colours but layout, type and shapes.
+ *  CLASSIC  Wallet Web/App — tinted cards, bold numbers, the original look
+ *  DARK     Wallet Dark — pure black, no cards, thin oversized numbers, mono amounts, text tabs
+ *  SOFT     Wallet Soft — grey canvas, white shadowed cards, round buttons, a bank-card stack
+ */
+enum class Family { CLASSIC, DARK, SOFT }
+
+/**
  * One theme's colours — the `:root[data-theme=…]` blocks in
  * frontend/src/styles.css. "Ink" is the overlay tint for hairlines and
  * wells: white on dark themes, black on light ones.
  */
 @Immutable
 data class Palette(
+    val family: Family,
     val dark: Boolean,
     val background: Color,
     val surface: Color,
@@ -35,6 +45,9 @@ data class Palette(
     val heroForeground: Color,
     val heroIncome: Color,
     val heroExpense: Color,
+    /** Soft's bank-card fills (--soft-card-1..3) and their spend bar (--soft-bar). */
+    val cardFills: List<Color> = emptyList(),
+    val cardBar: Brush = Brush.linearGradient(listOf(Color.White, Color.White)),
 ) {
     val muted: Color get() = foreground.copy(alpha = 0.45f)
     val border: Color get() = ink.copy(alpha = 0.07f)
@@ -51,6 +64,7 @@ enum class ThemeId(@StringRes val label: Int) {
 }
 
 private val classic = Palette(
+    family = Family.CLASSIC,
     dark = true,
     background = Color(0xFF08090A),
     surface = Color(0xFF0E1110),
@@ -77,6 +91,7 @@ private val classic = Palette(
 // Wallet Dark: pure black, one accent.
 private fun dark(primary: Long, accent: Long, onPrimary: Long, tint: Long, tint2: Long, expense: Long, income: Long = 0xFFFFFFFF) =
     Palette(
+        family = Family.DARK,
         dark = true,
         background = Color.Black,
         surface = Color(0xFF0A0A0A),
@@ -101,7 +116,16 @@ private fun dark(primary: Long, accent: Long, onPrimary: Long, tint: Long, tint2
     )
 
 // Wallet Soft: light grey canvas, white cards, a dark hero card.
-private fun soft(primary: Long, tint: Long, tint2: Long, heroFrom: Long, heroTo: Long) = Palette(
+private fun soft(
+    primary: Long,
+    tint: Long,
+    tint2: Long,
+    heroFrom: Long,
+    heroTo: Long,
+    cards: List<Long>,
+    bar: Pair<Long, Long>,
+) = Palette(
+    family = Family.SOFT,
     dark = false,
     background = Color(0xFFF3F3F3),
     surface = Color.White,
@@ -123,6 +147,8 @@ private fun soft(primary: Long, tint: Long, tint2: Long, heroFrom: Long, heroTo:
     heroForeground = Color.White,
     heroIncome = Color(0xFF7EE2A0),
     heroExpense = Color(0xFFFFB0A8),
+    cardFills = cards.map(::Color),
+    cardBar = Brush.horizontalGradient(listOf(Color(bar.first), Color(bar.second))),
 )
 
 fun paletteFor(id: ThemeId): Palette = when (id) {
@@ -131,7 +157,19 @@ fun paletteFor(id: ThemeId): Palette = when (id) {
     ThemeId.DARK_PURPLE -> dark(0xFF8A3FFC, 0xFF9D5CFF, 0xFFFFFFFF, 0xFF120A1F, 0xFF170D27, expense = 0xFF9D5CFF)
     // Green marks money in here, so money out stays the design's red.
     ThemeId.DARK_GREEN -> dark(0xFF1F8A4C, 0xFF34B06A, 0xFFFFFFFF, 0xFF07140C, 0xFF0A1C11, expense = 0xFFFF2A1A, income = 0xFF34B06A)
-    ThemeId.SOFT_MONO -> soft(0xFF111111, 0xFFECECEC, 0xFFE6E6E6, 0xFF1B1B1D, 0xFF1B1B1D)
-    ThemeId.SOFT_PURPLE -> soft(0xFF8A3FFC, 0xFFF1E9FF, 0xFFEBDFFF, 0xFF4C1D95, 0xFF8A3FFC)
-    ThemeId.SOFT_GREEN -> soft(0xFF14532D, 0xFFE5F2EA, 0xFFDCEDE2, 0xFF0F3D22, 0xFF1F7A4D)
+    ThemeId.SOFT_MONO -> soft(
+        0xFF111111, 0xFFECECEC, 0xFFE6E6E6, 0xFF1B1B1D, 0xFF1B1B1D,
+        cards = listOf(0xFF1B1B1D, 0xFF2A3F9E, 0xFFB8402C),
+        bar = 0xFFE8352A to 0xFFF5A623,
+    )
+    ThemeId.SOFT_PURPLE -> soft(
+        0xFF8A3FFC, 0xFFF1E9FF, 0xFFEBDFFF, 0xFF4C1D95, 0xFF8A3FFC,
+        cards = listOf(0xFF1B1B1D, 0xFF4C1D95, 0xFF8A3FFC),
+        bar = 0xFF8A3FFC to 0xFFD6B8FF,
+    )
+    ThemeId.SOFT_GREEN -> soft(
+        0xFF14532D, 0xFFE5F2EA, 0xFFDCEDE2, 0xFF0F3D22, 0xFF1F7A4D,
+        cards = listOf(0xFF1B1B1D, 0xFF14532D, 0xFF1F7A4D),
+        bar = 0xFF1F7A4D to 0xFF9BE3B4,
+    )
 }

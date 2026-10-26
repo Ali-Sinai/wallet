@@ -32,6 +32,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,69 +52,36 @@ import app.wallet.ui.components.LoadingBox
 import app.wallet.ui.components.Load
 import app.wallet.ui.components.TransactionDetailSheet
 import app.wallet.ui.components.TxRow
+import app.wallet.ui.design.family
+import app.wallet.ui.split.SplitPickerDialog
+import app.wallet.ui.theme.Family
 import app.wallet.ui.components.displayName
 import app.wallet.ui.components.parseColor
 import app.wallet.ui.theme.WalletColors
 import app.wallet.util.Fmt
 
-/** The phone home screen — MobileHome in frontend/src/pages/Dashboard.tsx. */
+/** What the home screens can open. */
+class HomeActions(
+    val seeAll: () -> Unit,
+    val openInbox: () -> Unit,
+    val settings: () -> Unit,
+    val split: (Long) -> Unit,
+    val edit: (Long) -> Unit,
+    val add: () -> Unit,
+    val reports: () -> Unit,
+)
+
+/** Home, in the active design: classic MobileHome, DarkHome or SoftHome (frontend/src/pages/Dashboard.tsx). */
 @Suppress("UNCHECKED_CAST")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    vm: HomeViewModel,
-    onSeeAll: () -> Unit,
-    onOpenInbox: () -> Unit,
-    onSettings: () -> Unit,
-    onSplit: (Long) -> Unit,
-    onEdit: (Long) -> Unit,
-) {
+fun HomeScreen(vm: HomeViewModel, username: String, actions: HomeActions) {
+    var pickingSplit by remember { mutableStateOf(false) }
     PullToRefreshBox(isRefreshing = vm.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
-        LazyColumn(Modifier.fillMaxSize()) {
-            item {
-                Row(
-                    Modifier.padding(start = 22.dp, end = 10.dp, top = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.app_name), fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                        Text(Fmt.jalaliMonthLabel(), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    IconButton(onClick = onSettings) {
-                        Icon(
-                            Icons.Filled.Settings,
-                            contentDescription = stringResource(R.string.settings),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-            when (val s = vm.state) {
-                Load.Loading -> item { LoadingBox() }
-                is Load.Failed -> item { ErrorBox(s.message, onRetry = vm::refresh) }
-                is Load.Ready -> {
-                    val data = s.data
-                    item { Hero(data.dashboard) }
-                    if (data.pendingSms > 0) item { PendingSmsBanner(data.pendingSms, onOpenInbox) }
-                    item { DailySpend(data.dashboard) }
-                    if (data.slices.isNotEmpty()) item { Categories(data.slices, data) }
-                    if (data.budgets.isNotEmpty()) item { Budgets(data) }
-                    item {
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(start = 22.dp, end = 10.dp, top = 18.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            SectionLabel(stringResource(R.string.recent), Modifier.weight(1f))
-                            TextButton(onClick = onSeeAll) { Text(stringResource(R.string.see_all), fontSize = 12.sp) }
-                        }
-                    }
-                    items(data.recent, key = { it.id }) { tx ->
-                        TxRow(tx, data.lookups, onClick = { vm.selected = tx })
-                    }
-                }
-            }
+        when (family) {
+            Family.CLASSIC -> ClassicHome(vm, actions)
+            Family.DARK -> DarkHome(vm, actions, onSplitPicker = { pickingSplit = true })
+            Family.SOFT -> SoftHome(vm, username, actions)
         }
     }
 
@@ -125,13 +96,76 @@ fun HomeScreen(
             onDismiss = { vm.selected = null },
             onSplit = {
                 vm.selected = null
-                onSplit(selected.id)
+                actions.split(selected.id)
             },
             onEdit = {
                 vm.selected = null
-                onEdit(selected.id)
+                actions.edit(selected.id)
             },
         )
+    }
+    if (pickingSplit) {
+        SplitPickerDialog(
+            onPick = {
+                pickingSplit = false
+                actions.split(it)
+            },
+            onDismiss = { pickingSplit = false },
+        )
+    }
+}
+
+/** Classic: MobileHome in frontend/src/pages/Dashboard.tsx. */
+@Composable
+private fun ClassicHome(vm: HomeViewModel, actions: HomeActions) {
+    val onSeeAll = actions.seeAll
+    val onOpenInbox = actions.openInbox
+    val onSettings = actions.settings
+    LazyColumn(Modifier.fillMaxSize()) {
+        item {
+            Row(
+                Modifier.padding(start = 22.dp, end = 10.dp, top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.app_name), fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text(Fmt.jalaliMonthLabel(), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                IconButton(onClick = onSettings) {
+                    Icon(
+                        Icons.Filled.Settings,
+                        contentDescription = stringResource(R.string.settings),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+        when (val s = vm.state) {
+            Load.Loading -> item { LoadingBox() }
+            is Load.Failed -> item { ErrorBox(s.message, onRetry = vm::refresh) }
+            is Load.Ready -> {
+                val data = s.data
+                item { Hero(data.dashboard) }
+                if (data.pendingSms > 0) item { PendingSmsBanner(data.pendingSms, onOpenInbox) }
+                item { DailySpend(data.dashboard) }
+                if (data.slices.isNotEmpty()) item { Categories(data.slices, data) }
+                if (data.budgets.isNotEmpty()) item { Budgets(data) }
+                item {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 22.dp, end = 10.dp, top = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        SectionLabel(stringResource(R.string.recent), Modifier.weight(1f))
+                        TextButton(onClick = onSeeAll) { Text(stringResource(R.string.see_all), fontSize = 12.sp) }
+                    }
+                }
+                items(data.recent, key = { it.id }) { tx ->
+                    TxRow(tx, data.lookups, onClick = { vm.selected = tx })
+                }
+            }
+        }
     }
 }
 

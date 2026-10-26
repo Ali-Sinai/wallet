@@ -33,6 +33,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.wallet.R
+import app.wallet.ui.design.Choice
+import app.wallet.ui.design.Choices
+import app.wallet.ui.design.DesignCard
+import app.wallet.ui.design.ScreenTitle
+import app.wallet.ui.design.family
+import app.wallet.ui.design.gutter
+import app.wallet.ui.theme.Family
 import app.wallet.ui.components.EmptyBox
 import app.wallet.ui.components.ErrorBox
 import app.wallet.ui.components.Load
@@ -45,27 +52,27 @@ import app.wallet.util.Fmt
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(vm: ReportsViewModel) {
+    val f = family
     Column(Modifier.fillMaxSize()) {
-        Text(
-            stringResource(R.string.tab_reports),
-            Modifier.padding(start = 22.dp, end = 22.dp, top = 14.dp),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
+        if (f == Family.CLASSIC) {
+            Text(
+                stringResource(R.string.tab_reports),
+                Modifier.padding(start = 22.dp, end = 22.dp, top = 14.dp),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        } else {
+            ScreenTitle(stringResource(R.string.statistics))
+        }
+        val periods = listOf(
+            Choice(ReportPeriod.TODAY, stringResource(R.string.period_today)),
+            Choice(ReportPeriod.WEEK, stringResource(R.string.period_week)),
+            Choice(ReportPeriod.MONTH, stringResource(R.string.period_month)),
+            Choice(ReportPeriod.ALL, stringResource(R.string.period_all)),
         )
-        Row(
-            Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            for ((p, label) in listOf(
-                ReportPeriod.TODAY to R.string.period_today,
-                ReportPeriod.WEEK to R.string.period_week,
-                ReportPeriod.MONTH to R.string.period_month,
-                ReportPeriod.ALL to R.string.period_all,
-            )) {
-                FilterChip(selected = vm.period == p, onClick = { vm.select(p) }, label = { Text(stringResource(label)) })
-            }
+        // Classic chooses the period up top; the new designs put it under their headline number.
+        if (f == Family.CLASSIC) {
+            Choices(periods, vm.period, vm::select, Modifier.padding(horizontal = 22.dp, vertical = 8.dp))
         }
 
         PullToRefreshBox(isRefreshing = vm.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
@@ -74,13 +81,10 @@ fun ReportsScreen(vm: ReportsViewModel) {
                 is Load.Failed -> ErrorBox(s.message, onRetry = vm::refresh)
                 is Load.Ready -> {
                     val d = s.data
-                    LazyColumn(Modifier.fillMaxSize()) {
-                        item { Totals(d) }
-                        item { SpendBars(d) }
-                        item { Categories(d) }
-                        if (d.monthOverMonth.isNotEmpty()) item { MonthOverMonth(d) }
-                        if (d.accounts.isNotEmpty()) item { Accounts(d) }
-                        item { Box(Modifier.height(24.dp)) }
+                    when (f) {
+                        Family.DARK -> DarkReports(d, periods, vm.period, vm::select)
+                        Family.SOFT -> SoftReports(d, periods, vm.period, vm::select)
+                        Family.CLASSIC -> ClassicReports(d)
                     }
                 }
             }
@@ -89,15 +93,24 @@ fun ReportsScreen(vm: ReportsViewModel) {
 }
 
 @Composable
-private fun Card(title: String, content: @Composable () -> Unit) {
-    Column(
+private fun ClassicReports(d: ReportsData) {
+    LazyColumn(Modifier.fillMaxSize()) {
+        item { Totals(d) }
+        item { SpendBars(d) }
+        item { Categories(d) }
+        if (d.monthOverMonth.isNotEmpty()) item { MonthOverMonth(d) }
+        if (d.accounts.isNotEmpty()) item { Accounts(d) }
+        item { Box(Modifier.height(24.dp)) }
+    }
+}
+
+/** A report card: classic's tinted card, Soft's white one (Soft reuses these under its own top). */
+@Composable
+internal fun Card(title: String, content: @Composable () -> Unit) {
+    DesignCard(
         Modifier
-            .padding(horizontal = 16.dp, vertical = 6.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(WalletColors.surface)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(horizontal = if (family == Family.SOFT) gutter else 16.dp, vertical = 6.dp)
+            .fillMaxWidth(),
     ) {
         Text(title, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         content()
@@ -105,7 +118,7 @@ private fun Card(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun Totals(d: ReportsData) {
+internal fun Totals(d: ReportsData) {
     val net = d.totals.incomeCents - d.totals.expenseCents
     Card(stringResource(R.string.income_vs_expense)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -183,7 +196,7 @@ private fun SpendBars(d: ReportsData) {
 }
 
 @Composable
-private fun Categories(d: ReportsData) {
+internal fun Categories(d: ReportsData) {
     val uncategorized = stringResource(R.string.uncategorized)
     Card(stringResource(R.string.categories)) {
         if (d.slices.isEmpty()) {
@@ -223,7 +236,7 @@ private fun Categories(d: ReportsData) {
 }
 
 @Composable
-private fun MonthOverMonth(d: ReportsData) {
+internal fun MonthOverMonth(d: ReportsData) {
     val uncategorized = stringResource(R.string.uncategorized)
     Card(stringResource(R.string.month_over_month)) {
         for ((i, row) in d.monthOverMonth.withIndex()) {
@@ -260,7 +273,7 @@ private fun MonthOverMonth(d: ReportsData) {
 }
 
 @Composable
-private fun Accounts(d: ReportsData) {
+internal fun Accounts(d: ReportsData) {
     Card(stringResource(R.string.by_account)) {
         for ((i, row) in d.accounts.withIndex()) {
             if (i > 0) HorizontalDivider(color = WalletColors.border)

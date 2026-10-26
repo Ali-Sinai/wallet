@@ -45,6 +45,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.wallet.R
+import app.wallet.ui.design.DesignCard
+import app.wallet.ui.design.Dot
+import app.wallet.ui.design.LineIcons
+import app.wallet.ui.design.Mono
+import app.wallet.ui.design.ScreenTitle
+import app.wallet.ui.design.SectionHeader
+import app.wallet.ui.design.SoftAvatar
+import app.wallet.ui.design.TitleButton
+import app.wallet.ui.design.family
+import app.wallet.ui.design.gutter
+import app.wallet.ui.theme.Family
 import app.wallet.data.Direction
 import app.wallet.data.Lookups
 import app.wallet.data.SmsAttempt
@@ -66,12 +77,20 @@ fun InboxScreen(vm: InboxViewModel, onResolve: (Long) -> Unit, onSettings: () ->
     LaunchedEffect(Unit) { vm.refresh() }
 
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.padding(start = 22.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.tab_inbox), Modifier.weight(1f), fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            TextButton(onClick = { pasteOpen = true }) { Text(stringResource(R.string.paste_sms)) }
-            IconButton(onClick = onSettings) {
-                Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.sms_settings))
+        if (family == Family.CLASSIC) {
+            Row(Modifier.padding(start = 22.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.tab_inbox), Modifier.weight(1f), fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                TextButton(onClick = { pasteOpen = true }) { Text(stringResource(R.string.paste_sms)) }
+                IconButton(onClick = onSettings) {
+                    Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.sms_settings))
+                }
             }
+        } else {
+            ScreenTitle(
+                stringResource(R.string.tab_inbox),
+                left = { TitleButton(LineIcons.Plus, stringResource(R.string.paste_sms), { pasteOpen = true }) },
+                right = { TitleButton(LineIcons.Gear, stringResource(R.string.sms_settings), onSettings) },
+            )
         }
 
         PullToRefreshBox(isRefreshing = vm.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
@@ -115,24 +134,17 @@ fun InboxScreen(vm: InboxViewModel, onResolve: (Long) -> Unit, onSettings: () ->
 
 @Composable
 private fun SectionTitle(text: String) {
-    Text(
-        text,
-        Modifier.padding(start = 22.dp, end = 22.dp, top = 14.dp, bottom = 6.dp),
-        fontSize = 12.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    SectionHeader(text, Modifier.padding(horizontal = gutter).padding(top = if (family == Family.DARK) 28.dp else 14.dp, bottom = 6.dp))
 }
 
 @Composable
 private fun Card(content: @Composable () -> Unit) {
-    Column(
+    // Classic's tinted card, Dark's hairline-topped block, Soft's white card (MobileSmsCard's three forms).
+    DesignCard(
         Modifier
-            .padding(horizontal = 16.dp, vertical = 5.dp)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(horizontal = if (family == Family.CLASSIC) 16.dp else gutter, vertical = 5.dp)
+            .fillMaxWidth(),
+        padding = 14.dp,
     ) { content() }
 }
 
@@ -151,11 +163,18 @@ private fun PendingCard(attempt: SmsAttempt, lookups: Lookups, vm: InboxViewMode
     val cents = attempt.amountCents ?: 0L
 
     Card {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            val title = attempt.merchant ?: stringResource(if (out) R.string.expense else R.string.income)
+            val tone = if (out) WalletColors.expense else WalletColors.income
+            when (family) {
+                Family.DARK -> Dot(tone)
+                Family.SOFT -> SoftAvatar(title.firstOrNull()?.toString() ?: "·", tone)
+                Family.CLASSIC -> Unit
+            }
             Column(Modifier.weight(1f)) {
                 Text(
-                    attempt.merchant ?: stringResource(if (out) R.string.expense else R.string.income),
-                    fontWeight = FontWeight.Bold,
+                    title,
+                    fontWeight = if (family == Family.DARK) FontWeight.Normal else FontWeight.Bold,
                     fontSize = 15.sp,
                 )
                 val account = matched?.displayName()
@@ -170,8 +189,9 @@ private fun PendingCard(attempt: SmsAttempt, lookups: Lookups, vm: InboxViewMode
             }
             Text(
                 Fmt.money(if (out) -cents else cents, signed = true),
-                fontWeight = FontWeight.Bold,
-                fontSize = 17.sp,
+                fontWeight = if (family == Family.DARK) FontWeight.Normal else FontWeight.Bold,
+                fontFamily = if (family == Family.DARK) Mono else null,
+                fontSize = if (family == Family.DARK) 15.sp else 17.sp,
                 color = if (out) WalletColors.expense else WalletColors.income,
             )
         }

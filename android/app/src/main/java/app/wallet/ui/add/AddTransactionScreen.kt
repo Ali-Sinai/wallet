@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,8 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -49,6 +46,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.wallet.R
+import app.wallet.ui.design.BigNumber
+import app.wallet.ui.design.PrimaryAction
+import app.wallet.ui.design.family
+import app.wallet.ui.design.gutter
+import app.wallet.ui.design.softCard
+import app.wallet.ui.theme.Family
 import app.wallet.data.Direction
 import app.wallet.ui.components.ErrorBox
 import app.wallet.ui.components.JalaliDateTimeDialog
@@ -147,12 +150,13 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    Text(
-                        if (vm.amount.isEmpty()) Fmt.digits("0") else Fmt.group(vm.amount.toLong() * 100),
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = amountColor,
-                    )
+                    val amountText = if (vm.amount.isEmpty()) Fmt.digits("0") else Fmt.group(vm.amount.toLong() * 100)
+                    // Dark's thin oversized numeral; Soft and classic draw it bold.
+                    if (family == Family.DARK) {
+                        BigNumber(amountText, size = 52.sp, color = amountColor)
+                    } else {
+                        Text(amountText, fontSize = if (family == Family.SOFT) 36.sp else 40.sp, fontWeight = FontWeight.Bold, color = amountColor)
+                    }
                     Text(
                         " " + stringResource(R.string.toman),
                         fontSize = 15.sp,
@@ -242,21 +246,13 @@ fun AddTransactionScreen(vm: AddTransactionViewModel, onClose: () -> Unit) {
         }
 
         if (lookups != null) {
-            Button(
+            PrimaryAction(
+                stringResource(R.string.save),
                 onClick = { vm.save(onClose) },
-                enabled = !vm.saving && vm.accountId != null,
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp, vertical = 12.dp)
-                    .height(52.dp),
-            ) {
-                if (vm.saving) {
-                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                } else {
-                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
-                }
-            }
+                enabled = vm.accountId != null,
+                busy = vm.saving,
+                modifier = Modifier.padding(horizontal = gutter, vertical = 12.dp),
+            )
         }
     }
 }
@@ -273,16 +269,36 @@ private fun Keypad(onKey: (String) -> Unit) {
         for (row in AddTransactionViewModel.KEYS.chunked(3)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (key in row) {
+                    // KEY_STYLES in AddTransactionModal.tsx: grey blocks (classic), bare thin
+                    // numerals (Dark), white tiles (Soft).
+                    val tile = when (family) {
+                        Family.CLASSIC -> Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(WalletColors.ink.copy(alpha = 0.05f))
+                        Family.DARK -> Modifier.clip(RoundedCornerShape(14.dp))
+                        Family.SOFT -> Modifier.softCard(WalletColors.surface, 18.dp)
+                    }
                     Box(
                         Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(WalletColors.ink.copy(alpha = 0.05f))
+                            .then(tile)
                             .clickable { onKey(key) }
-                            .padding(vertical = 14.dp),
+                            .padding(vertical = if (family == Family.DARK) 12.dp else 14.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(Fmt.digits(key), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            Fmt.digits(key),
+                            fontSize = when (family) {
+                                Family.CLASSIC -> 18.sp
+                                Family.DARK -> 26.sp
+                                Family.SOFT -> 19.sp
+                            },
+                            fontWeight = when (family) {
+                                Family.CLASSIC -> FontWeight.Bold
+                                Family.DARK -> FontWeight.Light
+                                Family.SOFT -> FontWeight.Medium
+                            },
+                        )
                     }
                 }
             }

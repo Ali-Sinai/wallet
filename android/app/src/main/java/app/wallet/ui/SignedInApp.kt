@@ -1,6 +1,23 @@
 package app.wallet.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.dp
+import app.wallet.ui.design.LineIcons
+import app.wallet.ui.design.family
+import app.wallet.ui.design.softCard
+import app.wallet.ui.theme.Family
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +57,7 @@ import app.wallet.ui.activity.ActivityScreen
 import app.wallet.ui.activity.ActivityViewModel
 import app.wallet.ui.add.AddTransactionScreen
 import app.wallet.ui.add.AddTransactionViewModel
+import app.wallet.ui.home.HomeActions
 import app.wallet.ui.home.HomeScreen
 import app.wallet.ui.home.HomeViewModel
 import app.wallet.ui.inbox.InboxScreen
@@ -112,9 +130,18 @@ fun SignedInApp(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { if (onTab) BottomBar(nav, route) },
-        floatingActionButton = {
+        bottomBar = {
             if (onTab) {
+                when (family) {
+                    Family.CLASSIC -> BottomBar(nav, route)
+                    Family.DARK -> DarkTabBar(nav, route)
+                    Family.SOFT -> SoftTabBar(nav, route, onAdd = { nav.navigate(Routes.add()) })
+                }
+            }
+        },
+        floatingActionButton = {
+            // Only classic floats an add button; Dark adds from its screens, Soft from the tab bar.
+            if (onTab && family == Family.CLASSIC) {
                 FloatingActionButton(
                     onClick = { nav.navigate(Routes.add()) },
                     containerColor = WalletColors.primary,
@@ -134,11 +161,16 @@ fun SignedInApp(
                 composable(Routes.HOME) {
                     HomeScreen(
                         vm = appViewModel { HomeViewModel(it.wallet) },
-                        onSeeAll = { nav.switchTab(Routes.ACTIVITY) },
-                        onOpenInbox = { nav.switchTab(Routes.INBOX) },
-                        onSettings = { nav.navigate(Routes.SETTINGS) },
-                        onSplit = { nav.navigate(Routes.split(it)) },
-                        onEdit = { nav.navigate(Routes.add(txId = it)) },
+                        username = username,
+                        actions = HomeActions(
+                            seeAll = { nav.switchTab(Routes.ACTIVITY) },
+                            openInbox = { nav.switchTab(Routes.INBOX) },
+                            settings = { nav.navigate(Routes.SETTINGS) },
+                            split = { nav.navigate(Routes.split(it)) },
+                            edit = { nav.navigate(Routes.add(txId = it)) },
+                            add = { nav.navigate(Routes.add()) },
+                            reports = { nav.switchTab(Routes.REPORTS) },
+                        ),
                     )
                 }
                 composable(Routes.SETTINGS) {
@@ -159,12 +191,17 @@ fun SignedInApp(
                 composable(Routes.ACTIVITY) {
                     ActivityScreen(
                         appViewModel { ActivityViewModel(it.wallet) },
+                        onAdd = { nav.navigate(Routes.add()) },
                         onSplit = { nav.navigate(Routes.split(it)) },
                         onEdit = { nav.navigate(Routes.add(txId = it)) },
                     )
                 }
                 composable(Routes.PEOPLE) {
-                    PeopleScreen(appViewModel { PeopleViewModel(it.wallet) }, onOpen = { nav.navigate(Routes.person(it)) })
+                    PeopleScreen(
+                        appViewModel { PeopleViewModel(it.wallet) },
+                        onOpen = { nav.navigate(Routes.person(it)) },
+                        onSplit = { nav.navigate(Routes.split(it)) },
+                    )
                 }
                 composable(
                     Routes.PERSON,
@@ -256,6 +293,89 @@ private fun BottomBar(nav: NavHostController, route: String?) {
                     indicatorColor = WalletColors.primaryTint,
                 ),
             )
+        }
+    }
+}
+
+/** Wallet Dark: four line icons on black, the current one in the accent; no labels. */
+@Composable
+private fun DarkTabBar(nav: NavHostController, route: String?) {
+    val p = WalletColors
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(p.background)
+            .navigationBarsPadding()
+            .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 18.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+    ) {
+        for ((r, icon, label) in listOf(
+            Triple(Routes.HOME, LineIcons.Home, R.string.tab_home),
+            Triple(Routes.ACTIVITY, LineIcons.List, R.string.tab_activity),
+            Triple(Routes.PEOPLE, LineIcons.People, R.string.tab_people),
+            Triple(Routes.REPORTS, LineIcons.Chart, R.string.tab_reports),
+        )) {
+            Icon(
+                icon,
+                contentDescription = stringResource(label),
+                tint = if (route == r) p.accent else p.foreground.copy(alpha = 0.4f),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable { nav.switchTab(r) }
+                    .padding(6.dp)
+                    .size(24.dp),
+            )
+        }
+    }
+}
+
+/** Wallet Soft: a floating white pill with the accent "+" in the middle. */
+@Composable
+private fun SoftTabBar(nav: NavHostController, route: String?, onAdd: () -> Unit) {
+    val p = WalletColors
+    @Composable
+    fun tab(r: String, icon: ImageVector, label: Int) {
+        Icon(
+            icon,
+            contentDescription = stringResource(label),
+            tint = if (route == r) p.primary else p.foreground.copy(alpha = 0.35f),
+            modifier = Modifier
+                .clip(CircleShape)
+                .clickable { nav.switchTab(r) }
+                .padding(8.dp)
+                .size(22.dp),
+        )
+    }
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(start = 16.dp, end = 16.dp, bottom = 14.dp, top = 6.dp),
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .softCard(p.surface, radius = 35.dp)
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            tab(Routes.HOME, LineIcons.Home, R.string.tab_home)
+            tab(Routes.ACTIVITY, LineIcons.Wallet, R.string.tab_activity)
+            Box(
+                Modifier
+                    .size(54.dp)
+                    .shadow(8.dp, CircleShape, ambientColor = p.primary.copy(alpha = 0.35f), spotColor = p.primary.copy(alpha = 0.35f))
+                    .clip(CircleShape)
+                    .background(p.primary)
+                    .clickable(onClick = onAdd),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(LineIcons.PlusBold, stringResource(R.string.add_transaction), Modifier.size(22.dp), tint = p.onPrimary)
+            }
+            tab(Routes.REPORTS, LineIcons.Chart, R.string.tab_reports)
+            tab(Routes.PEOPLE, LineIcons.Person, R.string.tab_people)
         }
     }
 }

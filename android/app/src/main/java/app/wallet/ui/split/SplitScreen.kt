@@ -7,17 +7,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -40,6 +37,13 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.wallet.R
+import app.wallet.ui.design.LineIcons
+import app.wallet.ui.design.ScreenTitle
+import app.wallet.ui.design.TitleButton
+import app.wallet.ui.design.family
+import app.wallet.ui.theme.Family
+import app.wallet.ui.design.PrimaryAction
+import app.wallet.ui.design.gutter
 import app.wallet.ui.components.EmptyBox
 import app.wallet.ui.components.ErrorBox
 import app.wallet.ui.components.LoadingBox
@@ -54,9 +58,16 @@ fun SplitScreen(vm: SplitViewModel, onClose: () -> Unit) {
             .fillMaxSize()
             .imePadding(),
     ) {
-        Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onClose) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close)) }
-            Text(stringResource(R.string.split), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        if (family == Family.CLASSIC) {
+            Row(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onClose) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close)) }
+                Text(stringResource(R.string.split), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        } else {
+            ScreenTitle(
+                stringResource(R.string.split),
+                left = { TitleButton(LineIcons.Back, stringResource(R.string.close), onClose, mirrored = true) },
+            )
         }
 
         val tx = vm.tx
@@ -177,15 +188,13 @@ fun SplitScreen(vm: SplitViewModel, onClose: () -> Unit) {
         }
 
         if (tx != null && vm.existing == null && !vm.loading) {
-            Button(
+            PrimaryAction(
+                stringResource(R.string.save),
                 onClick = { vm.save(onClose) },
                 enabled = vm.canSave,
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp, vertical = 12.dp)
-                    .height(52.dp),
-            ) { Text(stringResource(R.string.save), fontWeight = FontWeight.Bold) }
+                busy = vm.busy,
+                modifier = Modifier.padding(horizontal = gutter, vertical = 12.dp),
+            )
         }
     }
 }
