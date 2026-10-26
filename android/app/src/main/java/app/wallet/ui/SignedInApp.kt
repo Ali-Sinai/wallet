@@ -66,8 +66,6 @@ import app.wallet.ui.inbox.SmsPatternScreen
 import app.wallet.ui.inbox.SmsPatternViewModel
 import app.wallet.ui.inbox.SmsPatternsScreen
 import app.wallet.ui.inbox.SmsPatternsViewModel
-import app.wallet.ui.inbox.SmsSettingsScreen
-import app.wallet.ui.inbox.SmsSettingsViewModel
 import app.wallet.ui.people.PeopleScreen
 import app.wallet.ui.people.PeopleViewModel
 import app.wallet.ui.people.PersonScreen
@@ -85,11 +83,11 @@ private object Routes {
     const val HOME = "home"
     const val ACTIVITY = "activity"
     const val INBOX = "inbox"
-    const val SMS_SETTINGS = "sms-settings"
-    const val SETTINGS = "settings"
+    const val SETTINGS = "settings?sms={sms}"
     const val SMS_PATTERNS = "sms-patterns"
     const val SMS_PATTERN = "sms-pattern/{id}"
 
+    fun settings(sms: Boolean = false) = "settings?sms=$sms"
     fun smsPattern(id: Long?) = "sms-pattern/${id ?: -1}"
     const val PEOPLE = "people"
     const val PERSON = "person/{id}"
@@ -165,7 +163,7 @@ fun SignedInApp(
                         actions = HomeActions(
                             seeAll = { nav.switchTab(Routes.ACTIVITY) },
                             openInbox = { nav.switchTab(Routes.INBOX) },
-                            settings = { nav.navigate(Routes.SETTINGS) },
+                            settings = { nav.navigate(Routes.settings()) },
                             split = { nav.navigate(Routes.split(it)) },
                             edit = { nav.navigate(Routes.add(txId = it)) },
                             add = { nav.navigate(Routes.add()) },
@@ -173,7 +171,10 @@ fun SignedInApp(
                         ),
                     )
                 }
-                composable(Routes.SETTINGS) {
+                composable(
+                    Routes.SETTINGS,
+                    arguments = listOf(navArgument("sms") { type = NavType.BoolType; defaultValue = false }),
+                ) { entry ->
                     val themeStore = container().theme
                     val theme by themeStore.theme.collectAsStateWithLifecycle()
                     SettingsScreen(
@@ -182,8 +183,8 @@ fun SignedInApp(
                         onTheme = themeStore::set,
                         username = username,
                         serverUrl = serverUrl,
-                        onSmsSettings = { nav.navigate(Routes.SMS_SETTINGS) },
                         onSmsPatterns = { nav.navigate(Routes.SMS_PATTERNS) },
+                        openSms = entry.arguments?.getBoolean("sms") ?: false,
                         onLogout = onLogout,
                         onClose = { nav.popBackStack() },
                     )
@@ -229,14 +230,7 @@ fun SignedInApp(
                     InboxScreen(
                         appViewModel { InboxViewModel(it.wallet, it.smsSettings) },
                         onResolve = { id -> nav.navigate(Routes.add(attemptId = id)) },
-                        onSettings = { nav.navigate(Routes.SMS_SETTINGS) },
-                    )
-                }
-                composable(Routes.SMS_SETTINGS) {
-                    SmsSettingsScreen(
-                        appViewModel { SmsSettingsViewModel(it.wallet, it.smsSettings) },
-                        onPatterns = { nav.navigate(Routes.SMS_PATTERNS) },
-                        onClose = { nav.popBackStack() },
+                        onSettings = { nav.navigate(Routes.settings(sms = true)) },
                     )
                 }
                 composable(Routes.SMS_PATTERNS) {

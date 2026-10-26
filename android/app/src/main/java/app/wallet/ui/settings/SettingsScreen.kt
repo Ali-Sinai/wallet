@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +65,9 @@ import app.wallet.ui.theme.paletteFor
 import app.wallet.util.Fmt
 import app.wallet.util.Lang
 
+/** Index of the SMS section in the settings list: after theme, app icon, language and notifications. */
+private const val SMS_ITEM = 4
+
 /** Which editor dialog is open; a null item means "new". */
 private sealed interface Editor {
     data class EditAccount(val account: Account?) : Editor
@@ -78,13 +83,16 @@ fun SettingsScreen(
     onTheme: (ThemeId) -> Unit,
     username: String,
     serverUrl: String,
-    onSmsSettings: () -> Unit,
     onSmsPatterns: () -> Unit,
+    openSms: Boolean = false,
     onLogout: () -> Unit,
     onClose: () -> Unit,
 ) {
     var editor by remember { mutableStateOf<Editor?>(null) }
     var confirmLogout by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    // Opened from the inbox's gear: start at the SMS section rather than the top.
+    LaunchedEffect(openSms) { if (openSms) listState.scrollToItem(SMS_ITEM) }
 
     Column(Modifier.fillMaxSize()) {
         if (family == Family.CLASSIC) {
@@ -99,7 +107,7 @@ fun SettingsScreen(
             )
         }
 
-        LazyColumn(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState) {
             item {
                 SectionTitle(R.string.theme)
                 FlowRow(
@@ -163,6 +171,12 @@ fun SettingsScreen(
                 NotificationsSection(appViewModel { NotificationsViewModel(it.app, it.wallet) })
             }
 
+            // SMS_ITEM: keep in step with this item's position.
+            item {
+                SectionTitle(R.string.sms_settings)
+                SmsSection(appViewModel { SmsSettingsViewModel(it.wallet, it.smsSettings) }, onPatterns = onSmsPatterns)
+            }
+
             when (val s = vm.state) {
                 Load.Loading -> item { LoadingBox() }
                 is Load.Failed -> item { ErrorBox(s.message, onRetry = vm::refresh) }
@@ -201,8 +215,6 @@ fun SettingsScreen(
 
                     item {
                         SectionTitle(R.string.more)
-                        Line(title = stringResource(R.string.sms_settings), onClick = onSmsSettings)
-                        Line(title = stringResource(R.string.sms_patterns), onClick = onSmsPatterns)
                         Line(
                             title = stringResource(R.string.logout),
                             sub = "$username · ${serverUrl.trimEnd('/')}",
