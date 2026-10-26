@@ -55,8 +55,14 @@ def send_to_token(token: str, title: str, body: str) -> bool:
     try:
         from firebase_admin import messaging
 
+        # Data-only, so the app always builds the notification itself — with the
+        # app icon chosen in Settings — instead of the OS / Firebase SDK showing
+        # a fixed one while the app is in the background. "high" keeps a
+        # data-only message from waiting out Android's Doze.
         message = messaging.Message(
-            notification=messaging.Notification(title=title, body=body),
+            data={"title": title, "body": body},
+            android=messaging.AndroidConfig(priority="high"),
+            webpush=messaging.WebpushConfig(headers={"Urgency": "high"}),
             token=token,
         )
         messaging.send(message)

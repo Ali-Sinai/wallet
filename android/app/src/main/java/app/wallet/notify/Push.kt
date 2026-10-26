@@ -86,20 +86,23 @@ object Push {
 }
 
 /**
- * Receives FCM messages. In the background the system shows the server's
- * notification itself; in the foreground it lands here and is shown by hand.
+ * Receives FCM messages. The backend sends data-only messages, so every one
+ * lands here — foreground or background — and is shown with the chosen app
+ * icon; a notification payload (only shown here in the foreground) is a fallback.
  */
 class WalletMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) = Push.tokenChanged(applicationContext, token)
 
     override fun onMessageReceived(message: RemoteMessage) {
-        val n = message.notification ?: return
+        val title = message.data["title"] ?: message.notification?.title
+        val body = message.data["body"] ?: message.notification?.body
+        if (title == null && body == null) return
         Notifications.show(
             applicationContext,
             Notifications.CHANNEL_SERVER,
             (System.currentTimeMillis() % Int.MAX_VALUE).toInt(),
-            n.title.orEmpty(),
-            n.body.orEmpty(),
+            title.orEmpty(),
+            body.orEmpty(),
         )
     }
 }

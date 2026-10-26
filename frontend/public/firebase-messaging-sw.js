@@ -22,12 +22,29 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title ?? "کیف پول";
-  const body = payload.notification?.body ?? "";
-  self.registration.showNotification(title, {
+// The app icon chosen in Settings, as src/lib/appIcon.ts stores it for the
+// app-shell worker too (public/app-icon-sw.js) — Cache Storage is shared by
+// every service worker on the origin.
+async function appIconUrl() {
+  let id = "default";
+  try {
+    const hit = await (await caches.open("wallet-app-icon")).match("/__app-icon");
+    if (hit) id = (await hit.text()).trim();
+  } catch {
+    // Cache Storage unavailable — use the default.
+  }
+  if (!["default", "dark", "clear", "tinted"].includes(id)) id = "default";
+  return `/app-icons/${id}/icon-192.png`;
+}
+
+// The backend sends data-only messages (backend/app/firebase.py); the
+// notification fallback covers anything sent with a notification payload.
+messaging.onBackgroundMessage(async (payload) => {
+  const title = payload.data?.title ?? payload.notification?.title ?? "کیف پول";
+  const body = payload.data?.body ?? payload.notification?.body ?? "";
+  await self.registration.showNotification(title, {
     body,
-    icon: "/icons/icon-192.png",
+    icon: await appIconUrl(),
     dir: "rtl",
   });
 });
