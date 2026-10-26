@@ -70,6 +70,7 @@ export const S = {
     appIconDark: "تیره",
     appIconClear: "شفاف",
     appIconTinted: "سبز تیره",
+    appIconDarkRed: "تیره با قرمز",
     appIconTintedRed: "قرمز تیره",
 
     accounts: "حساب‌ها",
@@ -183,6 +184,7 @@ export const S = {
     appIconDark: "Dark",
     appIconClear: "Clear",
     appIconTinted: "Tinted",
+    appIconDarkRed: "Dark red",
     appIconTintedRed: "Tinted red",
 
     accounts: "Accounts",

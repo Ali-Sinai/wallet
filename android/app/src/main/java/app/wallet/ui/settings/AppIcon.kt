@@ -17,6 +17,7 @@ enum class AppIcon(val alias: String, @DrawableRes val preview: Int, @StringRes 
     DARK("LauncherDark", R.drawable.app_icon_dark, R.string.app_icon_dark),
     CLEAR("LauncherClear", R.drawable.app_icon_clear, R.string.app_icon_clear),
     TINTED("LauncherTinted", R.drawable.app_icon_tinted, R.string.app_icon_tinted),
+    DARK_RED("LauncherDarkRed", R.drawable.app_icon_dark_red, R.string.app_icon_dark_red),
     TINTED_RED("LauncherTintedRed", R.drawable.app_icon_tinted_red, R.string.app_icon_tinted_red),
     ;
 

@@ -33,7 +33,7 @@ async function appIconUrl() {
   } catch {
     // Cache Storage unavailable — use the default.
   }
-  if (!["default", "dark", "clear", "tinted", "tinted-red"].includes(id)) id = "default";
+  if (!["default", "dark", "clear", "tinted", "dark-red", "tinted-red"].includes(id)) id = "default";
   return `/app-icons/${id}/icon-192.png`;
 }
 

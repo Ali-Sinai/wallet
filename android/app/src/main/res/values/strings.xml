@@ -112,6 +112,7 @@
     <string name="app_icon_dark">تیره</string>
     <string name="app_icon_clear">شفاف</string>
     <string name="app_icon_tinted">سبز تیره</string>
+    <string name="app_icon_dark_red">تیره با قرمز</string>
     <string name="app_icon_tinted_red">قرمز تیره</string>
     <string name="accounts">حساب‌ها</string>
     <string name="budgets">بودجه‌ها</string>
