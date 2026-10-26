@@ -10,6 +10,8 @@
       rel="stylesheet"
     />
     <title>کیف پول</title>
+    <link id="app-favicon" rel="icon" type="image/png" sizes="32x32" href="/app-icons/default/favicon-32.png" />
+    <link id="app-touch-icon" rel="apple-touch-icon" href="/app-icons/default/apple-touch-icon.png" />
     <script>
       // Apply the saved theme before first paint (keep in step with src/lib/theme.tsx).
       try {
@@ -17,6 +19,14 @@
         if (theme && theme !== "classic") {
           document.documentElement.dataset.theme = theme;
           if (theme.indexOf("soft-") === 0) document.documentElement.classList.remove("dark");
+        }
+      } catch (e) {}
+      // Same for the app icon (keep in step with src/lib/appIcon.ts).
+      try {
+        var icon = localStorage.getItem("wallet.appIcon");
+        if (icon && icon !== "default" && /^[a-z-]+$/.test(icon)) {
+          document.getElementById("app-favicon").href = "/app-icons/" + icon + "/favicon-32.png";
+          document.getElementById("app-touch-icon").href = "/app-icons/" + icon + "/apple-touch-icon.png";
         }
       } catch (e) {}
     </script>

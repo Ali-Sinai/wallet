@@ -63,6 +63,16 @@ export const S = {
     persian: "فارسی",
     english: "انگلیسی",
 
+    appIcon: "آیکون برنامه",
+    appIconHint:
+      "آیکون نسخهٔ نصب‌شده روی صفحهٔ اصلی. اندروید آن را در بررسی بعدی اپ (گاهی تا یک روز) عوض می‌کند؛ در آیفون باید دوباره به صفحهٔ اصلی اضافه شود.",
+    appIconDefault: "پیش‌فرض",
+    appIconDark: "تیره",
+    appIconClear: "شفاف",
+    appIconTinted: "سبز تیره",
+    appIconDarkRed: "تیره با قرمز",
+    appIconTintedRed: "قرمز تیره",
+
     accounts: "حساب‌ها",
     accountsHint: "حساب‌هایی که پیامک‌هایشان خوانده می‌شود",
     accountNameFa: "نام (فارسی)",
@@ -166,6 +176,16 @@ export const S = {
     latinDigits: "Latin",
     persian: "Persian",
     english: "English",
+
+    appIcon: "App icon",
+    appIconHint:
+      "The installed app's home-screen icon. Android swaps it at the app's next update check (up to a day); on iPhone, add it to the home screen again.",
+    appIconDefault: "Default",
+    appIconDark: "Dark",
+    appIconClear: "Clear",
+    appIconTinted: "Tinted",
+    appIconDarkRed: "Dark red",
+    appIconTintedRed: "Tinted red",
 
     accounts: "Accounts",
     accountsHint: "The accounts whose messages get read",

@@ -7,12 +7,14 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import app.wallet.MainActivity
 import app.wallet.R
+import app.wallet.ui.settings.AppIcon
 import app.wallet.util.Lang
 
 /** The app's notification channels, and posting to them. */
@@ -52,7 +54,9 @@ object Notifications {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = NotificationCompat.Builder(context, channel)
+            // The status-bar icon has to be a silhouette; the large one shows the chosen app icon.
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(BitmapFactory.decodeResource(context.resources, AppIcon.current(context).preview))
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
