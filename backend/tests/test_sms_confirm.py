@@ -9,10 +9,12 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from app.db import get_session
-from app.deps import get_current_username
+from app.deps import get_current_user
 from app.jalali import utc_now
 from app.main import app
-from app.models import Account, Direction, ParseStatus, SmsIngestAttempt, Transaction
+from app.models import Account, Direction, ParseStatus, SmsIngestAttempt, Transaction, User
+
+USER_ID = 1
 
 
 @pytest.fixture
@@ -22,20 +24,27 @@ def session() -> Iterator[Session]:
     )
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
+        session.add(User(id=USER_ID, username="tester", password_hash="x"))
+        session.commit()
         yield session
 
 
 @pytest.fixture
 def client(session: Session) -> Iterator[TestClient]:
     app.dependency_overrides[get_session] = lambda: session
-    app.dependency_overrides[get_current_username] = lambda: "tester"
+    app.dependency_overrides[get_current_user] = lambda: session.get(User, USER_ID)
     yield TestClient(app)
     app.dependency_overrides.clear()
 
 
 def add_account(session: Session, last4: str, *, active: bool = True) -> Account:
     account = Account(
-        name_fa="حساب", name_en="Account", bank_name="Bank", last4=last4, is_active=active
+        user_id=USER_ID,
+        name_fa="حساب",
+        name_en="Account",
+        bank_name="Bank",
+        last4=last4,
+        is_active=active,
     )
     session.add(account)
     session.commit()
@@ -47,6 +56,7 @@ def add_attempt(
     session: Session, last4: str | None, *, occurred_at: datetime | None = None
 ) -> SmsIngestAttempt:
     attempt = SmsIngestAttempt(
+        user_id=USER_ID,
         sender="melli",
         parse_status=ParseStatus.PARSED,
         amount_cents=15_000_000,

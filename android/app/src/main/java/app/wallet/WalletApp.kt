@@ -30,8 +30,8 @@ class AppContainer(val app: Application) {
     private val cookies = PersistentCookieJar(app)
     val server = ServerStore(app)
     val api = ApiClient(cookies)
-    val auth = AuthRepository(server, api, cookies)
-    val wallet = WalletRepository(auth, api)
     val smsSettings = SmsSettings(app)
+    val auth = AuthRepository(server, api, cookies, smsSettings)
+    val wallet = WalletRepository(auth, api)
     val theme = ThemeStore(app)
 }

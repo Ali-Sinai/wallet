@@ -7,9 +7,9 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.db import get_session
-from app.deps import get_current_username
+from app.deps import CurrentUser, user_id_of
 from app.jalali import format_jalali_day_month, utc_now
-from app.models import Debt, DebtDirection, DebtStatus, Direction
+from app.models import Debt, DebtDirection, DebtStatus, Direction, User
 from app.reporting import (
     Period,
     effective_amounts_by_tx,
@@ -18,9 +18,7 @@ from app.reporting import (
     transactions_in_range,
 )
 
-router = APIRouter(
-    prefix="/api/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_username)]
-)
+router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 
 class DailyBar(BaseModel):
@@ -44,13 +42,14 @@ class DashboardOut(BaseModel):
 @router.get("", response_model=DashboardOut)
 def dashboard(
     session: Session = Depends(get_session),
+    user: User = CurrentUser,
     period: Period = "month",
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     gross: bool = False,
 ) -> DashboardOut:
     start, end = resolve_period(period, date_from, date_to)
-    txs = transactions_in_range(session, start, end)
+    txs = transactions_in_range(session, user_id_of(user), start, end)
     my_shares = effective_amounts_by_tx(session, [t.id for t in txs if t.id is not None])
 
     total_in = sum(t.amount_cents for t in txs if t.direction == Direction.DEPOSIT)
@@ -62,7 +61,9 @@ def dashboard(
 
     debts = session.exec(
         select(Debt).where(
-            Debt.direction == DebtDirection.OWED_TO_ME, Debt.status != DebtStatus.SETTLED
+            Debt.user_id == user.id,
+            Debt.direction == DebtDirection.OWED_TO_ME,
+            Debt.status != DebtStatus.SETTLED,
         )
     ).all()
     outstanding = sum(d.amount_cents - d.amount_settled_cents for d in debts)

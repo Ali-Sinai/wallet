@@ -16,7 +16,7 @@ from sqlmodel import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from alembic import command
-from app.bootstrap import ensure_admin_user
+from app.bootstrap import ensure_admin_user, ensure_base_data_for_all_users
 from app.config import get_settings
 from app.db import engine
 from app.errors import (
@@ -43,7 +43,6 @@ from app.routers import (
     settings as settings_router,
 )
 from app.routers.sms import purge_expired_attempts
-from app.seed_data import ensure_base_data
 from app.seller_hints import purge_expired_hints
 
 logging.basicConfig(level=logging.INFO)
@@ -89,7 +88,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         with Session(engine) as session:
             ensure_admin_user(session)
-            ensure_base_data(session)
+            ensure_base_data_for_all_users(session)
             if not _IS_SERVERLESS:
                 purge_expired_attempts(session)
                 purge_expired_hints(session)

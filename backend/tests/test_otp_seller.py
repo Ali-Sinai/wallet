@@ -11,7 +11,7 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from app.db import get_session
-from app.deps import get_current_username
+from app.deps import get_current_user
 from app.jalali import utc_now
 from app.main import app
 from app.models import (
@@ -24,6 +24,7 @@ from app.models import (
     PatternKind,
     SmsIngestAttempt,
     SmsPattern,
+    User,
 )
 from app.seed_data import (
     DEFAULT_KEYWORD_RULES,
@@ -40,6 +41,8 @@ OTP_SMS = """رمز پویا: 46829175
 
 WITHDRAWAL_SMS = "بانک ملی: خرید 2,450,000 ریال کارت ····4417 مانده 128,940,000 ریال"
 
+USER_ID = 1
+
 
 @pytest.fixture
 def session() -> Iterator[Session]:
@@ -48,12 +51,15 @@ def session() -> Iterator[Session]:
     )
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
+        session.add(User(id=USER_ID, username="tester", password_hash="x"))
+        session.commit()
         for keyword, direction in DEFAULT_KEYWORD_RULES:
-            session.add(KeywordRule(keyword=keyword, direction=direction))
+            session.add(KeywordRule(user_id=USER_ID, keyword=keyword, direction=direction))
         for p in DEFAULT_SMS_PATTERNS + DEFAULT_OTP_PATTERNS:
-            session.add(SmsPattern(amount_unit=AmountUnit.RIAL, enabled=True, **p))
+            session.add(SmsPattern(user_id=USER_ID, amount_unit=AmountUnit.RIAL, enabled=True, **p))
         session.add(
             Account(
+                user_id=USER_ID,
                 name_fa="حساب",
                 name_en="Account",
                 bank_name="Melli",
@@ -68,7 +74,7 @@ def session() -> Iterator[Session]:
 @pytest.fixture
 def client(session: Session) -> Iterator[TestClient]:
     app.dependency_overrides[get_session] = lambda: session
-    app.dependency_overrides[get_current_username] = lambda: "tester"
+    app.dependency_overrides[get_current_user] = lambda: session.get(User, USER_ID)
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -111,6 +117,7 @@ def test_an_otp_message_is_read_as_a_seller_hint_not_a_transaction(session: Sess
 def test_an_otp_pattern_that_captures_no_seller_is_passed_over(session: Session) -> None:
     session.add(
         SmsPattern(
+            user_id=USER_ID,
             name="broken otp",
             sender_match="",
             body_regex=r"رمز پویا",  # matches, but captures nothing
@@ -167,6 +174,7 @@ def test_a_deposit_never_claims_a_seller(client: TestClient, session: Session) -
 def test_a_seller_named_by_the_withdrawal_itself_wins(client: TestClient, session: Session) -> None:
     session.add(
         SmsPattern(
+            user_id=USER_ID,
             name="با فروشنده",
             sender_match="testbank",
             body_regex=(
@@ -188,6 +196,7 @@ def test_a_seller_named_by_the_withdrawal_itself_wins(client: TestClient, sessio
 def test_an_expired_hint_is_not_claimed(session: Session) -> None:
     record_hint(
         session,
+        user_id=USER_ID,
         sender="melli",
         matched_pattern_id=None,
         hint=SellerHintFields(seller="دیجی کالا", amount_cents=24_500_000),
@@ -195,7 +204,11 @@ def test_an_expired_hint_is_not_claimed(session: Session) -> None:
     )
 
     seller = claim_seller(
-        session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000, now=utc_now()
+        session,
+        user_id=USER_ID,
+        direction=Direction.WITHDRAWAL,
+        amount_cents=24_500_000,
+        now=utc_now(),
     )
 
     assert seller is None
@@ -206,12 +219,15 @@ def test_an_expired_hint_is_not_claimed(session: Session) -> None:
 def test_a_hint_for_a_different_amount_is_not_claimed(session: Session) -> None:
     record_hint(
         session,
+        user_id=USER_ID,
         sender="melli",
         matched_pattern_id=None,
         hint=SellerHintFields(seller="دیجی کالا", amount_cents=990_000),
     )
 
-    seller = claim_seller(session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000)
+    seller = claim_seller(
+        session, user_id=USER_ID, direction=Direction.WITHDRAWAL, amount_cents=24_500_000
+    )
 
     assert seller is None
 
@@ -221,12 +237,15 @@ def test_a_hint_that_named_no_amount_is_still_claimed(session: Session) -> None:
     # only thing tying the two messages together.
     record_hint(
         session,
+        user_id=USER_ID,
         sender="melli",
         matched_pattern_id=None,
         hint=SellerHintFields(seller="دیجی کالا", amount_cents=None),
     )
 
-    seller = claim_seller(session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000)
+    seller = claim_seller(
+        session, user_id=USER_ID, direction=Direction.WITHDRAWAL, amount_cents=24_500_000
+    )
 
     assert seller == "دیجی کالا"
 
@@ -234,18 +253,22 @@ def test_a_hint_that_named_no_amount_is_still_claimed(session: Session) -> None:
 def test_the_hint_whose_amount_matches_wins_over_the_newer_one(session: Session) -> None:
     record_hint(
         session,
+        user_id=USER_ID,
         sender="melli",
         matched_pattern_id=None,
         hint=SellerHintFields(seller="دیجی کالا", amount_cents=24_500_000),
     )
     record_hint(
         session,
+        user_id=USER_ID,
         sender="melli",
         matched_pattern_id=None,
         hint=SellerHintFields(seller="اسنپ", amount_cents=990_000),
     )
 
-    seller = claim_seller(session, direction=Direction.WITHDRAWAL, amount_cents=24_500_000)
+    seller = claim_seller(
+        session, user_id=USER_ID, direction=Direction.WITHDRAWAL, amount_cents=24_500_000
+    )
 
     assert seller == "دیجی کالا"
 

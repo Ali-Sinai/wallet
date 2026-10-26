@@ -57,9 +57,9 @@ def effective_amount(tx: Transaction, my_shares: dict[int, int]) -> int:
 
 
 def transactions_in_range(
-    session: Session, start: datetime | None, end: datetime | None
+    session: Session, user_id: int, start: datetime | None, end: datetime | None
 ) -> list[Transaction]:
-    stmt = select(Transaction)
+    stmt = select(Transaction).where(Transaction.user_id == user_id)
     if start is not None:
         stmt = stmt.where(Transaction.occurred_at >= start)
     if end is not None:

@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.db import get_session
-from app.deps import get_current_username
-from app.models import Category
+from app.deps import CurrentUser, check_owned, get_owned
+from app.models import Category, User
 
-router = APIRouter(
-    prefix="/api/categories", tags=["categories"], dependencies=[Depends(get_current_username)]
-)
+router = APIRouter(prefix="/api/categories", tags=["categories"])
 
 
 class CategoryIn(BaseModel):
@@ -27,13 +25,19 @@ class CategoryOut(CategoryIn):
 
 
 @router.get("", response_model=list[CategoryOut])
-def list_categories(session: Session = Depends(get_session)) -> list[Category]:
-    return list(session.exec(select(Category).order_by(Category.sort_order)).all())  # type: ignore[arg-type]
+def list_categories(
+    session: Session = Depends(get_session), user: User = CurrentUser
+) -> list[Category]:
+    stmt = select(Category).where(Category.user_id == user.id).order_by(col(Category.sort_order))
+    return list(session.exec(stmt).all())
 
 
 @router.post("", response_model=CategoryOut)
-def create_category(body: CategoryIn, session: Session = Depends(get_session)) -> Category:
-    category = Category(**body.model_dump())
+def create_category(
+    body: CategoryIn, session: Session = Depends(get_session), user: User = CurrentUser
+) -> Category:
+    check_owned(session, Category, body.parent_id, user, "parent category")
+    category = Category(user_id=user.id, **body.model_dump())
     session.add(category)
     session.commit()
     session.refresh(category)
@@ -42,11 +46,13 @@ def create_category(body: CategoryIn, session: Session = Depends(get_session)) -
 
 @router.patch("/{category_id}", response_model=CategoryOut)
 def update_category(
-    category_id: int, body: CategoryIn, session: Session = Depends(get_session)
+    category_id: int,
+    body: CategoryIn,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> Category:
-    category = session.get(Category, category_id)
-    if category is None:
-        raise HTTPException(status_code=404, detail="category not found")
+    category = get_owned(session, Category, category_id, user, "category")
+    check_owned(session, Category, body.parent_id, user, "parent category")
     for key, value in body.model_dump().items():
         setattr(category, key, value)
     session.add(category)
@@ -56,10 +62,10 @@ def update_category(
 
 
 @router.delete("/{category_id}")
-def delete_category(category_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
-    category = session.get(Category, category_id)
-    if category is None:
-        raise HTTPException(status_code=404, detail="category not found")
+def delete_category(
+    category_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, bool]:
+    category = get_owned(session, Category, category_id, user, "category")
     session.delete(category)
     session.commit()
     return {"ok": True}
