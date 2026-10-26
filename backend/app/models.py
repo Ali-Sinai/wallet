@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Index, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 from app.jalali import utc_now
@@ -98,7 +98,7 @@ class MerchantCategoryMap(SQLModel, table=True):
     # One mapping per merchant per user: two people shopping at the same store
     # file it under their own categories.
     __table_args__ = (
-        UniqueConstraint("user_id", "merchant_key", name="uq_merchantcategorymap_user_merchant"),
+        Index("uq_merchantcategorymap_user_merchant", "user_id", "merchant_key", unique=True),
     )
 
     id: int | None = Field(default=None, primary_key=True)
