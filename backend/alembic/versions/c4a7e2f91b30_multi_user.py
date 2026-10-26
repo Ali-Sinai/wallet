@@ -54,9 +54,9 @@ FIRST_USER = '(SELECT MIN(id) FROM "user")'
 def _foreign_keys(on: bool) -> None:
     """Batch mode rebuilds each table — copy, drop the old one, rename — and
     with foreign keys enforced (app/db.py turns them on for every connection)
-    dropping a table other rows point at fails. Off for the rebuild; SQLite
-    only honours this outside a transaction, which is where alembic runs
-    SQLite migrations."""
+    dropping a table other rows point at fails. Only the downgrade rebuilds
+    anything; SQLite honours this only outside a transaction, which is where
+    alembic runs SQLite migrations."""
     op.execute(f"PRAGMA foreign_keys={'ON' if on else 'OFF'}")
 
 
@@ -66,41 +66,65 @@ def _check_foreign_keys() -> None:
         raise RuntimeError(f"foreign key violations after migration: {broken[:10]}")
 
 
-def upgrade() -> None:
-    _foreign_keys(on=False)
-    for table in OWNED_TABLES:
-        with op.batch_alter_table(table) as batch_op:
-            batch_op.add_column(sa.Column("user_id", sa.Integer(), nullable=True))
-            batch_op.create_index(f"ix_{table}_user_id", ["user_id"], unique=False)
-            batch_op.create_foreign_key(f"fk_{table}_user_id", "user", ["user_id"], ["id"])
-        op.execute(f'UPDATE "{table}" SET user_id = {FIRST_USER}')
+def _columns(table: str) -> set[str]:
+    return {c["name"] for c in sa.inspect(op.get_bind()).get_columns(table)}
 
-    with op.batch_alter_table("merchantcategorymap") as batch_op:
-        batch_op.drop_index("ix_merchantcategorymap_merchant_key")
-        batch_op.create_index("ix_merchantcategorymap_merchant_key", ["merchant_key"], unique=False)
-        batch_op.create_unique_constraint(
-            "uq_merchantcategorymap_user_merchant", ["user_id", "merchant_key"]
+
+def _indexes(table: str) -> set[str]:
+    return {i["name"] for i in sa.inspect(op.get_bind()).get_indexes(table) if i["name"]}
+
+
+def upgrade() -> None:
+    # Plain ALTER TABLE ADD COLUMN and CREATE/DROP INDEX only — no batch
+    # rebuild, so no table is ever dropped and foreign keys can stay on. That
+    # matters on Turso, where a PRAGMA over the remote connection isn't
+    # guaranteed to land outside a transaction. SQLite DDL isn't rolled back
+    # here either, so every step skips what's already done: a run that fails
+    # halfway can simply be run again.
+    for table in OWNED_TABLES:
+        if "user_id" not in _columns(table):
+            # Raw SQL because alembic would add the REFERENCES as a separate
+            # ALTER, which SQLite can't do. Allowed on a live table since the
+            # new column is NULL everywhere.
+            op.execute(f'ALTER TABLE "{table}" ADD COLUMN user_id INTEGER REFERENCES "user" (id)')
+        if f"ix_{table}_user_id" not in _indexes(table):
+            op.create_index(f"ix_{table}_user_id", table, ["user_id"], unique=False)
+        op.execute(f'UPDATE "{table}" SET user_id = {FIRST_USER} WHERE user_id IS NULL')
+
+    if "uq_merchantcategorymap_user_merchant" not in _indexes("merchantcategorymap"):
+        op.drop_index("ix_merchantcategorymap_merchant_key", table_name="merchantcategorymap")
+        op.create_index(
+            "ix_merchantcategorymap_merchant_key",
+            "merchantcategorymap",
+            ["merchant_key"],
+            unique=False,
+        )
+        op.create_index(
+            "uq_merchantcategorymap_user_merchant",
+            "merchantcategorymap",
+            ["user_id", "merchant_key"],
+            unique=True,
         )
 
-    op.create_table(
-        "usersetting",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("user_id", sa.Integer(), nullable=True),
-        sa.Column("key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("value", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.ForeignKeyConstraint(["user_id"], ["user.id"]),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("user_id", "key", name="uq_usersetting_user_key"),
-    )
-    op.create_index("ix_usersetting_user_id", "usersetting", ["user_id"], unique=False)
-    op.create_index("ix_usersetting_key", "usersetting", ["key"], unique=False)
-    op.execute(
-        f'INSERT INTO usersetting (user_id, "key", value) '
-        f'SELECT {FIRST_USER}, "key", value FROM appsetting'
-    )
-    op.drop_table("appsetting")
-    _check_foreign_keys()
-    _foreign_keys(on=True)
+    if not sa.inspect(op.get_bind()).has_table("usersetting"):
+        op.create_table(
+            "usersetting",
+            sa.Column("id", sa.Integer(), nullable=False),
+            sa.Column("user_id", sa.Integer(), nullable=True),
+            sa.Column("key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+            sa.Column("value", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+            sa.ForeignKeyConstraint(["user_id"], ["user.id"]),
+            sa.PrimaryKeyConstraint("id"),
+            sa.UniqueConstraint("user_id", "key", name="uq_usersetting_user_key"),
+        )
+        op.create_index("ix_usersetting_user_id", "usersetting", ["user_id"], unique=False)
+        op.create_index("ix_usersetting_key", "usersetting", ["key"], unique=False)
+    if sa.inspect(op.get_bind()).has_table("appsetting"):
+        op.execute(
+            f'INSERT OR IGNORE INTO usersetting (user_id, "key", value) '
+            f'SELECT {FIRST_USER}, "key", value FROM appsetting'
+        )
+        op.drop_table("appsetting")
 
 
 def downgrade() -> None:
@@ -120,15 +144,16 @@ def downgrade() -> None:
     op.drop_index("ix_usersetting_user_id", table_name="usersetting")
     op.drop_table("usersetting")
 
-    with op.batch_alter_table("merchantcategorymap") as batch_op:
-        batch_op.drop_constraint("uq_merchantcategorymap_user_merchant", type_="unique")
-        batch_op.drop_index("ix_merchantcategorymap_merchant_key")
-        batch_op.create_index("ix_merchantcategorymap_merchant_key", ["merchant_key"], unique=True)
+    op.drop_index("uq_merchantcategorymap_user_merchant", table_name="merchantcategorymap")
+    op.drop_index("ix_merchantcategorymap_merchant_key", table_name="merchantcategorymap")
+    op.create_index(
+        "ix_merchantcategorymap_merchant_key", "merchantcategorymap", ["merchant_key"], unique=True
+    )
 
     for table in OWNED_TABLES:
+        op.drop_index(f"ix_{table}_user_id", table_name=table)
+        # The rebuild drops the column's unnamed REFERENCES along with it.
         with op.batch_alter_table(table) as batch_op:
-            batch_op.drop_constraint(f"fk_{table}_user_id", type_="foreignkey")
-            batch_op.drop_index(f"ix_{table}_user_id")
             batch_op.drop_column("user_id")
     _check_foreign_keys()
     _foreign_keys(on=True)
