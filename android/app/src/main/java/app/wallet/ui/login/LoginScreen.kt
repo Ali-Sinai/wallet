@@ -20,6 +20,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import app.wallet.R
 
 @Composable
-fun LoginScreen(vm: LoginViewModel, onLoggedIn: (String) -> Unit) {
+fun LoginScreen(vm: LoginViewModel, onLoggedIn: (String) -> Unit, onCreateAccount: () -> Unit) {
     val submit = { vm.submit(onLoggedIn) }
     // Addresses and credentials are Latin text; keep them left-to-right inside the RTL form.
     val ltr = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Ltr)
@@ -106,6 +107,10 @@ fun LoginScreen(vm: LoginViewModel, onLoggedIn: (String) -> Unit) {
             } else {
                 Text(stringResource(R.string.login_submit))
             }
+        }
+        // Signing up asks for the server first, on its own screen.
+        TextButton(onClick = onCreateAccount, enabled = !vm.busy, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.login_create_account))
         }
     }
 }

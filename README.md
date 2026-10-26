@@ -1,6 +1,6 @@
 # Wallet — Personal Finance Tracker
 
-Self-hosted personal finance tracker for a single user, built for the Iranian
+Self-hosted personal finance tracker for you and anyone you let sign up, built for the Iranian
 context: amounts in Toman, Jalali (Shamsi) calendar, RTL Persian UI, and
 SMS-based transaction ingestion from Iranian banks.
 
@@ -17,7 +17,8 @@ Design source: [`Design/iranian-finance-tracking-app`](Design/iranian-finance-tr
 
 ## Architecture notes
 
-- One SQLite file, WAL mode. Single user — no Postgres daemon for no benefit.
+- One SQLite file, WAL mode — no Postgres daemon for no benefit.
+- Multi-user. Anyone who can reach the server can create an account (the web login page and the Android app both have a "create account" link; the app asks for the server address first). Every row of financial data and every setting carries a `user_id`, every route filters on it, and another user's row answers 404 exactly like a missing one. Each new account gets its own copy of the default categories, keyword rules and bank SMS patterns, so editing one never affects anyone else. Set `WALLET_ALLOW_SIGNUP=false` to close sign-up once everyone is in. `WALLET_ADMIN_USERNAME`/`WALLET_ADMIN_PASSWORD` are optional now: they create a first account at startup, and on an install from before multi-user that account owns all the existing data (migration `c4a7e2f91b30`).
 - Alembic migrations are checked into `backend/alembic/versions/` and applied automatically at startup (see `_run_migrations()` in `backend/app/main.py`) — you never run `alembic upgrade` by hand in normal operation.
 - Raw SMS text is **never stored for a message that parsed** — only the fields the parser extracted (amount, direction, account, timestamp, merchant), and only until you confirm or dismiss them. The single exception is a message that matched **no** pattern: it keeps its text on the unparsed row, because otherwise there is nothing to show you and no way to tell what rule to write. That text dies with the row — the moment you resolve or ignore it, and in the purge sweep regardless. See `SmsIngestAttempt` in `backend/app/models.py`.
 - A purchase OTP ("رمز پویا") names the store; the withdrawal SMS that follows it a moment later does not. So an OTP pattern parks the seller name in `OtpSellerHint` and the next withdrawal claims it as its merchant — see `backend/app/seller_hints.py`. The pairing is the time window, not the card: hints expire after `WALLET_OTP_HINT_TTL_MINUTES` (default 2), so an abandoned checkout never labels your next purchase.
@@ -175,7 +176,7 @@ In the app, paste one or many raw SMS bodies at once. The server parses them, an
 }
 ```
 
-Get a token from Settings → rotate webhook token (`POST /api/settings/webhook-token/rotate`, shown once — the old one stops working immediately).
+Get a token from Settings → rotate webhook token (`POST /api/settings/webhook-token/rotate`, shown once — the old one stops working immediately). Each user has their own token, and it's what decides whose inbox a message lands in.
 
 **MacroDroid setup** (Tasker is equivalent — trigger on SMS received, action is an HTTP POST):
 

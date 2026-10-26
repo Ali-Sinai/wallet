@@ -31,6 +31,7 @@ from app.models import (
     SplitShare,
     Transaction,
     TxSource,
+    User,
 )
 from app.seed_data import ensure_base_data
 from app.split_math import ME, equal_split
@@ -69,26 +70,43 @@ def main() -> None:
 
     with Session(engine) as session:
         ensure_admin_user(session)
-        ensure_base_data(session)
+        # Everything below belongs to the first user — the admin from
+        # WALLET_ADMIN_USERNAME, or whoever signed up first.
+        uid = session.exec(select(User.id).order_by(User.id)).first()  # type: ignore[arg-type]
+        if uid is None:
+            print("No user yet: set WALLET_ADMIN_USERNAME/WALLET_ADMIN_PASSWORD, or sign up first.")
+            return
+        ensure_base_data(session, uid)
 
-        if session.exec(select(Account)).first() is None:
+        if session.exec(select(Account).where(Account.user_id == uid)).first() is None:
             session.add_all(
                 [
-                    Account(name_fa="سامان", name_en="Saman", bank_name="بانک سامان", last4="4417"),
-                    Account(name_fa="بلو", name_en="Blu", bank_name="بلوبانک", last4="9902"),
+                    Account(
+                        user_id=uid,
+                        name_fa="سامان",
+                        name_en="Saman",
+                        bank_name="بانک سامان",
+                        last4="4417",
+                    ),
+                    Account(
+                        user_id=uid, name_fa="بلو", name_en="Blu", bank_name="بلوبانک", last4="9902"
+                    ),
                 ]
             )
             session.commit()
 
-        accounts = list(session.exec(select(Account)).all())
-        categories = {c.name_fa: c for c in session.exec(select(Category)).all()}
+        accounts = list(session.exec(select(Account).where(Account.user_id == uid)).all())
+        categories = {
+            c.name_fa: c
+            for c in session.exec(select(Category).where(Category.user_id == uid)).all()
+        }
 
-        if session.exec(select(Person)).first() is None:
-            session.add_all([Person(name=name) for name in PEOPLE])
+        if session.exec(select(Person).where(Person.user_id == uid)).first() is None:
+            session.add_all([Person(user_id=uid, name=name) for name in PEOPLE])
             session.commit()
-        people = list(session.exec(select(Person)).all())
+        people = list(session.exec(select(Person).where(Person.user_id == uid)).all())
 
-        if session.exec(select(Transaction)).first() is not None:
+        if session.exec(select(Transaction).where(Transaction.user_id == uid)).first() is not None:
             print(
                 "Transactions already exist — skipping transaction seed "
                 "(accounts/people/categories are idempotent)."
@@ -103,6 +121,7 @@ def main() -> None:
             for _ in range(random.choice([0, 0, 1, 1, 2])):
                 merchant, cat_name, (low, high) = random.choice(MERCHANTS)
                 tx = Transaction(
+                    user_id=uid,
                     amount_cents=random_amount_cents(low, high),
                     direction=Direction.WITHDRAWAL,
                     account_id=random.choice(accounts).id,  # type: ignore[arg-type]
@@ -117,6 +136,7 @@ def main() -> None:
             if day_offset % 30 == 0:
                 merchant, cat_name, (low, high) = random.choice(INCOME_SOURCES)
                 tx = Transaction(
+                    user_id=uid,
                     amount_cents=random_amount_cents(low, high),
                     direction=Direction.DEPOSIT,
                     account_id=accounts[0].id,  # type: ignore[arg-type]
@@ -141,7 +161,7 @@ def main() -> None:
         # One shared transaction with a debt, so the People/Balances screens aren't empty.
         villa = next((t for t in created if t.merchant_text == "دیجی‌کالا"), created[0])
         if session.exec(select(Split).where(Split.transaction_id == villa.id)).first() is None:
-            split = Split(transaction_id=villa.id, mode=SplitMode.I_PAID)  # type: ignore[arg-type]
+            split = Split(user_id=uid, transaction_id=villa.id, mode=SplitMode.I_PAID)  # type: ignore[arg-type]
             session.add(split)
             session.flush()
             shares = equal_split(villa.amount_cents, [ME, people[0].id])
@@ -154,6 +174,7 @@ def main() -> None:
             session.flush()
             session.add(
                 Debt(
+                    user_id=uid,
                     split_share_id=other_share.id,  # type: ignore[arg-type]
                     person_id=people[0].id,  # type: ignore[arg-type]
                     direction=DebtDirection.OWED_TO_ME,

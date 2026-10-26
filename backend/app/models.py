@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
+from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 from app.jalali import utc_now
@@ -59,6 +60,12 @@ class SplitMode(StrEnum):
 
 
 class User(SQLModel, table=True):
+    """Someone with a login. Every table holding financial data or settings
+    carries a `user_id`, and every route filters on it, so users never see one
+    another's rows. It's null only on rows from a single-user install that no
+    user has adopted yet — see `app.bootstrap.adopt_orphaned_rows`.
+    """
+
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
     password_hash: str
@@ -67,6 +74,7 @@ class User(SQLModel, table=True):
 
 class Account(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     name_fa: str
     name_en: str
     bank_name: str
@@ -77,6 +85,7 @@ class Account(SQLModel, table=True):
 
 class Category(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     name_fa: str
     name_en: str
     icon: str = "💰"
@@ -86,8 +95,15 @@ class Category(SQLModel, table=True):
 
 
 class MerchantCategoryMap(SQLModel, table=True):
+    # One mapping per merchant per user: two people shopping at the same store
+    # file it under their own categories.
+    __table_args__ = (
+        UniqueConstraint("user_id", "merchant_key", name="uq_merchantcategorymap_user_merchant"),
+    )
+
     id: int | None = Field(default=None, primary_key=True)
-    merchant_key: str = Field(index=True, unique=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
+    merchant_key: str = Field(index=True)
     category_id: int = Field(foreign_key="category.id")
     hit_count: int = 1
     updated_at: datetime = Field(default_factory=utc_now)
@@ -95,12 +111,14 @@ class MerchantCategoryMap(SQLModel, table=True):
 
 class KeywordRule(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     keyword: str = Field(index=True)
     direction: Direction
 
 
 class SmsPattern(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     name: str
     sender_match: str
     body_regex: str
@@ -132,6 +150,7 @@ class SmsIngestAttempt(SQLModel, table=True):
     """
 
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     sender: str
     matched_pattern_id: int | None = Field(default=None, foreign_key="smspattern.id")
     parse_status: ParseStatus
@@ -161,6 +180,7 @@ class OtpSellerHint(SQLModel, table=True):
     """
 
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     sender: str
     matched_pattern_id: int | None = Field(default=None, foreign_key="smspattern.id")
     seller: str
@@ -171,6 +191,7 @@ class OtpSellerHint(SQLModel, table=True):
 
 class Transaction(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     amount_cents: int
     direction: Direction
     account_id: int = Field(foreign_key="account.id")
@@ -187,6 +208,7 @@ class Transaction(SQLModel, table=True):
 
 class Person(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     name: str
     contact_note: str | None = None
     created_at: datetime = Field(default_factory=utc_now)
@@ -194,6 +216,7 @@ class Person(SQLModel, table=True):
 
 class Split(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     transaction_id: int = Field(foreign_key="transaction.id", unique=True)
     mode: SplitMode
     created_at: datetime = Field(default_factory=utc_now)
@@ -209,6 +232,7 @@ class SplitShare(SQLModel, table=True):
 
 class Debt(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     split_share_id: int = Field(foreign_key="splitshare.id", unique=True)
     person_id: int = Field(foreign_key="person.id")
     direction: DebtDirection = DebtDirection.OWED_TO_ME
@@ -228,6 +252,7 @@ class DebtPayment(SQLModel, table=True):
 
 class Budget(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     category_id: int = Field(foreign_key="category.id")
     limit_cents: int
     month_jalali: str | None = None  # e.g. "1405-06"; null = recurring every month
@@ -236,11 +261,18 @@ class Budget(SQLModel, table=True):
 
 class PushSubscription(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
     fcm_token: str = Field(unique=True, index=True)
     created_at: datetime = Field(default_factory=utc_now)
     last_seen_at: datetime = Field(default_factory=utc_now)
 
 
-class AppSetting(SQLModel, table=True):
-    key: str = Field(primary_key=True)
+class UserSetting(SQLModel, table=True):
+    """Per-user key/value settings — see app/settings_store.py."""
+
+    __table_args__ = (UniqueConstraint("user_id", "key", name="uq_usersetting_user_key"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int | None = Field(default=None, foreign_key="user.id", index=True)
+    key: str = Field(index=True)
     value: str

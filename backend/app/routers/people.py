@@ -5,13 +5,11 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.db import get_session
-from app.deps import get_current_username
-from app.models import Debt, DebtDirection, DebtPayment, DebtStatus, Person
+from app.deps import CurrentUser, check_owned, get_owned
+from app.models import Debt, DebtDirection, DebtPayment, DebtStatus, Person, Transaction, User
 from app.money import assert_int_money
 
-router = APIRouter(
-    prefix="/api/people", tags=["people"], dependencies=[Depends(get_current_username)]
-)
+router = APIRouter(prefix="/api/people", tags=["people"])
 
 
 class PersonIn(BaseModel):
@@ -47,13 +45,15 @@ class PersonBalance(BaseModel):
 
 
 @router.get("", response_model=list[PersonOut])
-def list_people(session: Session = Depends(get_session)) -> list[Person]:
-    return list(session.exec(select(Person)).all())
+def list_people(session: Session = Depends(get_session), user: User = CurrentUser) -> list[Person]:
+    return list(session.exec(select(Person).where(Person.user_id == user.id)).all())
 
 
 @router.get("/balances", response_model=list[PersonBalance])
-def balances(session: Session = Depends(get_session)) -> list[PersonBalance]:
-    people = session.exec(select(Person)).all()
+def balances(
+    session: Session = Depends(get_session), user: User = CurrentUser
+) -> list[PersonBalance]:
+    people = session.exec(select(Person).where(Person.user_id == user.id)).all()
     result = []
     for person in people:
         assert person.id is not None  # loaded from DB, always has a primary key
@@ -75,8 +75,10 @@ def balances(session: Session = Depends(get_session)) -> list[PersonBalance]:
 
 
 @router.post("", response_model=PersonOut)
-def create_person(body: PersonIn, session: Session = Depends(get_session)) -> Person:
-    person = Person(**body.model_dump())
+def create_person(
+    body: PersonIn, session: Session = Depends(get_session), user: User = CurrentUser
+) -> Person:
+    person = Person(user_id=user.id, **body.model_dump())
     session.add(person)
     session.commit()
     session.refresh(person)
@@ -85,11 +87,12 @@ def create_person(body: PersonIn, session: Session = Depends(get_session)) -> Pe
 
 @router.patch("/{person_id}", response_model=PersonOut)
 def update_person(
-    person_id: int, body: PersonIn, session: Session = Depends(get_session)
+    person_id: int,
+    body: PersonIn,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> Person:
-    person = session.get(Person, person_id)
-    if person is None:
-        raise HTTPException(status_code=404, detail="person not found")
+    person = get_owned(session, Person, person_id, user, "person")
     for key, value in body.model_dump().items():
         setattr(person, key, value)
     session.add(person)
@@ -99,17 +102,20 @@ def update_person(
 
 
 @router.delete("/{person_id}")
-def delete_person(person_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
-    person = session.get(Person, person_id)
-    if person is None:
-        raise HTTPException(status_code=404, detail="person not found")
+def delete_person(
+    person_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, bool]:
+    person = get_owned(session, Person, person_id, user, "person")
     session.delete(person)
     session.commit()
     return {"ok": True}
 
 
 @router.get("/{person_id}/debts", response_model=list[DebtOut])
-def person_debts(person_id: int, session: Session = Depends(get_session)) -> list[Debt]:
+def person_debts(
+    person_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> list[Debt]:
+    get_owned(session, Person, person_id, user, "person")
     return list(session.exec(select(Debt).where(Debt.person_id == person_id)).all())
 
 
@@ -144,7 +150,10 @@ def _apply_settlement(
 
 
 @router.post("/{person_id}/settle-all")
-def settle_all(person_id: int, session: Session = Depends(get_session)) -> dict[str, int]:
+def settle_all(
+    person_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, int]:
+    get_owned(session, Person, person_id, user, "person")
     debts = session.exec(
         select(Debt).where(Debt.person_id == person_id, Debt.status != DebtStatus.SETTLED)
     ).all()
@@ -157,21 +166,24 @@ def settle_all(person_id: int, session: Session = Depends(get_session)) -> dict[
     return {"settled": count}
 
 
-debts_router = APIRouter(
-    prefix="/api/debts", tags=["debts"], dependencies=[Depends(get_current_username)]
-)
+debts_router = APIRouter(prefix="/api/debts", tags=["debts"])
 
 
 @debts_router.get("", response_model=list[DebtOut])
-def list_debts(session: Session = Depends(get_session)) -> list[Debt]:
-    return list(session.exec(select(Debt).where(Debt.status != DebtStatus.SETTLED)).all())
+def list_debts(session: Session = Depends(get_session), user: User = CurrentUser) -> list[Debt]:
+    stmt = select(Debt).where(Debt.user_id == user.id, Debt.status != DebtStatus.SETTLED)
+    return list(session.exec(stmt).all())
 
 
 @debts_router.post("/{debt_id}/settle", response_model=DebtOut)
-def settle_debt(debt_id: int, body: SettleRequest, session: Session = Depends(get_session)) -> Debt:
-    debt = session.get(Debt, debt_id)
-    if debt is None:
-        raise HTTPException(status_code=404, detail="debt not found")
+def settle_debt(
+    debt_id: int,
+    body: SettleRequest,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
+) -> Debt:
+    debt = get_owned(session, Debt, debt_id, user, "debt")
+    check_owned(session, Transaction, body.linked_transaction_id, user, "transaction")
     return _apply_settlement(
         session, debt, body.amount_cents, body.linked_transaction_id, body.note
     )

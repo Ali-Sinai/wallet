@@ -7,15 +7,17 @@ from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from app.db import get_session
-from app.deps import get_current_username
+from app.deps import CurrentUser, get_owned
 from app.models import (
     Debt,
     DebtDirection,
     DebtPayment,
+    Person,
     Split,
     SplitMode,
     SplitShare,
     Transaction,
+    User,
 )
 from app.split_math import (
     ME,
@@ -28,7 +30,7 @@ from app.split_math import (
     percentage_split,
 )
 
-router = APIRouter(prefix="/api", tags=["splits"], dependencies=[Depends(get_current_username)])
+router = APIRouter(prefix="/api", tags=["splits"])
 
 
 class LineItemIn(BaseModel):
@@ -97,17 +99,25 @@ def _compute_shares(body: SplitRequest, total_cents: int) -> dict[ParticipantId,
 
 
 @router.post("/transactions/{tx_id}/split", response_model=SplitOut)
-def create_split(tx_id: int, body: SplitRequest, session: Session = Depends(get_session)) -> Split:
-    tx = session.get(Transaction, tx_id)
-    if tx is None:
-        raise HTTPException(status_code=404, detail="transaction not found")
+def create_split(
+    tx_id: int,
+    body: SplitRequest,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
+) -> Split:
+    tx = get_owned(session, Transaction, tx_id, user, "transaction")
     existing = session.exec(select(Split).where(Split.transaction_id == tx_id)).first()
     if existing is not None:
         raise HTTPException(status_code=400, detail="transaction already split; delete it first")
 
     shares = _compute_shares(body, tx.amount_cents)
+    # Percentages, custom amounts and line items name people too, not just
+    # participant_person_ids — check every share's person, not the list.
+    for participant in shares:
+        if participant is not None:
+            get_owned(session, Person, cast(int, participant), user, "person")
 
-    split = Split(transaction_id=tx_id, mode=body.mode)
+    split = Split(user_id=user.id, transaction_id=tx_id, mode=body.mode)
     session.add(split)
     session.flush()
 
@@ -126,6 +136,7 @@ def create_split(tx_id: int, body: SplitRequest, session: Session = Depends(get_
         if person_id is not None and amount_cents > 0:
             session.add(
                 Debt(
+                    user_id=user.id,
                     split_share_id=share.id,  # type: ignore[arg-type]
                     person_id=person_id,
                     direction=debt_direction,
@@ -141,9 +152,12 @@ def create_split(tx_id: int, body: SplitRequest, session: Session = Depends(get_
 
 
 @router.get("/transactions/{tx_id}/split", response_model=SplitOut | None)
-def get_split_for_transaction(tx_id: int, session: Session = Depends(get_session)) -> dict | None:
+def get_split_for_transaction(
+    tx_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict | None:
     """The split covering a transaction, if it has one. Lets a client reach the
     existing split endpoints (notably DELETE) from a transaction it already has."""
+    get_owned(session, Transaction, tx_id, user, "transaction")
     split = session.exec(select(Split).where(Split.transaction_id == tx_id)).first()
     if split is None:
         return None
@@ -157,10 +171,10 @@ def get_split_for_transaction(tx_id: int, session: Session = Depends(get_session
 
 
 @router.get("/splits/{split_id}", response_model=SplitOut)
-def get_split(split_id: int, session: Session = Depends(get_session)) -> dict:
-    split = session.get(Split, split_id)
-    if split is None:
-        raise HTTPException(status_code=404, detail="split not found")
+def get_split(
+    split_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict:
+    split = get_owned(session, Split, split_id, user, "split")
     shares = session.exec(select(SplitShare).where(SplitShare.split_id == split_id)).all()
     return {
         "id": split.id,
@@ -171,10 +185,10 @@ def get_split(split_id: int, session: Session = Depends(get_session)) -> dict:
 
 
 @router.delete("/splits/{split_id}")
-def delete_split(split_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
-    split = session.get(Split, split_id)
-    if split is None:
-        raise HTTPException(status_code=404, detail="split not found")
+def delete_split(
+    split_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, bool]:
+    split = get_owned(session, Split, split_id, user, "split")
 
     shares = session.exec(select(SplitShare).where(SplitShare.split_id == split_id)).all()
     for share in shares:

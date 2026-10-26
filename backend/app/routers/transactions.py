@@ -4,27 +4,29 @@ import csv
 import io
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator
 from sqlmodel import Session, select
 
 from app.db import get_session
-from app.deps import get_current_username
+from app.deps import CurrentUser, check_owned, get_owned
 from app.jalali import format_jalali_full
 from app.models import (
+    Account,
+    Category,
     Direction,
     MerchantCategoryMap,
+    Person,
     Split,
     SplitShare,
     Transaction,
     TxSource,
+    User,
 )
 from app.money import assert_positive_money
 
-router = APIRouter(
-    prefix="/api/transactions", tags=["transactions"], dependencies=[Depends(get_current_username)]
-)
+router = APIRouter(prefix="/api/transactions", tags=["transactions"])
 
 
 class TransactionIn(BaseModel):
@@ -81,6 +83,12 @@ def _merchant_key(text: str) -> str:
     return text.strip().lower()
 
 
+def _check_references(session: Session, body: TransactionIn, user: User) -> None:
+    """The account and category a transaction points at must be the user's own."""
+    check_owned(session, Account, body.account_id, user, "account")
+    check_owned(session, Category, body.category_id, user, "category")
+
+
 def _apply_filters(
     stmt,
     date_from: datetime | None,
@@ -117,6 +125,7 @@ def _apply_filters(
 @router.get("", response_model=list[TransactionOut])
 def list_transactions(
     session: Session = Depends(get_session),
+    user: User = CurrentUser,
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     direction: Direction | None = None,
@@ -128,11 +137,12 @@ def list_transactions(
     search: str | None = None,
     limit: int = Query(default=200, le=1000),
 ) -> list[TransactionOut]:
-    stmt = select(Transaction)
+    stmt = select(Transaction).where(Transaction.user_id == user.id)
     stmt = _apply_filters(
         stmt, date_from, date_to, direction, category_id, account_id, amount_min, amount_max, search
     )
     if person_id is not None:
+        get_owned(session, Person, person_id, user, "person")
         tx_ids = session.exec(
             select(Split.transaction_id)  # type: ignore[arg-type]
             .join(SplitShare, SplitShare.split_id == Split.id)  # type: ignore[arg-type]
@@ -145,10 +155,13 @@ def list_transactions(
 
 @router.get("/uncategorized", response_model=list[TransactionOut])
 def uncategorized(
-    session: Session = Depends(get_session), limit: int = Query(default=50, le=500)
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
+    limit: int = Query(default=50, le=500),
 ) -> list[TransactionOut]:
     stmt = (
         select(Transaction)
+        .where(Transaction.user_id == user.id)
         .where(Transaction.category_id.is_(None))  # type: ignore[union-attr]
         .order_by(Transaction.occurred_at.desc())  # type: ignore[attr-defined]
         .limit(limit)
@@ -159,6 +172,7 @@ def uncategorized(
 @router.get("/export.csv")
 def export_csv(
     session: Session = Depends(get_session),
+    user: User = CurrentUser,
     date_from: datetime | None = None,
     date_to: datetime | None = None,
     direction: Direction | None = None,
@@ -169,7 +183,7 @@ def export_csv(
     search: str | None = None,
 ) -> StreamingResponse:
     stmt = _apply_filters(
-        select(Transaction),
+        select(Transaction).where(Transaction.user_id == user.id),
         date_from,
         date_to,
         direction,
@@ -221,9 +235,10 @@ def export_csv(
 
 @router.post("", response_model=TransactionOut)
 def create_transaction(
-    body: TransactionIn, session: Session = Depends(get_session)
+    body: TransactionIn, session: Session = Depends(get_session), user: User = CurrentUser
 ) -> TransactionOut:
-    tx = Transaction(source=TxSource.MANUAL, **body.model_dump())
+    _check_references(session, body, user)
+    tx = Transaction(user_id=user.id, source=TxSource.MANUAL, **body.model_dump())
     session.add(tx)
     session.commit()
     session.refresh(tx)
@@ -231,20 +246,22 @@ def create_transaction(
 
 
 @router.get("/{tx_id}", response_model=TransactionOut)
-def get_transaction(tx_id: int, session: Session = Depends(get_session)) -> TransactionOut:
-    tx = session.get(Transaction, tx_id)
-    if tx is None:
-        raise HTTPException(status_code=404, detail="transaction not found")
+def get_transaction(
+    tx_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> TransactionOut:
+    tx = get_owned(session, Transaction, tx_id, user, "transaction")
     return _to_out(tx)
 
 
 @router.patch("/{tx_id}", response_model=TransactionOut)
 def update_transaction(
-    tx_id: int, body: TransactionIn, session: Session = Depends(get_session)
+    tx_id: int,
+    body: TransactionIn,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> TransactionOut:
-    tx = session.get(Transaction, tx_id)
-    if tx is None:
-        raise HTTPException(status_code=404, detail="transaction not found")
+    tx = get_owned(session, Transaction, tx_id, user, "transaction")
+    _check_references(session, body, user)
     for key, value in body.model_dump().items():
         setattr(tx, key, value)
     session.add(tx)
@@ -254,10 +271,10 @@ def update_transaction(
 
 
 @router.delete("/{tx_id}")
-def delete_transaction(tx_id: int, session: Session = Depends(get_session)) -> dict[str, bool]:
-    tx = session.get(Transaction, tx_id)
-    if tx is None:
-        raise HTTPException(status_code=404, detail="transaction not found")
+def delete_transaction(
+    tx_id: int, session: Session = Depends(get_session), user: User = CurrentUser
+) -> dict[str, bool]:
+    tx = get_owned(session, Transaction, tx_id, user, "transaction")
     session.delete(tx)
     session.commit()
     return {"ok": True}
@@ -265,22 +282,28 @@ def delete_transaction(tx_id: int, session: Session = Depends(get_session)) -> d
 
 @router.patch("/{tx_id}/categorize", response_model=TransactionOut)
 def categorize(
-    tx_id: int, body: CategorizeRequest, session: Session = Depends(get_session)
+    tx_id: int,
+    body: CategorizeRequest,
+    session: Session = Depends(get_session),
+    user: User = CurrentUser,
 ) -> TransactionOut:
-    tx = session.get(Transaction, tx_id)
-    if tx is None:
-        raise HTTPException(status_code=404, detail="transaction not found")
+    tx = get_owned(session, Transaction, tx_id, user, "transaction")
+    check_owned(session, Category, body.category_id, user, "category")
     tx.category_id = body.category_id
     session.add(tx)
 
     if tx.merchant_text:
         key = _merchant_key(tx.merchant_text)
         mapping = session.exec(
-            select(MerchantCategoryMap).where(MerchantCategoryMap.merchant_key == key)
+            select(MerchantCategoryMap).where(
+                MerchantCategoryMap.user_id == user.id, MerchantCategoryMap.merchant_key == key
+            )
         ).first()
         if mapping is None:
             session.add(
-                MerchantCategoryMap(merchant_key=key, category_id=body.category_id, hit_count=1)
+                MerchantCategoryMap(
+                    user_id=user.id, merchant_key=key, category_id=body.category_id, hit_count=1
+                )
             )
         else:
             mapping.category_id = body.category_id
@@ -294,10 +317,12 @@ def categorize(
 
 @router.get("/suggest-category/{merchant_text}")
 def suggest_category(
-    merchant_text: str, session: Session = Depends(get_session)
+    merchant_text: str, session: Session = Depends(get_session), user: User = CurrentUser
 ) -> dict[str, int | None]:
     key = _merchant_key(merchant_text)
     mapping = session.exec(
-        select(MerchantCategoryMap).where(MerchantCategoryMap.merchant_key == key)
+        select(MerchantCategoryMap).where(
+            MerchantCategoryMap.user_id == user.id, MerchantCategoryMap.merchant_key == key
+        )
     ).first()
     return {"category_id": mapping.category_id if mapping else None}

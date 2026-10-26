@@ -10,6 +10,22 @@
     <string name="login_username">Username</string>
     <string name="login_password">Password</string>
     <string name="login_submit">Sign in</string>
+    <string name="login_create_account">No account? Create one</string>
+
+    <string name="register_title">Create an account</string>
+    <string name="register_server_intro">First, the address of the server your account will live on.</string>
+    <string name="register_account_intro">Choose a username and password for the new account.</string>
+    <string name="register_next">Continue</string>
+    <string name="register_submit">Create account</string>
+    <string name="register_have_account">Have an account? Sign in</string>
+    <string name="register_username_hint">3–32 English letters, digits, dots, dashes or _</string>
+    <string name="register_password_confirm">Repeat password</string>
+    <string name="register_closed">This server isn\'t taking new accounts</string>
+    <string name="register_username_taken">That username is taken</string>
+    <string name="register_username_rule">A username is 3–32 English letters, digits, dots, dashes or _, starting with a letter or digit</string>
+    <string name="register_password_short">The password needs at least %1$s characters</string>
+    <string name="register_password_long">That password is too long</string>
+    <string name="register_password_mismatch">The passwords don\'t match</string>
 
     <string name="error_invalid_credentials">Wrong username or password</string>
     <string name="error_network">Couldn\'t reach the server</string>
